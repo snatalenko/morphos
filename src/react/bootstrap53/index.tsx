@@ -208,7 +208,7 @@ export const RemoveButton: ComponentType<RemoveButtonProps> = ({ onClick }) => {
 	return (
 		<button
 			type="button"
-			className="btn btn-outline-danger"
+			className="btn btn-sm btn-outline-danger"
 			onClick={onClick}
 			aria-label={labels.removeField}
 		>
@@ -236,7 +236,7 @@ export const TypeSelector: ComponentType<TypeSelectorProps> = ({ kind, onChange 
 export const Reorder: ComponentType<ReorderProps> = ({ canMoveUp, canMoveDown, onMoveUp, onMoveDown }) => {
 	const labels = useContext(LabelsContext);
 	return (
-		<div className="btn-group" role="group" aria-label={labels.reorder}>
+		<div className="btn-group btn-group-sm" role="group" aria-label={labels.reorder}>
 			<button
 				type="button"
 				className="btn btn-outline-secondary"
