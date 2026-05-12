@@ -45,13 +45,22 @@
       "require": "./dist/cjs/react/bootstrap53/index.js",
       "import": "./dist/esm/react/bootstrap53/index.js",
       "types": "./types/react/bootstrap53/index.d.ts"
+    },
+    "./openai": {
+      "require": "./dist/cjs/openai/index.js",
+      "import": "./dist/esm/openai/index.js",
+      "types": "./types/openai/index.d.ts"
     }
   },
   "peerDependencies": {
-    "react": ">=18"
+    "react": ">=18",
+    "openai": ">=4"
   },
   "peerDependenciesMeta": {
     "react": {
+      "optional": true
+    },
+    "openai": {
       "optional": true
     }
   },
@@ -93,6 +102,7 @@
     "globals": "^17.4.0",
     "jest": "^29.7.0",
     "jsonschema": "^1.5.0",
+    "openai": "^6.37.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "ts-jest": "^29.4.6",
