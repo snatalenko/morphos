@@ -1,0 +1,30 @@
+import type { MappingEditorLabels } from './types.ts';
+
+export const defaultLabels: MappingEditorLabels = {
+	field: 'Value',
+	array: 'List',
+	object: 'Object',
+	addField: '+ Value',
+	addArray: '+ List',
+	addObject: '+ Object',
+	addSchemaField: '+ Add field…',
+	selectPlaceholder: '— select —',
+	advanced: 'Advanced…',
+	useSuggestions: 'Use suggestions',
+	useSchemaFields: 'Use schema fields',
+	customSuffix: 'custom',
+	forEach: 'forEach',
+	from: 'from',
+	keyPlaceholder: 'key',
+	expressionPlaceholder: 'js expression',
+	removeField: 'Remove field',
+	moveUp: 'Move up',
+	moveDown: 'Move down',
+	moveUpSymbol: '↑',
+	moveDownSymbol: '↓',
+	removeSymbol: '×',
+	useSuggestionsSymbol: '↩',
+	reorder: 'Reorder',
+	mappingType: 'Mapping type',
+	required: 'required'
+};
