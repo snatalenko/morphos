@@ -278,6 +278,7 @@
 							<a href="#overview" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Overview</a>
 							<ul class="toc-sub space-y-0.5">
 								<li><a href="#reasoning" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Reasoning</a></li>
+								<li><a href="#optional-packages" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Optional Packages</a></li>
 								<li><a href="#quick-start-example" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Quick Start</a></li>
 							</ul>
 						</li>
@@ -526,11 +527,8 @@
 			return html.replace(/^\s*<h1[^>]*>[\s\S]*?<\/h1>\s*/i, '');
 		}
 
-		function stripBeforeFirstH(html) {
-			// drop badges/logo/intro that lives between the title and the first ## heading —
-			// they push content down as they load and break anchor scrolling on refresh
-			const idx = html.search(/<h\d[\s>]/i);
-			return idx === -1 ? html : html.slice(idx);
+		function stripBadges(html) {
+			return html.replace(/<p\b[^>]*>\s*(?:<a\b[^>]*>\s*<img\b[^>]*>\s*<\/a>\s*)+<\/p>/g, '');
 		}
 
 		function stripEmbeddedToc(html) {
@@ -654,8 +652,8 @@
 				const htmlRaw = marked.parse(md);
 				const htmlWithoutToc = stripEmbeddedToc(htmlRaw);
 				const htmlWithoutH1 = stripLeadingH1(htmlWithoutToc);
-				// const html = stripBeforeFirstH(htmlWithoutH1);
-				contentEl.innerHTML = htmlWithoutH1;
+				const html = stripBadges(htmlWithoutH1);
+				contentEl.innerHTML = html;
 
 				const rootDir = file.includes('/') ? file.slice(0, file.lastIndexOf('/') + 1) : '';
 				rewriteLinks(rootDir);
