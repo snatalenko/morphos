@@ -4,6 +4,7 @@ export type ValueMap =
 	ArrayMapping |
 	ObjectInContextMapping |
 	ConditionalMapping |
+	ConcatMapping |
 	PropertiesMap;
 
 export type PropertiesMap = {
@@ -30,4 +31,14 @@ export type ConditionalMapping = {
 	else?: ValueMap
 }
 
-export type RootMapping = ObjectMapping | ArrayMapping | ObjectInContextMapping | ConditionalMapping | PropertiesMap;
+export type ConcatMapping = {
+	concat: Array<ValueMap>
+}
+
+export type RootMapping =
+	ObjectMapping |
+	ArrayMapping |
+	ObjectInContextMapping |
+	ConditionalMapping |
+	ConcatMapping |
+	PropertiesMap;

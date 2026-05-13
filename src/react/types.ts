@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from 'react';
 
-export type AddKind = 'expr' | 'array' | 'object' | 'conditional';
+export type AddKind = 'expr' | 'array' | 'object' | 'conditional' | 'concat';
 export type EntryKind = AddKind;
 
 export type { MappingSchema } from '../MappingSchema.ts';
@@ -8,12 +8,19 @@ import type { MappingSchema } from '../MappingSchema.ts';
 
 export interface SchemaFieldOption {
 	name: string;
+	label?: string;
 	schema: MappingSchema;
 	required: boolean;
 }
 
+export interface FieldOption {
+	value: string;
+	label?: string;
+}
+
 export interface SourceFieldMatch {
 	path: string;
+	label?: string;
 	schema: MappingSchema;
 }
 
@@ -58,9 +65,10 @@ export interface KeyLabelProps {
 export interface SuggestedKeyInputProps {
 	value: string;
 	onChange: (next: string) => void;
-	available: SchemaFieldOption[];
+	options: FieldOption[];
 	placeholder?: string;
-	allowCurrentValue?: boolean;
+	defaultAdvanced?: boolean;
+	onAdvanced?: () => void;
 }
 
 export interface ValueInputProps {
@@ -73,9 +81,8 @@ export interface SuggestedValueInputProps {
 	value: string;
 	onChange: (next: string) => void;
 	placeholder?: string;
-	emptyLabel?: string;
 	defaultAdvanced?: boolean;
-	suggestions: SourceFieldMatch[];
+	options: FieldOption[];
 }
 
 export interface RemoveButtonProps {
@@ -89,11 +96,11 @@ export interface ReorderProps {
 	onMoveDown: () => void;
 }
 
-export interface AddBarProps {
-	onAdd: (kind: AddKind) => void;
+export interface AddElseButtonProps {
+	onClick: () => void;
 }
 
-export interface AddElseButtonProps {
+export interface AddItemButtonProps {
 	onClick: () => void;
 }
 
@@ -117,11 +124,10 @@ export interface MappingEditorLabels {
 	array: string;
 	object: string;
 	conditional: string;
-	addField: string;
-	addArray: string;
-	addObject: string;
-	addConditional: string;
+	concat: string;
+	addItem: string;
 	addSchemaField: string;
+	newField: string;
 	selectPlaceholder: string;
 	advanced: string;
 	useSuggestions: string;
@@ -133,6 +139,7 @@ export interface MappingEditorLabels {
 	when: string;
 	then: string;
 	else: string;
+	concatItem: string;
 	addElse: string;
 	keyPlaceholder: string;
 	expressionPlaceholder: string;
@@ -160,8 +167,8 @@ export interface MappingEditorComponents {
 	RemoveButton: ComponentType<RemoveButtonProps>;
 	Reorder: ComponentType<ReorderProps>;
 	TypeSelector: ComponentType<TypeSelectorProps>;
-	AddBar: ComponentType<AddBarProps>;
 	AddElseButton: ComponentType<AddElseButtonProps>;
+	AddItemButton: ComponentType<AddItemButtonProps>;
 	SchemaAddBar: ComponentType<SchemaAddBarProps>;
 	Section: ComponentType<SectionProps>;
 	SectionHeader: ComponentType<SectionHeaderProps>;

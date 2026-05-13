@@ -5,7 +5,8 @@ import type {
 	ObjectInContextMapping,
 	ObjectMapping,
 	ValueMap,
-	ConditionalMapping
+	ConditionalMapping,
+	ConcatMapping
 } from './mappingTypes.ts';
 
 function isConditionalMapping(mapping: RootMapping): mapping is ConditionalMapping {
@@ -17,6 +18,11 @@ function isConditionalMapping(mapping: RootMapping): mapping is ConditionalMappi
 function isArrayMapping(mapping: RootMapping): mapping is ArrayMapping {
 	const keys = Object.keys(mapping);
 	return keys.length === 2 && keys.includes('forEach') && keys.includes('map');
+}
+
+function isConcatMapping(mapping: RootMapping): mapping is ConcatMapping {
+	const keys = Object.keys(mapping);
+	return keys.length === 1 && keys.includes('concat');
 }
 
 function isObjectInContextMapping(mapping: RootMapping): mapping is ObjectInContextMapping {
@@ -104,6 +110,33 @@ function* mappingToJs(mapping: RootMapping, level: number) {
 			yield `${prefix}    return $omit;`;
 		else
 			yield* returnValueMapToJs(elseMapping, level + 2);
+		yield `${prefix}  })()`;
+	}
+	else if (isConcatMapping(mapping)) {
+		const { concat } = mapping;
+		if (!Array.isArray(concat))
+			throw new TypeError(`Property "concat" is not an array in mapping "${JSON.stringify(mapping)}"`);
+
+		yield `${prefix}  (() => {`;
+		yield `${prefix}    var $output = [];`;
+		yield `${prefix}    var $value;`;
+		for (const mappingInstruction of concat) {
+			yield `${prefix}    $value =`;
+			if (typeof mappingInstruction === 'string') {
+				yield `${prefix}      ${mappingInstruction || 'null'};`;
+			}
+			else {
+				yield* mappingToJs(mappingInstruction, level + 2);
+				yield `${prefix}    ;`;
+			}
+			yield `${prefix}    if ($value !== $omit) {`;
+			yield `${prefix}      if (Array.isArray($value))`;
+			yield `${prefix}        $output.push(...$value);`;
+			yield `${prefix}      else`;
+			yield `${prefix}        $output.push($value);`;
+			yield `${prefix}    }`;
+		}
+		yield `${prefix}    return $output;`;
 		yield `${prefix}  })()`;
 	}
 	else if (isArrayMapping(mapping)) {

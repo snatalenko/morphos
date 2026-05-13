@@ -27,6 +27,7 @@ Declarative Mapper is a JSON data transformation and object mapping library for 
   - [Tuple Arrays](#tuple-arrays)
   - [Context Switching](#context-switching)
   - [Conditional Fields](#conditional-fields)
+  - [Concatenating Arrays](#concatenating-arrays)
   - [Dynamic Output Keys](#dynamic-output-keys)
 - [Extensions](#extensions)
 - [Complex Mapping Example](#complex-mapping-example)
@@ -130,6 +131,11 @@ The right side is either a string with a valid JS expression or an object with m
   "key": {                    // conditionally include a value
     "when": "someField",
     "then": "someField"
+  },
+  "key": {                    // build an array from multiple mappings
+    "concat": [
+      { "when": "foo", "then": "'bar'" }
+    ]
   },
   "${prefix}_${id}": "value", // dynamic output key (template interpolation)
 }
@@ -359,6 +365,34 @@ Use `"else"` when a fallback value should be emitted:
     "when": "cancelledAt",
     "then": "'cancelled'",
     "else": "'active'"
+  }
+}
+```
+
+### Concatenating Arrays
+
+Use `"concat"` to build arrays from multiple mapping branches. Omitted conditional
+branches are skipped, and array branch results are flattened:
+
+```json
+{
+  "bizTransactionList": {
+    "concat": [
+      {
+        "when": "shipment.purchaseOrderNumber",
+        "then": {
+          "type": "'po'",
+          "bizTransaction": "shipment.purchaseOrderNumber"
+        }
+      },
+      {
+        "when": "shipment.asnNumber",
+        "then": {
+          "type": "'desadv'",
+          "bizTransaction": "shipment.asnNumber"
+        }
+      }
+    ]
   }
 }
 ```

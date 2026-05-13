@@ -1,4 +1,4 @@
-import { useContext, useState, type ComponentType } from 'react';
+import { useContext, useEffect, useRef, useState, type ComponentType } from 'react';
 import { LabelsContext } from '../LabelsContext.ts';
 import type {
 	ContainerProps,
@@ -11,31 +11,37 @@ import type {
 	SuggestedValueInputProps,
 	RemoveButtonProps,
 	ReorderProps,
-	AddBarProps,
 	AddElseButtonProps,
+	AddItemButtonProps,
 	SchemaAddBarProps,
 	SectionProps,
 	SectionHeaderProps,
 	TypeSelectorProps,
 	MappingEditorComponents,
-	AddKind
+	AddKind,
+	FieldOption
 } from '../types.ts';
 
 export const Container: ComponentType<ContainerProps> = ({ children }) => (
 	<div className="dm-bs34-container">{children}</div>
 );
 
-export const Row: ComponentType<RowProps> = ({ keyInput, typeSelector, value, remove, reorder }) => (
-	<div className="row" style={{ marginBottom: 8 }}>
-		<div className={typeSelector ? 'col-xs-3' : 'col-xs-5'}>{keyInput}</div>
-		{typeSelector ? <div className="col-xs-2">{typeSelector}</div> : null}
-		<div className="col-xs-5">{value}</div>
-		<div className="col-xs-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
-			{reorder}
-			{remove}
+export const Row: ComponentType<RowProps> = ({ keyInput, typeSelector, value, remove, reorder }) => {
+	const isTemplate = !typeSelector && !value && !remove && !reorder;
+	return (
+		<div className="row" style={{ marginBottom: 8 }}>
+			<div className={typeSelector || isTemplate ? 'col-xs-3' : 'col-xs-5'}>{keyInput}</div>
+			{typeSelector ? <div className="col-xs-2">{typeSelector}</div> : null}
+			{value ? <div className="col-xs-5">{value}</div> : null}
+			{reorder || remove ? (
+				<div className="col-xs-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+					{reorder}
+					{remove}
+				</div>
+			) : null}
 		</div>
-	</div>
-);
+	);
+};
 
 export const SectionRow: ComponentType<SectionRowProps> = ({
 	keyInput,
@@ -81,44 +87,70 @@ export const KeyLabel: ComponentType<KeyLabelProps> = ({ name, schema, required 
 	);
 };
 
-const BS34_KEY_ADVANCED = '__dm_key_advanced__';
+const BS34_ADVANCED = '__dm_advanced__';
 
-export const SuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = ({
+function SuggestedInput({
 	value,
 	onChange,
-	available,
+	options,
 	placeholder,
-	allowCurrentValue
-}) => {
+	defaultAdvanced,
+	onAdvanced
+}: {
+	value: string;
+	onChange: (next: string) => void;
+	options: FieldOption[];
+	placeholder?: string;
+	defaultAdvanced?: boolean;
+	onAdvanced?: () => void;
+}) {
 	const labels = useContext(LabelsContext);
-	const matched = value === ''
-		|| available.some(f => f.name === value)
-		|| (allowCurrentValue && value === '*');
-	const [advanced, setAdvanced] = useState(!matched);
+	const matched = value === '' || options.some(o => o.value === value);
+	const [advanced, setAdvanced] = useState(!!defaultAdvanced || !matched);
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		if (advanced) {
+			inputRef.current?.focus();
+			inputRef.current?.select();
+		}
+	}, [advanced]);
+
+	if (!options.length) {
+		return (
+			<input
+				ref={inputRef}
+				type="text"
+				className="form-control"
+				value={value}
+				onChange={e => onChange(e.target.value)}
+				placeholder={placeholder}
+			/>
+		);
+	}
 
 	if (advanced) {
 		return (
 			<div className="input-group">
 				<input
+					ref={inputRef}
 					type="text"
 					className="form-control"
 					value={value}
 					onChange={e => onChange(e.target.value)}
 					placeholder={placeholder}
 				/>
-				{(available.length > 0 || allowCurrentValue) && (
-					<span className="input-group-btn">
-						<button
-							type="button"
-							className="btn btn-default"
-							onClick={() => setAdvanced(false)}
-							aria-label={labels.useSchemaFields}
-							title={labels.useSchemaFields}
-						>
-							<span className="glyphicon glyphicon-list" aria-hidden="true" />
-						</button>
-					</span>
-				)}
+				<span className="input-group-btn">
+					<button
+						type="button"
+						className="btn btn-default"
+						onClick={() => setAdvanced(false)}
+						aria-label={labels.useSchemaFields}
+						title={labels.useSchemaFields}
+					>
+						<span className="glyphicon glyphicon-list" aria-hidden="true" />
+					</button>
+				</span>
 			</div>
 		);
 	}
@@ -129,24 +161,28 @@ export const SuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = ({
 			value={matched ? value : ''}
 			onChange={e => {
 				const v = e.target.value;
-				if (v === BS34_KEY_ADVANCED) {
+				if (v === BS34_ADVANCED) {
 					setAdvanced(true);
+					if (onAdvanced)
+						onAdvanced();
 					return;
 				}
 				onChange(v);
 			}}
 		>
-			<option value="" disabled>{labels.selectPlaceholder}</option>
-			{allowCurrentValue && <option value="*">{labels.currentValue}</option>}
-			{available.map(f => (
-				<option key={f.name} value={f.name}>
-					{f.name}{f.required ? ' *' : ''}
-				</option>
+			{!options.some(o => o.value === '') && (
+				<option value="" disabled>{labels.selectPlaceholder}</option>
+			)}
+			{options.map(o => (
+				<option key={o.value} value={o.value}>{o.label ?? o.value}</option>
 			))}
-			<option value={BS34_KEY_ADVANCED}>{labels.advanced}</option>
+			<option value={BS34_ADVANCED}>{labels.advanced}</option>
 		</select>
 	);
-};
+}
+
+export const SuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = SuggestedInput;
+export const SuggestedValueInput: ComponentType<SuggestedValueInputProps> = SuggestedInput;
 
 export const ValueInput: ComponentType<ValueInputProps> = ({ value, onChange, placeholder }) => (
 	<input
@@ -157,69 +193,6 @@ export const ValueInput: ComponentType<ValueInputProps> = ({ value, onChange, pl
 		placeholder={placeholder}
 	/>
 );
-
-const BS34_ADVANCED = '__dm_advanced__';
-
-export const SuggestedValueInput: ComponentType<SuggestedValueInputProps> = ({
-	value,
-	onChange,
-	placeholder,
-	emptyLabel,
-	defaultAdvanced,
-	suggestions
-}) => {
-	const labels = useContext(LabelsContext);
-	const isMatched = value === '' || suggestions.some(s => s.path === value);
-	const [advanced, setAdvanced] = useState(!!defaultAdvanced || !isMatched);
-
-	if (advanced) {
-		return (
-			<div className="input-group">
-				<input
-					type="text"
-					className="form-control"
-					value={value}
-					onChange={e => onChange(e.target.value)}
-					placeholder={placeholder}
-				/>
-				{suggestions.length > 0 && (
-					<span className="input-group-btn">
-						<button
-							type="button"
-							className="btn btn-default"
-							onClick={() => setAdvanced(false)}
-							aria-label={labels.useSuggestions}
-							title={labels.useSuggestions}
-						>
-							<span className="glyphicon glyphicon-list" aria-hidden="true" />
-						</button>
-					</span>
-				)}
-			</div>
-		);
-	}
-
-	return (
-		<select
-			className="form-control"
-			value={isMatched ? value : ''}
-			onChange={e => {
-				const v = e.target.value;
-				if (v === BS34_ADVANCED) {
-					setAdvanced(true);
-					return;
-				}
-				onChange(v);
-			}}
-		>
-			<option value="">{emptyLabel ?? labels.selectPlaceholder}</option>
-			{suggestions.map(s => (
-				<option key={s.path} value={s.path}>{s.path}</option>
-			))}
-			<option value={BS34_ADVANCED}>{labels.advanced}</option>
-		</select>
-	);
-};
 
 export const RemoveButton: ComponentType<RemoveButtonProps> = ({ onClick }) => {
 	const labels = useContext(LabelsContext);
@@ -249,6 +222,7 @@ export const TypeSelector: ComponentType<TypeSelectorProps> = ({ kind, onChange 
 			<option value="array">{labels.array}</option>
 			<option value="object">{labels.object}</option>
 			<option value="conditional">{labels.conditional}</option>
+			<option value="concat">{labels.concat}</option>
 		</select>
 	);
 };
@@ -307,26 +281,25 @@ export const SchemaAddBar: ComponentType<SchemaAddBarProps> = ({ available, onAd
 	);
 };
 
-export const AddBar: ComponentType<AddBarProps> = ({ onAdd }) => {
+export const AddElseButton: ComponentType<AddElseButtonProps> = ({ onClick }) => {
 	const labels = useContext(LabelsContext);
 	return (
-		<div style={{ marginTop: 8, textAlign: 'right' }}>
-			<div className="btn-group" role="group">
-				<button type="button" className="btn btn-default" onClick={() => onAdd('expr')}>{labels.addField}</button>
-				<button type="button" className="btn btn-default" onClick={() => onAdd('array')}>{labels.addArray}</button>
-				<button type="button" className="btn btn-default" onClick={() => onAdd('object')}>{labels.addObject}</button>
-				<button type="button" className="btn btn-default" onClick={() => onAdd('conditional')}>{labels.addConditional}</button>
-			</div>
+		<div style={{ marginTop: 8 }}>
+			<button type="button" className="btn btn-default" onClick={onClick}>
+				{labels.addElse}
+			</button>
 		</div>
 	);
 };
 
-export const AddElseButton: ComponentType<AddElseButtonProps> = ({ onClick }) => {
+export const AddItemButton: ComponentType<AddItemButtonProps> = ({ onClick }) => {
 	const labels = useContext(LabelsContext);
 	return (
-		<button type="button" className="btn btn-default" onClick={onClick}>
-			{labels.addElse}
-		</button>
+		<div style={{ marginTop: 8, textAlign: 'left' }}>
+			<button type="button" className="btn btn-default" onClick={onClick}>
+				{labels.addItem}
+			</button>
+		</div>
 	);
 };
 
@@ -364,8 +337,8 @@ const components: Partial<MappingEditorComponents> = {
 	RemoveButton,
 	Reorder,
 	TypeSelector,
-	AddBar,
 	AddElseButton,
+	AddItemButton,
 	SchemaAddBar,
 	Section,
 	SectionHeader

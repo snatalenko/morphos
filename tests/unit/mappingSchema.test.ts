@@ -66,6 +66,20 @@ describe('mappingSchema', () => {
 
 		v.validate(map, schema, { throwError: true });
 
+		map = {
+			foo: {
+				concat: [
+					'bar',
+					{
+						when: 'baz',
+						then: 'baz'
+					}
+				]
+			}
+		};
+
+		v.validate(map, schema, { throwError: true });
+
 		map = [
 			'foo',
 			{

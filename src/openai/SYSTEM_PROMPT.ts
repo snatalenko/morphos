@@ -34,6 +34,8 @@ Conditional mappings:
 - Use { "when": "<condition>", "then": <mapping>, "else": <mapping> } for conditional values.
 - If "when" is false and "else" is omitted, omit the destination field.
 - Example: { "billOfLading": { "when": "shipment.billOfLadingNumber", "then": "shipment.billOfLadingNumber" } }
+- Use { "concat": [<mapping>, ...] } to build arrays from multiple mappings. Omitted conditional branches are skipped; array branch results are flattened.
+- Example: { "bizTransactionList": { "concat": [{ "when": "shipment.asnNumber", "then": { "type": "'desadv'", "bizTransaction": "shipment.asnNumber" } }] } }
 
 Array mappings:
 - For destination arrays derived from source arrays, use:

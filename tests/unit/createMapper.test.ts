@@ -393,6 +393,83 @@ describe('createMapper', () => {
 		});
 	});
 
+	describe('concat', () => {
+
+		it('builds arrays from conditional branches', () => {
+
+			const mapper = createMapper({
+				bizTransactionList: {
+					concat: [
+						{
+							when: 'shipment.purchaseOrderNumber',
+							then: {
+								type: '"po"',
+								bizTransaction: 'shipment.purchaseOrderNumber'
+							}
+						},
+						{
+							when: 'shipment.asnNumber',
+							then: {
+								type: '"desadv"',
+								bizTransaction: 'shipment.asnNumber'
+							}
+						},
+						{
+							when: 'shipment.billOfLadingNumber',
+							then: {
+								type: '"bol"',
+								bizTransaction: 'shipment.billOfLadingNumber'
+							}
+						}
+					]
+				}
+			});
+
+			const result = mapper({
+				shipment: {
+					purchaseOrderNumber: 'PO-1',
+					asnNumber: 'ASN-1'
+				}
+			});
+
+			expect(result).to.eql({
+				bizTransactionList: [
+					{ type: 'po', bizTransaction: 'PO-1' },
+					{ type: 'desadv', bizTransaction: 'ASN-1' }
+				]
+			});
+		});
+
+		it('flattens array branch results', () => {
+
+			const mapper = createMapper({
+				tags: {
+					concat: [
+						'baseTags',
+						{
+							when: 'hazmat',
+							then: '"hazmat"'
+						}
+					]
+				}
+			});
+
+			const result = mapper({
+				baseTags: ['fragile', 'priority'],
+				hazmat: true
+			});
+
+			expect(result).to.eql({
+				tags: ['fragile', 'priority', 'hazmat']
+			});
+		});
+
+		it('throws errors on incorrectly formatted instructions', () => {
+
+			expect(() => createMapper({ concat: 'foo' } as any)).to.throw('Property "concat" is not an array in mapping "{"concat":"foo"}"');
+		});
+	});
+
 	it('maps array from array element index maps', () => {
 
 		const input = {

@@ -5,7 +5,8 @@ import type {
 	ArrayMapping,
 	ObjectInContextMapping,
 	ObjectMapping,
-	ConditionalMapping
+	ConditionalMapping,
+	ConcatMapping
 } from '../mappingTypes.ts';
 import type { MappingSchema, SourceFieldMatch } from './types.ts';
 
@@ -18,12 +19,20 @@ export type ConditionalEntryValue = {
 	then: EntryValue;
 	else?: EntryValue;
 };
-export type EntryValue = ExprEntryValue | ArrayEntryValue | ObjectEntryValue | ConditionalEntryValue;
+export type ConcatEntryValue = { kind: 'concat'; items: EntryValue[] };
+export type EntryValue =
+	ExprEntryValue |
+	ArrayEntryValue |
+	ObjectEntryValue |
+	ConditionalEntryValue |
+	ConcatEntryValue;
 
 export type Entry = {
 	id: string;
 	key: string;
 	value: EntryValue;
+	keyAdvanced?: boolean;
+	template?: boolean;
 };
 
 let idCounter = 0;
@@ -199,6 +208,10 @@ function valueToEntryValue(v: ValueMap): EntryValue {
 				else: cm.else === undefined ? undefined : valueToEntryValue(cm.else)
 			};
 		}
+		if ('concat' in v && Object.keys(v).length === 1) {
+			const cm = v as ConcatMapping;
+			return { kind: 'concat', items: cm.concat.map(item => valueToEntryValue(item)) };
+		}
 		if ('forEach' in v && 'map' in v) {
 			const am = v as ArrayMapping;
 			return { kind: 'array', forEach: am.forEach, entries: propsToEntries(am.map) };
@@ -245,10 +258,12 @@ export function entriesToProps(entries: Entry[]): PropertiesMap {
 	return out;
 }
 
-export function convertEntryValue(prev: EntryValue, to: 'expr' | 'array' | 'object' | 'conditional'): EntryValue {
+export function convertEntryValue(prev: EntryValue, to: 'expr' | 'array' | 'object' | 'conditional' | 'concat'): EntryValue {
 	if (to === 'expr') {
 		if (prev.kind === 'expr')
 			return prev;
+		if (prev.kind === 'concat')
+			return prev.items[0] ? convertEntryValue(prev.items[0], to) : { kind: 'expr', expr: '' };
 		if (prev.kind === 'array')
 			return { kind: 'expr', expr: prev.forEach };
 		if (prev.kind === 'conditional') {
@@ -264,6 +279,8 @@ export function convertEntryValue(prev: EntryValue, to: 'expr' | 'array' | 'obje
 	if (to === 'array') {
 		if (prev.kind === 'array')
 			return prev;
+		if (prev.kind === 'concat')
+			return prev.items[0] ? convertEntryValue(prev.items[0], to) : { kind: 'array', forEach: '', entries: [] };
 		if (prev.kind === 'object')
 			return { kind: 'array', forEach: prev.from, entries: prev.entries };
 		if (prev.kind === 'conditional') {
@@ -283,8 +300,17 @@ export function convertEntryValue(prev: EntryValue, to: 'expr' | 'array' | 'obje
 		return { kind: 'conditional', when: '', then: prev };
 	}
 
+	if (to === 'concat') {
+		if (prev.kind === 'concat')
+			return prev;
+
+		return { kind: 'concat', items: [prev] };
+	}
+
 	if (prev.kind === 'object')
 		return prev;
+	if (prev.kind === 'concat')
+		return prev.items[0] ? convertEntryValue(prev.items[0], to) : { kind: 'object', from: '', entries: [] };
 	if (prev.kind === 'array')
 		return { kind: 'object', from: prev.forEach, entries: prev.entries };
 	if (prev.kind === 'conditional') {
@@ -321,6 +347,9 @@ function entryValueToValue(ev: EntryValue): ValueMap {
 
 		return result;
 	}
+
+	if (ev.kind === 'concat')
+		return { concat: ev.items.map(item => entryValueToValue(item)) };
 
 	return assertNever(ev);
 }

@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useRef } from 'react';
 import { ComponentsContext } from './ComponentsContext.ts';
 import { LabelsContext } from './LabelsContext.ts';
 import {
@@ -16,13 +16,26 @@ import {
 } from './entries.ts';
 import type {
 	AddKind,
+	FieldOption,
 	MappingEditorComponents,
 	MappingSchema,
-	SchemaFieldOption,
 	SourceFieldMatch
 } from './types.ts';
 
 const WILDCARD_KEY = '*';
+
+function createEntryValue(kind: AddKind): EntryValue {
+	if (kind === 'array')
+		return { kind: 'array', forEach: '', entries: [] };
+	if (kind === 'object')
+		return { kind: 'object', from: '', entries: [] };
+	if (kind === 'conditional')
+		return { kind: 'conditional', when: '', then: { kind: 'expr', expr: '' } };
+	if (kind === 'concat')
+		return { kind: 'concat', items: [] };
+
+	return { kind: 'expr', expr: '' };
+}
 
 export function EntriesEditor({
 	entries,
@@ -39,6 +52,7 @@ export function EntriesEditor({
 }) {
 	const C = useContext(ComponentsContext);
 	const labels = useContext(LabelsContext);
+	const draftEntryId = useRef(genId());
 
 	const updateEntry = (id: string, patch: Partial<Entry>) => {
 		onChange(entries.map(e => (e.id === id ? { ...e, ...patch } : e)));
@@ -55,18 +69,18 @@ export function EntriesEditor({
 		onChange(next);
 	};
 
-	const addEntry = (kind: AddKind) => {
-		let value: EntryValue;
-		if (kind === 'array')
-			value = { kind: 'array', forEach: '', entries: [] };
-		else if (kind === 'object')
-			value = { kind: 'object', from: '', entries: [] };
-		else if (kind === 'conditional')
-			value = { kind: 'conditional', when: '', then: { kind: 'expr', expr: '' } };
-		else
-			value = { kind: 'expr', expr: '' };
+	const createEntryForKey = (key: string, keyAdvanced = false, id = genId()): Entry => {
+		const sub = key === WILDCARD_KEY ? schema : getPropertySchema(schema, key);
+		const value = sub ? createEntryValueForSchema(sub) : createEntryValue('expr');
+		return { id, key, value, keyAdvanced };
+	};
 
-		onChange([...entries, { id: genId(), key: '', value }]);
+	const addEntry = (kind: AddKind, key = '', keyAdvanced = false, id = genId()) => {
+		onChange([...entries, { id, key, value: createEntryValue(kind), keyAdvanced }]);
+	};
+
+	const addEntryForKey = (key: string, keyAdvanced = false, id = genId()) => {
+		onChange([...entries, createEntryForKey(key, keyAdvanced, id)]);
 	};
 
 	const requiredSet = new Set(schema?.required ?? []);
@@ -75,17 +89,21 @@ export function EntriesEditor({
 	const currentValueMapped = mappedKeys.has(WILDCARD_KEY);
 	const canMapCurrentValue = entries.length <= 1;
 
-	const availableForEntry = (entry: Entry): SchemaFieldOption[] => {
-		const result: SchemaFieldOption[] = [];
+	const availableForEntry = (entry: Entry): FieldOption[] => {
+		const result: FieldOption[] = [];
+
+		if (entry.key === WILDCARD_KEY || (!currentValueMapped && canMapCurrentValue))
+			result.push({ value: WILDCARD_KEY, label: labels.currentValue });
+
 		for (const name of schemaPropNames) {
 			if (name !== entry.key && mappedKeys.has(name))
 				continue;
 
-			const sub = getPropertySchema(schema, name);
-			if (!sub)
+			if (!getPropertySchema(schema, name))
 				continue;
 
-			result.push({ name, schema: sub, required: requiredSet.has(name) });
+			const required = requiredSet.has(name);
+			result.push({ value: name, label: name + (required ? ' *' : '') });
 		}
 
 		return result;
@@ -93,6 +111,16 @@ export function EntriesEditor({
 
 	const updateEntryKey = (id: string, newKey: string) => {
 		const newSub = newKey === WILDCARD_KEY ? schema : getPropertySchema(schema, newKey);
+		if (id === draftEntryId.current) {
+			if (newKey === '')
+				return;
+
+			const nextId = draftEntryId.current;
+			draftEntryId.current = genId();
+			addEntryForKey(newKey, !newSub, nextId);
+			return;
+		}
+
 		onChange(entries.map(e => {
 			if (e.id !== id)
 				return e;
@@ -102,17 +130,33 @@ export function EntriesEditor({
 				return {
 					...e,
 					key: newKey,
-					value: e.value.kind === expected.kind ? e.value : expected
+					value: e.value.kind === expected.kind ? e.value : expected,
+					keyAdvanced: false
 				};
 			}
 
-			return { ...e, key: newKey };
+			return { ...e, key: newKey, keyAdvanced: true };
 		}));
 	};
 
+	const promoteTemplateToAdvanced = () => {
+		const nextId = draftEntryId.current;
+		draftEntryId.current = genId();
+		addEntry('expr', '', true, nextId);
+	};
+
+	const templateEntry: Entry = {
+		id: draftEntryId.current,
+		key: '',
+		value: createEntryValue('expr'),
+		template: true
+	};
+	const renderedEntries = currentValueMapped ? entries : [...entries, templateEntry];
+
 	return (
 		<C.Container>
-			{entries.map((entry, index) => {
+			{renderedEntries.map((entry, index) => {
+				const isTemplate = entry.template === true;
 				const subSchema = entry.key === WILDCARD_KEY
 					? schema
 					: getPropertySchema(schema, entry.key);
@@ -121,19 +165,36 @@ export function EntriesEditor({
 					<C.SuggestedKeyInput
 						value={entry.key}
 						onChange={k => updateEntryKey(entry.id, k)}
-						available={availableForEntry(entry)}
-						placeholder={labels.keyPlaceholder}
-						allowCurrentValue={
-							entry.key === WILDCARD_KEY || (!currentValueMapped && canMapCurrentValue)
-						}
+						options={availableForEntry(entry)}
+						placeholder={isTemplate ? labels.newField : labels.keyPlaceholder}
+						defaultAdvanced={!isTemplate && entry.keyAdvanced}
+						onAdvanced={isTemplate ? promoteTemplateToAdvanced : undefined}
 					/>
 				) : (
 					<C.KeyInput
 						value={entry.key}
-						onChange={k => updateEntry(entry.id, { key: k })}
+						onChange={k => {
+							if (isTemplate && k === '')
+								return;
+
+							updateEntryKey(entry.id, k);
+						}}
 						placeholder={labels.keyPlaceholder}
 					/>
 				);
+
+				if (isTemplate) {
+					return (
+						<C.Row
+							key={entry.id}
+							keyInput={keyCell}
+							typeSelector={null}
+							value={null}
+							remove={null}
+							reorder={null}
+						/>
+					);
+				}
 
 				const valueView = (
 					<ValueView
@@ -207,7 +268,6 @@ export function EntriesEditor({
 					/>
 				);
 			})}
-			{currentValueMapped ? null : <C.AddBar onAdd={addEntry} />}
 		</C.Container>
 	);
 }
@@ -296,17 +356,16 @@ function renderExpressionInput(
 	suggestions: SourceFieldMatch[],
 	placeholder: string,
 	forceSuggested = false,
-	emptyLabel?: string,
 	defaultAdvanced?: boolean
 ) {
 	if (suggestions.length > 0 || forceSuggested) {
+		const options: FieldOption[] = suggestions.map(s => ({ value: s.path, label: s.label }));
 		return (
 			<C.SuggestedValueInput
 				value={value}
 				onChange={onChange}
-				suggestions={suggestions}
+				options={options}
 				placeholder={placeholder}
-				emptyLabel={emptyLabel}
 				defaultAdvanced={defaultAdvanced}
 			/>
 		);
@@ -339,6 +398,7 @@ function ConditionalBranch({
 	sourceSuggestions?: SourceFieldMatch[];
 }) {
 	const C = useContext(ComponentsContext);
+	const isSection = value.kind !== 'expr';
 	const columns = onRemove
 		? '4rem 9rem minmax(0, 1fr) auto'
 		: '4rem 9rem minmax(0, 1fr)';
@@ -366,8 +426,104 @@ function ConditionalBranch({
 				schema={schema}
 				sourceSchema={sourceSchema}
 				sourceSuggestions={sourceSuggestions}
+				part={isSection ? 'control' : 'full'}
 			/>
 			{onRemove ? <C.RemoveButton onClick={onRemove} /> : null}
+			{isSection && (
+				<div style={{ gridColumn: '1 / -1' }}>
+					<ValueView
+						name=""
+						value={value}
+						onChange={onChange}
+						schema={schema}
+						sourceSchema={sourceSchema}
+						sourceSuggestions={sourceSuggestions}
+						part="body"
+					/>
+				</div>
+			)}
+		</div>
+	);
+}
+
+function ConcatItemView({
+	index,
+	value,
+	onChange,
+	onRemove,
+	canMoveUp,
+	canMoveDown,
+	onMoveUp,
+	onMoveDown,
+	schema,
+	sourceSchema,
+	sourceSuggestions
+}: {
+	index: number;
+	value: EntryValue;
+	onChange: (next: EntryValue) => void;
+	onRemove: () => void;
+	canMoveUp: boolean;
+	canMoveDown: boolean;
+	onMoveUp: () => void;
+	onMoveDown: () => void;
+	schema?: MappingSchema;
+	sourceSchema?: MappingSchema;
+	sourceSuggestions?: SourceFieldMatch[];
+}) {
+	const C = useContext(ComponentsContext);
+	const labels = useContext(LabelsContext);
+	const isSection = value.kind !== 'expr';
+
+	return (
+		<div
+			className="dm-mapping-concat-item"
+			style={{
+				display: 'grid',
+				gridTemplateColumns: '4rem 9rem minmax(0, 1fr) auto',
+				gap: '0.5rem',
+				alignItems: 'start',
+				marginBottom: '0.5rem'
+			}}
+		>
+			<label className="dm-mapping-label" style={{ paddingTop: '0.35rem' }}>
+				{labels.concatItem} {index + 1}
+			</label>
+			<C.TypeSelector
+				kind={value.kind}
+				onChange={to => onChange(convertEntryValue(value, to))}
+			/>
+			<ValueView
+				name=""
+				value={value}
+				onChange={onChange}
+				schema={schema}
+				sourceSchema={sourceSchema}
+				sourceSuggestions={sourceSuggestions}
+				part={isSection ? 'control' : 'full'}
+			/>
+			<span className="dm-mapping-actions">
+				<C.Reorder
+					canMoveUp={canMoveUp}
+					canMoveDown={canMoveDown}
+					onMoveUp={onMoveUp}
+					onMoveDown={onMoveDown}
+				/>
+				<C.RemoveButton onClick={onRemove} />
+			</span>
+			{isSection && (
+				<div style={{ gridColumn: '1 / -1' }}>
+					<ValueView
+						name=""
+						value={value}
+						onChange={onChange}
+						schema={schema}
+						sourceSchema={sourceSchema}
+						sourceSuggestions={sourceSuggestions}
+						part="body"
+					/>
+				</div>
+			)}
 		</div>
 	);
 }
@@ -443,7 +599,8 @@ function ValueView({
 			forEach => onChange({ ...value, forEach }),
 			forEachSuggestions,
 			labels.expressionPlaceholder,
-			!!sourceSchema
+			!!sourceSchema,
+			false
 		);
 		const body = (
 			<EntriesEditor
@@ -488,14 +645,17 @@ function ValueView({
 			? resolved
 			: undefined;
 		const nestedSourceSchema = extendSourceSchema(resolvedFrom, sourceSchema, value.from);
+		const fromWithRoot: SourceFieldMatch[] = [
+			{ path: '', schema: {} },
+			...fromSuggestions
+		];
 		const valueInput = renderExpressionInput(
 			C,
 			value.from,
 			from => onChange({ ...value, from }),
-			fromSuggestions,
-			'',
-			!!sourceSchema,
-			''
+			fromWithRoot,
+			labels.expressionPlaceholder,
+			!!sourceSchema
 		);
 		const body = (
 			<EntriesEditor
@@ -542,7 +702,6 @@ function ValueView({
 			whenSuggestions,
 			labels.expressionPlaceholder,
 			!!sourceSchema,
-			undefined,
 			true
 		);
 		const body = (
@@ -556,7 +715,7 @@ function ValueView({
 					sourceSuggestions={sourceSuggestions}
 				/>
 				{value.else === undefined ? (
-					<div className="dm-mapping-conditional-add-else" style={{ textAlign: 'right' }}>
+					<div className="dm-mapping-conditional-add-else">
 						<C.AddElseButton onClick={addElse} />
 					</div>
 				) : (
@@ -589,6 +748,55 @@ function ValueView({
 				body={body}
 			/>
 		);
+	}
+
+	if (value.kind === 'concat') {
+		const updateItem = (index: number, nextValue: EntryValue) => {
+			const next = value.items.slice();
+			next[index] = nextValue;
+			onChange({ ...value, items: next });
+		};
+		const removeItem = (index: number) => {
+			onChange({ ...value, items: value.items.filter((_, i) => i !== index) });
+		};
+		const moveItem = (index: number, direction: -1 | 1) => {
+			const target = index + direction;
+			if (target < 0 || target >= value.items.length)
+				return;
+
+			const next = value.items.slice();
+			const [moved] = next.splice(index, 1);
+			next.splice(target, 0, moved);
+			onChange({ ...value, items: next });
+		};
+		const addItem = () => {
+			onChange({ ...value, items: [...value.items, createEntryValue('expr')] });
+		};
+		const body = (
+			<>
+				{value.items.map((item, index) => (
+					<ConcatItemView
+						key={index}
+						index={index}
+						value={item}
+						onChange={nextValue => updateItem(index, nextValue)}
+						onRemove={() => removeItem(index)}
+						canMoveUp={index > 0}
+						canMoveDown={index < value.items.length - 1}
+						onMoveUp={() => moveItem(index, -1)}
+						onMoveDown={() => moveItem(index, 1)}
+						schema={schema}
+						sourceSchema={sourceSchema}
+						sourceSuggestions={sourceSuggestions}
+					/>
+				))}
+				<C.AddItemButton onClick={addItem} />
+			</>
+		);
+
+		if (part === 'control')
+			return null;
+		return <C.Section body={body} />;
 	}
 
 	throw new Error(`Unknown mapping value kind: ${JSON.stringify(value)}`);

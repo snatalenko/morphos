@@ -100,6 +100,10 @@ pattern used for values. When a mapping level has no sibling fields, it also exp
 `Current value` option, which writes the wildcard key `'*'` and maps the value of the current
 mapping level instead of one named property.
 
+Each mapping level ends with a blank field selector. Selecting a field, choosing `Advanced…`,
+or typing a custom key turns that line into a regular mapping row and adds a new blank selector
+underneath it.
+
 ## Source schema
 
 Passing `sourceSchema` populates dropdowns for value expressions, `forEach`, `from`, and
@@ -143,8 +147,8 @@ Built-in defaults render bare HTML with `dm-mapping-*` class hooks for styling.
 | Name                  | Purpose                                                                                  |
 |-----------------------|------------------------------------------------------------------------------------------|
 | `Container`           | Wraps the list of rows in a level (root or nested).                                      |
-| `Row`                 | Renders a simple key→expression row. Receives `keyInput`, `typeSelector`, `value`, `reorder`, `remove` slots. |
-| `SectionRow`          | Renders a key→section row (List / Object / Conditional). Receives `value` for the row control and `section` for the nested editor body. |
+| `Row`                 | Renders a key→expression row or blank field selector. Receives `keyInput`, `typeSelector`, `value`, `reorder`, `remove` slots. |
+| `SectionRow`          | Renders a key→section row (List / Object / Conditional / Concat). Receives `value` for the row control and `section` for the nested editor body. |
 | `KeyInput`            | Free-form key text input.                                                                |
 | `KeyLabel`            | Read-only key display when bound to a schema field.                                      |
 | `SuggestedKeyInput`   | Schema-aware key dropdown + Advanced… fallback (used when destination schema is set).    |
@@ -152,9 +156,9 @@ Built-in defaults render bare HTML with `dm-mapping-*` class hooks for styling.
 | `SuggestedValueInput` | Source-schema-aware value dropdown + Advanced… fallback.                                  |
 | `RemoveButton`        | Per-row delete button.                                                                   |
 | `Reorder`             | Up/down buttons for moving a row within its parent list.                                 |
-| `TypeSelector`        | Per-row mapping-kind selector (Value / List / Object / Conditional).                     |
-| `AddBar`              | Add controls (Value / List / Object / Conditional).                                      |
+| `TypeSelector`        | Per-row mapping-kind selector (Value / List / Object / Conditional / Concat).            |
 | `AddElseButton`       | Adds the optional fallback branch inside a Conditional mapping.                           |
+| `AddItemButton`       | Adds a new Value item to a Concat mapping.                                                |
 | `SchemaAddBar`        | Legacy schema-fields dropdown (no longer rendered by default; kept for compatibility).    |
 | `Section`             | Wraps a section's optional `header` + `body`.                                            |
 | `SectionHeader`       | Renders the `forEach`, optional `from`, or `when` label next to its value input.          |
@@ -191,7 +195,7 @@ import { defaultComponents, MappingEditor } from 'declarative-mapper/react';
 <MappingEditor
     components={{
         ...defaultComponents,
-        AddBar: MyFancyAddBar
+        AddItemButton: MyFancyAddItemButton
     }}
 />
 ```
@@ -208,10 +212,9 @@ override any subset — the rest fall back to defaults.
         array: 'Liste',
         object: 'Objekt',
         conditional: 'Wenn / sonst',
-        addField: '+ Feld',
-        addArray: '+ Liste',
-        addObject: '+ Objekt',
-        addConditional: '+ Wenn / sonst',
+        concat: 'Verketten',
+        addItem: 'Element hinzufügen',
+        newField: 'Neues Feld',
         selectPlaceholder: '— auswählen —',
         advanced: 'Erweitert…',
         useSuggestions: 'Vorschläge verwenden',
@@ -222,6 +225,7 @@ override any subset — the rest fall back to defaults.
         when: 'wenn',
         then: 'dann',
         else: 'sonst',
+        concatItem: 'Element',
         addElse: '+ sonst',
         keyPlaceholder: 'Schlüssel',
         expressionPlaceholder: 'JS-Ausdruck',
@@ -240,11 +244,10 @@ override any subset — the rest fall back to defaults.
 | `array`                   | `List`               | Type-selector option for `array` kind.           |
 | `object`                  | `Object`             | Type-selector option for `object` kind.          |
 | `conditional`             | `Conditional`        | Type-selector option for conditional kind.       |
-| `addField`                | `+ Value`            | Add-bar button.                                  |
-| `addArray`                | `+ List`             | Add-bar button.                                  |
-| `addObject`               | `+ Object`           | Add-bar button.                                  |
-| `addConditional`          | `+ Conditional`      | Add-bar button.                                  |
+| `concat`                  | `Concat`             | Type-selector option for concat kind.            |
+| `addItem`                 | `Add Item`           | Add button in Concat mappings.                   |
 | `addSchemaField`          | `+ Add field…`       | Legacy `SchemaAddBar` placeholder.               |
+| `newField`                | `New Field`          | Blank custom-field input placeholder.            |
 | `selectPlaceholder`       | `— select —`         | Placeholder or empty option in dropdowns.        |
 | `advanced`                | `Advanced…`          | Switch-to-input option in dropdowns.             |
 | `useSuggestions`          | `Use suggestions`    | Back-button aria/title on value inputs.          |
@@ -255,6 +258,7 @@ override any subset — the rest fall back to defaults.
 | `when`                    | `when`               | Conditional section header label.                |
 | `then`                    | `then`               | Conditional truthy branch label.                 |
 | `else`                    | `else`               | Conditional fallback branch label.               |
+| `concatItem`              | `item`               | Concat branch row label.                         |
 | `addElse`                 | `+ else`             | Add fallback branch button.                      |
 | `keyPlaceholder`          | `key`                | Free-form key input placeholder.                 |
 | `expressionPlaceholder`   | `js expression`      | Value input placeholder.                         |
@@ -289,12 +293,12 @@ When writing your own components, read labels from the exported `LabelsContext`:
 
 ```tsx
 import { useContext } from 'react';
-import { LabelsContext, type AddBarProps } from 'declarative-mapper/react';
+import { LabelsContext, type AddItemButtonProps } from 'declarative-mapper/react';
 
-const MyAddBar = ({ onAdd }: AddBarProps) => {
+const MyAddItemButton = ({ onClick }: AddItemButtonProps) => {
     const labels = useContext(LabelsContext);
     return (
-        <button onClick={() => onAdd('expr')}>{labels.addField}</button>
+        <button onClick={onClick}>{labels.addItem}</button>
     );
 };
 ```

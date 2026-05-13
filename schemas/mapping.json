@@ -56,6 +56,9 @@
                     "$ref": "#/definitions/ConditionalMapping"
                 },
                 {
+                    "$ref": "#/definitions/ConcatMapping"
+                },
+                {
                     "$ref": "#/definitions/TupleMapping"
                 },
                 {
@@ -84,7 +87,7 @@
             "type": "object",
             "minProperties": 1,
             "patternProperties": {
-                "^(?!(\\*)|(map)|(forEach)|(from)|(when)|(then)|(else)).+$": {
+                "^(?!(\\*)|(map)|(forEach)|(from)|(when)|(then)|(else)|(concat)).+$": {
                     "$ref": "#/definitions/AnyMapping"
                 }
             },
@@ -205,6 +208,36 @@
                 {
                     "when": "shipment.billOfLadingNumber",
                     "then": "shipment.billOfLadingNumber"
+                }
+            ]
+        },
+        "ConcatMapping": {
+            "title": "Concat Mapping",
+            "description": "Builds an array by evaluating a list of mappings, skipping omitted conditional branches, and flattening array results.",
+            "type": "object",
+            "properties": {
+                "concat": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AnyMapping"
+                    }
+                }
+            },
+            "required": [
+                "concat"
+            ],
+            "additionalProperties": false,
+            "examples": [
+                {
+                    "concat": [
+                        {
+                            "when": "shipment.purchaseOrderNumber",
+                            "then": {
+                                "type": "'po'",
+                                "bizTransaction": "shipment.purchaseOrderNumber"
+                            }
+                        }
+                    ]
                 }
             ]
         }

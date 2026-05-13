@@ -1,4 +1,4 @@
-import { useContext, useState, type ComponentType } from 'react';
+import { useContext, useEffect, useRef, useState, type ComponentType } from 'react';
 import { LabelsContext } from './LabelsContext.ts';
 import type {
 	ContainerProps,
@@ -11,14 +11,15 @@ import type {
 	SuggestedValueInputProps,
 	RemoveButtonProps,
 	ReorderProps,
-	AddBarProps,
 	AddElseButtonProps,
+	AddItemButtonProps,
 	SchemaAddBarProps,
 	SectionProps,
 	SectionHeaderProps,
 	TypeSelectorProps,
 	MappingEditorComponents,
-	AddKind
+	AddKind,
+	FieldOption
 } from './types.ts';
 
 export const DefaultContainer: ComponentType<ContainerProps> = ({ children }) => (
@@ -30,10 +31,12 @@ export const DefaultRow: ComponentType<RowProps> = ({ keyInput, typeSelector, va
 		{keyInput}
 		{typeSelector}
 		{value}
-		<span className="dm-mapping-actions">
-			{reorder}
-			{remove}
-		</span>
+		{reorder || remove ? (
+			<span className="dm-mapping-actions">
+				{reorder}
+				{remove}
+			</span>
+		) : null}
 	</div>
 );
 
@@ -78,69 +81,120 @@ export const DefaultKeyLabel: ComponentType<KeyLabelProps> = ({ name, schema, re
 	);
 };
 
-const KEY_ADVANCED_SENTINEL = '__dm_key_advanced__';
+const DM_ADVANCED_SENTINEL = '__dm_advanced__';
 
-export const DefaultSuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = ({
+function DefaultSuggestedInput({
 	value,
 	onChange,
-	available,
+	options,
+	inputClassName,
+	wrapperClassName,
 	placeholder,
-	allowCurrentValue
-}) => {
+	defaultAdvanced,
+	onAdvanced
+}: {
+	value: string;
+	onChange: (next: string) => void;
+	options: FieldOption[];
+	inputClassName: string;
+	wrapperClassName: string;
+	placeholder?: string;
+	defaultAdvanced?: boolean;
+	onAdvanced?: () => void;
+}) {
 	const labels = useContext(LabelsContext);
-	const matched = value === ''
-		|| available.some(f => f.name === value)
-		|| (allowCurrentValue && value === '*');
-	const [advanced, setAdvanced] = useState(!matched);
+	const hasOptions = options.length > 0;
+	const matched = value === '' || options.some(o => o.value === value);
+	const [advanced, setAdvanced] = useState(!!defaultAdvanced || !matched);
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	useEffect(() => {
+		if (advanced) {
+			inputRef.current?.focus();
+			inputRef.current?.select();
+		}
+	}, [advanced]);
+
+	if (!hasOptions) {
+		return (
+			<input
+				ref={inputRef}
+				className={inputClassName}
+				value={value}
+				onChange={e => onChange(e.target.value)}
+				placeholder={placeholder}
+			/>
+		);
+	}
 
 	if (advanced) {
 		return (
-			<span className="dm-mapping-key-advanced">
+			<span className={wrapperClassName}>
 				<input
-					className="dm-mapping-key"
+					ref={inputRef}
+					className={inputClassName}
 					value={value}
 					onChange={e => onChange(e.target.value)}
 					placeholder={placeholder}
 				/>
-				{(available.length > 0 || allowCurrentValue) && (
-					<button
-						type="button"
-						className="dm-mapping-key-back"
-						onClick={() => setAdvanced(false)}
-						aria-label={labels.useSchemaFields}
-						title={labels.useSchemaFields}
-					>
-						{labels.useSuggestionsSymbol}
-					</button>
-				)}
+				<button
+					type="button"
+					className="dm-mapping-key-back"
+					onClick={() => setAdvanced(false)}
+					aria-label={labels.useSchemaFields}
+					title={labels.useSchemaFields}
+				>
+					{labels.useSuggestionsSymbol}
+				</button>
 			</span>
 		);
 	}
 
 	return (
 		<select
-			className="dm-mapping-key"
+			className={inputClassName}
 			value={matched ? value : ''}
 			onChange={e => {
 				const v = e.target.value;
-				if (v === KEY_ADVANCED_SENTINEL) {
+				if (v === DM_ADVANCED_SENTINEL) {
 					setAdvanced(true);
+					if (onAdvanced)
+						onAdvanced();
 					return;
 				}
 				onChange(v);
 			}}
 		>
-			<option value="" disabled>{labels.selectPlaceholder}</option>
-			{allowCurrentValue && <option value="*">{labels.currentValue}</option>}
-			{available.map(f => (
-				<option key={f.name} value={f.name}>
-					{f.name}{f.required ? ' *' : ''}
-				</option>
+			{!options.some(o => o.value === '') && (
+				<option value="" disabled>{labels.selectPlaceholder}</option>
+			)}
+			{options.map(o => (
+				<option key={o.value} value={o.value}>{o.label ?? o.value}</option>
 			))}
-			<option value={KEY_ADVANCED_SENTINEL}>{labels.advanced}</option>
+			<option value={DM_ADVANCED_SENTINEL}>{labels.advanced}</option>
 		</select>
 	);
-};
+}
+
+export const DefaultSuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = ({
+	value,
+	onChange,
+	options,
+	placeholder,
+	defaultAdvanced,
+	onAdvanced
+}) => (
+	<DefaultSuggestedInput
+		value={value}
+		onChange={onChange}
+		options={options}
+		inputClassName="dm-mapping-key"
+		wrapperClassName="dm-mapping-key-advanced"
+		placeholder={placeholder}
+		defaultAdvanced={defaultAdvanced}
+		onAdvanced={onAdvanced}
+	/>
+);
 
 export const DefaultValueInput: ComponentType<ValueInputProps> = ({ value, onChange, placeholder }) => (
 	<input
@@ -151,65 +205,23 @@ export const DefaultValueInput: ComponentType<ValueInputProps> = ({ value, onCha
 	/>
 );
 
-const ADVANCED_SENTINEL = '__dm_advanced__';
-
 export const DefaultSuggestedValueInput: ComponentType<SuggestedValueInputProps> = ({
 	value,
 	onChange,
+	options,
 	placeholder,
-	emptyLabel,
-	defaultAdvanced,
-	suggestions
-}) => {
-	const labels = useContext(LabelsContext);
-	const isMatched = value === '' || suggestions.some(s => s.path === value);
-	const [advanced, setAdvanced] = useState(!!defaultAdvanced || !isMatched);
-
-	if (advanced) {
-		return (
-			<span className="dm-mapping-suggested-advanced">
-				<input
-					className="dm-mapping-value"
-					value={value}
-					onChange={e => onChange(e.target.value)}
-					placeholder={placeholder}
-				/>
-				{suggestions.length > 0 && (
-					<button
-						type="button"
-						className="dm-mapping-suggested-back"
-						onClick={() => setAdvanced(false)}
-						aria-label={labels.useSuggestions}
-						title={labels.useSuggestions}
-					>
-						{labels.useSuggestionsSymbol}
-					</button>
-				)}
-			</span>
-		);
-	}
-
-	return (
-		<select
-			className="dm-mapping-value"
-			value={isMatched ? value : ''}
-			onChange={e => {
-				const v = e.target.value;
-				if (v === ADVANCED_SENTINEL) {
-					setAdvanced(true);
-					return;
-				}
-				onChange(v);
-			}}
-		>
-			<option value="">{emptyLabel ?? labels.selectPlaceholder}</option>
-			{suggestions.map(s => (
-				<option key={s.path} value={s.path}>{s.path}</option>
-			))}
-			<option value={ADVANCED_SENTINEL}>{labels.advanced}</option>
-		</select>
-	);
-};
+	defaultAdvanced
+}) => (
+	<DefaultSuggestedInput
+		value={value}
+		onChange={onChange}
+		options={options}
+		inputClassName="dm-mapping-value"
+		wrapperClassName="dm-mapping-suggested-advanced"
+		placeholder={placeholder}
+		defaultAdvanced={defaultAdvanced}
+	/>
+);
 
 export const DefaultRemoveButton: ComponentType<RemoveButtonProps> = ({ onClick }) => {
 	const labels = useContext(LabelsContext);
@@ -246,23 +258,20 @@ export const DefaultReorder: ComponentType<ReorderProps> = ({ canMoveUp, canMove
 	);
 };
 
-export const DefaultAddBar: ComponentType<AddBarProps> = ({ onAdd }) => {
-	const labels = useContext(LabelsContext);
-	return (
-		<div className="dm-mapping-add">
-			<button type="button" onClick={() => onAdd('expr')}>{labels.addField}</button>
-			<button type="button" onClick={() => onAdd('array')}>{labels.addArray}</button>
-			<button type="button" onClick={() => onAdd('object')}>{labels.addObject}</button>
-			<button type="button" onClick={() => onAdd('conditional')}>{labels.addConditional}</button>
-		</div>
-	);
-};
-
 export const DefaultAddElseButton: ComponentType<AddElseButtonProps> = ({ onClick }) => {
 	const labels = useContext(LabelsContext);
 	return (
 		<button type="button" className="dm-mapping-add-else" onClick={onClick}>
 			{labels.addElse}
+		</button>
+	);
+};
+
+export const DefaultAddItemButton: ComponentType<AddItemButtonProps> = ({ onClick }) => {
+	const labels = useContext(LabelsContext);
+	return (
+		<button type="button" className="dm-mapping-add-item" onClick={onClick}>
+			{labels.addItem}
 		</button>
 	);
 };
@@ -322,6 +331,7 @@ export const DefaultTypeSelector: ComponentType<TypeSelectorProps> = ({ kind, on
 			<option value="array">{labels.array}</option>
 			<option value="object">{labels.object}</option>
 			<option value="conditional">{labels.conditional}</option>
+			<option value="concat">{labels.concat}</option>
 		</select>
 	);
 };
@@ -353,8 +363,8 @@ export const defaultComponents: MappingEditorComponents = {
 	RemoveButton: DefaultRemoveButton,
 	Reorder: DefaultReorder,
 	TypeSelector: DefaultTypeSelector,
-	AddBar: DefaultAddBar,
 	AddElseButton: DefaultAddElseButton,
+	AddItemButton: DefaultAddItemButton,
 	SchemaAddBar: DefaultSchemaAddBar,
 	Section: DefaultSection,
 	SectionHeader: DefaultSectionHeader
