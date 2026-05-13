@@ -89,6 +89,10 @@ export interface RemoveButtonProps {
 	onClick: () => void;
 }
 
+export interface InputResetButtonProps {
+	onClick: () => void;
+}
+
 export interface ReorderProps {
 	canMoveUp: boolean;
 	canMoveDown: boolean;
@@ -165,6 +169,7 @@ export interface MappingEditorComponents {
 	ValueInput: ComponentType<ValueInputProps>;
 	SuggestedValueInput: ComponentType<SuggestedValueInputProps>;
 	RemoveButton: ComponentType<RemoveButtonProps>;
+	InputResetButton: ComponentType<InputResetButtonProps>;
 	Reorder: ComponentType<ReorderProps>;
 	TypeSelector: ComponentType<TypeSelectorProps>;
 	AddElseButton: ComponentType<AddElseButtonProps>;

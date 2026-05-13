@@ -22,7 +22,8 @@ export const gs1TransformationEvent: DocumentSchemaSample = {
 			...commonEventProperties(),
 			type: {
 				type: 'string',
-				description: 'Constant event type value: TransformationEvent'
+				description: 'Constant event type value: TransformationEvent',
+				enum: ['TransformationEvent']
 			},
 			inputEPCList: epcList('Input EPC instance identifiers consumed or used by the transformation'),
 			inputQuantityList: quantityList('Input class-level quantities consumed or used by the transformation'),

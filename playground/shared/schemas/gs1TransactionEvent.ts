@@ -22,7 +22,8 @@ export const gs1TransactionEvent: DocumentSchemaSample = {
 			...commonEventProperties(),
 			type: {
 				type: 'string',
-				description: 'Constant event type value: TransactionEvent'
+				description: 'Constant event type value: TransactionEvent',
+				enum: ['TransactionEvent']
 			},
 			parentID: {
 				...epcUri,
@@ -32,7 +33,8 @@ export const gs1TransactionEvent: DocumentSchemaSample = {
 			quantityList: quantityList('Class-level quantities associated with the business transaction'),
 			action: {
 				type: 'string',
-				description: 'Transaction event action: ADD, OBSERVE, or DELETE'
+				description: 'Transaction event action: ADD, OBSERVE, or DELETE',
+				enum: ['ADD', 'OBSERVE', 'DELETE']
 			},
 			...commonWhyWhereHowProperties(),
 			bizTransactionList: {

@@ -2,6 +2,7 @@ import { StrictMode, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
 	MappingEditor,
+	schemaToInitialMapping,
 	type MappingEditorHandle,
 	type MappingEditorComponents
 } from '../src/react/index.ts';
@@ -15,6 +16,11 @@ import { documentSchemaSamples } from './shared/schemas/index.ts';
 import type { DocumentSchemaSample } from './shared/schemas/index.ts';
 
 type EditorType = 'default' | 'bs34' | 'bs53' | 'json';
+
+function isEmptyMapping(m: RootMapping): boolean {
+	return typeof m === 'object' && m !== null && !Array.isArray(m) && Object.keys(m).length === 0;
+}
+
 
 const BS34_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css';
 const BS53_CSS = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css';
@@ -114,12 +120,16 @@ function App() {
 	const [mappingVersion, setMappingVersion] = useState(0);
 
 	const [apiKey, setApiKey] = useState('');
+	const [aiModel, setAiModel] = useState('gpt-4.1');
+	const [aiInstructions, setAiInstructions] = useState('');
 	const [loading, setLoading] = useState(false);
 	const [aiError, setAiError] = useState<string | null>(null);
 
 	const editorRef = useRef<MappingEditorHandle>(null);
+	const userModifiedRef = useRef(false);
 
 	const handleEditorChange = (next: RootMapping) => {
+		userModifiedRef.current = true;
 		setMapping(next);
 		setMappingText(JSON.stringify(next, null, 2));
 		setMappingError(null);
@@ -197,12 +207,30 @@ function App() {
 			loadSample(selected.schema, setText, setSchema, setError);
 	};
 
+	const handleDestSchemaSelect = (value: string) => {
+		loadSchemaSelection(value, sampleDest, setDestText, setDestSchema, setDestError);
+
+		if (!userModifiedRef.current || isEmptyMapping(mapping)) {
+			const schema = value === 'sample'
+				? sampleDest
+				: value === 'empty'
+					? undefined
+					: documentSchemaSamples.find(s => s.id === value)?.schema;
+			const autoMapping = schemaToInitialMapping(schema);
+			setMapping(autoMapping);
+			setMappingText(JSON.stringify(autoMapping, null, 2));
+			setMappingVersion(v => v + 1);
+			userModifiedRef.current = false;
+		}
+	};
+
 	const switchEditor = (next: EditorType) => {
 		setMappingError(null);
 		setEditorType(next);
 	};
 
 	const updateMappingText = (text: string) => {
+		userModifiedRef.current = true;
 		setMappingText(text);
 		if (text.trim() === '') {
 			setMapping({});
@@ -234,6 +262,8 @@ function App() {
 				sourceSchema,
 				destinationSchema: destSchema,
 				apiKey,
+				model: aiModel,
+				instructions: aiInstructions || undefined,
 				dangerouslyAllowBrowser: true
 			});
 			setMapping(result);
@@ -374,20 +404,57 @@ function App() {
 						borderRadius: 4
 					}}>
 						<h3 style={{ margin: '0 0 0.5rem', fontSize: '0.9rem' }}>Generate with OpenAI</h3>
-						<label style={labelStyle}>API key (not stored — memory only)</label>
-						<input
-							type="password"
-							value={apiKey}
-							onChange={e => setApiKey(e.target.value)}
-							placeholder="sk-..."
+						<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
+							<div style={{ flex: 1 }}>
+								<label style={labelStyle}>API key (not stored — memory only)</label>
+								<input
+									type="password"
+									value={apiKey}
+									onChange={e => setApiKey(e.target.value)}
+									placeholder="sk-..."
+									style={{
+										width: '100%',
+										fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+										fontSize: '0.85rem',
+										padding: '0.4rem 0.5rem',
+										boxSizing: 'border-box',
+										border: '1px solid #ccc',
+										borderRadius: 4
+									}}
+								/>
+							</div>
+							<div>
+								<label style={labelStyle}>Model</label>
+								<select
+									value={aiModel}
+									onChange={e => setAiModel(e.target.value)}
+									style={{ fontSize: '0.85rem', padding: '0.4rem 0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
+								>
+									<option value="gpt-4.1">gpt-4.1</option>
+									<option value="gpt-4.1-mini">gpt-4.1-mini</option>
+									<option value="gpt-4o">gpt-4o</option>
+									<option value="gpt-4o-mini">gpt-4o-mini</option>
+									<option value="o4-mini">o4-mini</option>
+									<option value="o3">o3</option>
+									<option value="gpt-5.5">gpt-5.5</option>
+								</select>
+							</div>
+						</div>
+						<label style={{ ...labelStyle, marginTop: '0.5rem' }}>Instructions (optional)</label>
+						<textarea
+							value={aiInstructions}
+							onChange={e => setAiInstructions(e.target.value)}
+							rows={2}
+							placeholder="e.g. use snake_case for all field names, map dates to ISO 8601 strings…"
 							style={{
 								width: '100%',
-								fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+								fontFamily: 'system-ui, -apple-system, sans-serif',
 								fontSize: '0.85rem',
 								padding: '0.4rem 0.5rem',
 								boxSizing: 'border-box',
 								border: '1px solid #ccc',
-								borderRadius: 4
+								borderRadius: 4,
+								resize: 'vertical'
 							}}
 						/>
 						<div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -420,13 +487,7 @@ function App() {
 						<h2 style={{ margin: 0, fontSize: '1rem' }}>Destination schema</h2>
 						<select
 							value=""
-							onChange={e => loadSchemaSelection(
-								e.target.value,
-								sampleDest,
-								setDestText,
-								setDestSchema,
-								setDestError
-							)}
+							onChange={e => handleDestSchemaSelect(e.target.value)}
 							style={{ fontSize: '0.85rem' }}
 						>
 							{schemaSampleOptions}

@@ -11,7 +11,7 @@ import { ComponentsContext } from './ComponentsContext.ts';
 import { LabelsContext } from './LabelsContext.ts';
 import { defaultComponents } from './defaultComponents.tsx';
 import { defaultLabels } from './defaultLabels.ts';
-import { rootToEntries, entriesToProps, type Entry } from './entries.ts';
+import { rootToEntries, entriesToProps, schemaToInitialMapping, type Entry } from './utils/index.ts';
 import { EntriesEditor } from './EntriesEditor.tsx';
 import type { MappingEditorComponents, MappingEditorLabels, MappingSchema } from './types.ts';
 
@@ -30,7 +30,14 @@ export interface MappingEditorProps {
 }
 
 const MappingEditor = forwardRef<MappingEditorHandle, MappingEditorProps>(function MappingEditor(props, ref) {
-	const [entries, setEntries] = useState<Entry[]>(() => rootToEntries(props.value ?? props.defaultValue));
+	const [entries, setEntries] = useState<Entry[]>(() => {
+		const root = props.value ?? props.defaultValue;
+		if (root !== undefined)
+			return rootToEntries(root);
+		if (props.schema)
+			return rootToEntries(schemaToInitialMapping(props.schema));
+		return [];
+	});
 
 	useEffect(() => {
 		if (props.value !== undefined)

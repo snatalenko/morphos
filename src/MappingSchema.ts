@@ -5,6 +5,7 @@ export interface MappingSchema {
 	};
 	items?: MappingSchema | boolean | Array<MappingSchema | boolean>;
 	required?: string[];
+	enum?: unknown[];
 	title?: string;
 	description?: string;
 }

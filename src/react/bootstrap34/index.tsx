@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState, type ComponentType } from 'react';
 import { LabelsContext } from '../LabelsContext.ts';
+import { ComponentsContext } from '../ComponentsContext.ts';
 import type {
 	ContainerProps,
 	RowProps,
@@ -10,6 +11,7 @@ import type {
 	ValueInputProps,
 	SuggestedValueInputProps,
 	RemoveButtonProps,
+	InputResetButtonProps,
 	ReorderProps,
 	AddElseButtonProps,
 	AddItemButtonProps,
@@ -87,6 +89,23 @@ export const KeyLabel: ComponentType<KeyLabelProps> = ({ name, schema, required 
 	);
 };
 
+export const InputResetButton: ComponentType<InputResetButtonProps> = ({ onClick }) => {
+	const labels = useContext(LabelsContext);
+	return (
+		<span className="input-group-btn">
+			<button
+				type="button"
+				className="btn btn-default"
+				onClick={onClick}
+				aria-label={labels.useSchemaFields}
+				title={labels.useSchemaFields}
+			>
+				<span className="glyphicon glyphicon-list" aria-hidden="true" />
+			</button>
+		</span>
+	);
+};
+
 const BS34_ADVANCED = '__dm_advanced__';
 
 function SuggestedInput({
@@ -104,6 +123,7 @@ function SuggestedInput({
 	defaultAdvanced?: boolean;
 	onAdvanced?: () => void;
 }) {
+	const C = useContext(ComponentsContext);
 	const labels = useContext(LabelsContext);
 	const matched = value === '' || options.some(o => o.value === value);
 	const [advanced, setAdvanced] = useState(!!defaultAdvanced || !matched);
@@ -140,17 +160,7 @@ function SuggestedInput({
 					onChange={e => onChange(e.target.value)}
 					placeholder={placeholder}
 				/>
-				<span className="input-group-btn">
-					<button
-						type="button"
-						className="btn btn-default"
-						onClick={() => setAdvanced(false)}
-						aria-label={labels.useSchemaFields}
-						title={labels.useSchemaFields}
-					>
-						<span className="glyphicon glyphicon-list" aria-hidden="true" />
-					</button>
-				</span>
+				<C.InputResetButton onClick={() => setAdvanced(false)} />
 			</div>
 		);
 	}
@@ -335,6 +345,7 @@ const components: Partial<MappingEditorComponents> = {
 	ValueInput,
 	SuggestedValueInput,
 	RemoveButton,
+	InputResetButton,
 	Reorder,
 	TypeSelector,
 	AddElseButton,

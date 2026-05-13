@@ -21,7 +21,8 @@ export const gs1AssociationEvent: DocumentSchemaSample = {
 			...commonEventProperties(),
 			type: {
 				type: 'string',
-				description: 'Constant event type value: AssociationEvent'
+				description: 'Constant event type value: AssociationEvent',
+				enum: ['AssociationEvent']
 			},
 			parentID: {
 				...epcUri,
@@ -31,7 +32,8 @@ export const gs1AssociationEvent: DocumentSchemaSample = {
 			childQuantityList: quantityList('Class-level child quantities associated with the parent'),
 			action: {
 				type: 'string',
-				description: 'Association event action: ADD, OBSERVE, or DELETE'
+				description: 'Association event action: ADD, OBSERVE, or DELETE',
+				enum: ['ADD', 'OBSERVE', 'DELETE']
 			},
 			...commonWhyWhereHowProperties()
 		}

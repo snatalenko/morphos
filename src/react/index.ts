@@ -1,4 +1,5 @@
 export { default as MappingEditor } from './MappingEditor.tsx';
+export { schemaToInitialMapping } from './utils/index.ts';
 export type { MappingEditorProps, MappingEditorHandle } from './MappingEditor.tsx';
 export { defaultComponents } from './defaultComponents.tsx';
 export { defaultLabels } from './defaultLabels.ts';
@@ -19,6 +20,7 @@ export type {
 	SuggestedValueInputProps,
 	SourceFieldMatch,
 	RemoveButtonProps,
+	InputResetButtonProps,
 	ReorderProps,
 	AddElseButtonProps,
 	AddItemButtonProps,

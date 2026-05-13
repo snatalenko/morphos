@@ -21,7 +21,8 @@ export const gs1AggregationEvent: DocumentSchemaSample = {
 			...commonEventProperties(),
 			type: {
 				type: 'string',
-				description: 'Constant event type value: AggregationEvent'
+				description: 'Constant event type value: AggregationEvent',
+				enum: ['AggregationEvent']
 			},
 			parentID: {
 				...epcUri,
@@ -31,7 +32,8 @@ export const gs1AggregationEvent: DocumentSchemaSample = {
 			childQuantityList: quantityList('Class-level child quantities in the aggregation'),
 			action: {
 				type: 'string',
-				description: 'Aggregation event action: ADD, OBSERVE, or DELETE'
+				description: 'Aggregation event action: ADD, OBSERVE, or DELETE',
+				enum: ['ADD', 'OBSERVE', 'DELETE']
 			},
 			...commonWhyWhereHowProperties()
 		}

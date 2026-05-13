@@ -66,7 +66,8 @@ export const bizTransaction: MappingSchema = {
 	properties: {
 		type: {
 			type: 'string',
-			description: 'Business transaction type, such as purchase order, invoice, or despatch advice'
+			description: 'Business transaction type, such as purchase order, invoice, or despatch advice',
+			enum: ['bol', 'cert', 'desadv', 'inv', 'pedigree', 'po', 'poc', 'prodorder', 'recadv', 'rma', 'testprd', 'testres', 'upevt']
 		},
 		bizTransaction: {
 			type: 'string',
@@ -82,7 +83,8 @@ export const source: MappingSchema = {
 	properties: {
 		type: {
 			type: 'string',
-			description: 'Source type vocabulary value'
+			description: 'Source type vocabulary value',
+			enum: ['owning_party', 'possessing_party', 'location']
 		},
 		source: {
 			type: 'string',
@@ -98,7 +100,8 @@ export const destination: MappingSchema = {
 	properties: {
 		type: {
 			type: 'string',
-			description: 'Destination type vocabulary value'
+			description: 'Destination type vocabulary value',
+			enum: ['owning_party', 'possessing_party', 'location']
 		},
 		destination: {
 			type: 'string',
@@ -204,7 +207,11 @@ export const errorDeclaration: MappingSchema = {
 	required: ['declarationTime'],
 	properties: {
 		declarationTime: epcisTime,
-		reason: epcisVocabularyValue,
+		reason: {
+			type: 'string',
+			description: 'Reason the event is declared erroneous',
+			enum: ['did_not_occur', 'incorrect_data']
+		},
 		correctiveEventIDs: {
 			type: 'array',
 			description: 'Identifiers of corrective EPCIS events',
@@ -271,11 +278,30 @@ export function commonWhyWhereHowProperties(): NonNullable<MappingSchema['proper
 	return {
 		bizStep: {
 			type: 'string',
-			description: 'Business step vocabulary value, such as shipping, receiving, or commissioning'
+			description: 'Business step vocabulary value, such as shipping, receiving, or commissioning',
+			enum: [
+				'accepting', 'arriving', 'assembling', 'collecting', 'commissioning', 'conforming',
+				'creating_class_instance', 'cycle_counting', 'decommissioning', 'departing', 'destroying',
+				'disassembling', 'dispensing', 'encoding', 'entering_exiting', 'grading', 'harvesting',
+				'holding', 'inspecting', 'installing', 'killing', 'loading', 'other', 'packing', 'picking',
+				'producing', 'receiving', 'relocating', 'removing', 'repackaging', 'reserving',
+				'retail_selling', 'sampling', 'sensor_reporting', 'shipping', 'staging_outbound',
+				'stock_taking', 'stocking', 'storing', 'transforming', 'transporting', 'unloading',
+				'unpacking', 'void_shipping'
+			]
 		},
 		disposition: {
 			type: 'string',
-			description: 'Business disposition vocabulary value, such as in_transit or active'
+			description: 'Business disposition vocabulary value, such as in_transit or active',
+			enum: [
+				'active', 'available', 'completeness_inferred', 'completeness_verified', 'conformant',
+				'container_closed', 'container_open', 'damaged', 'destroyed', 'dispensed', 'disposed',
+				'encoded', 'expired', 'in_progress', 'in_transit', 'inactive', 'mismatch_class',
+				'mismatch_instance', 'mismatch_quantity', 'needs_replacement', 'no_pedigree_match',
+				'non_conformant', 'not_dispensed', 'partially_dispensed', 'recalled', 'rejected',
+				'reserved', 'retail_sold', 'returned', 'sellable_accessible', 'sellable_not_accessible',
+				'stolen', 'unknown'
+			]
 		},
 		persistentDisposition,
 		readPoint,

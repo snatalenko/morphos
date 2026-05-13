@@ -1,5 +1,7 @@
 import { useContext, useEffect, useRef, useState, type ComponentType } from 'react';
 import { LabelsContext } from './LabelsContext.ts';
+// eslint-disable-next-line import/no-cycle
+import { ComponentsContext } from './ComponentsContext.ts';
 import type {
 	ContainerProps,
 	RowProps,
@@ -10,6 +12,7 @@ import type {
 	ValueInputProps,
 	SuggestedValueInputProps,
 	RemoveButtonProps,
+	InputResetButtonProps,
 	ReorderProps,
 	AddElseButtonProps,
 	AddItemButtonProps,
@@ -83,6 +86,21 @@ export const DefaultKeyLabel: ComponentType<KeyLabelProps> = ({ name, schema, re
 
 const DM_ADVANCED_SENTINEL = '__dm_advanced__';
 
+export const DefaultInputResetButton: ComponentType<InputResetButtonProps> = ({ onClick }) => {
+	const labels = useContext(LabelsContext);
+	return (
+		<button
+			type="button"
+			className="dm-mapping-key-back"
+			onClick={onClick}
+			aria-label={labels.useSchemaFields}
+			title={labels.useSchemaFields}
+		>
+			{labels.useSuggestionsSymbol}
+		</button>
+	);
+};
+
 function DefaultSuggestedInput({
 	value,
 	onChange,
@@ -102,6 +120,7 @@ function DefaultSuggestedInput({
 	defaultAdvanced?: boolean;
 	onAdvanced?: () => void;
 }) {
+	const C = useContext(ComponentsContext);
 	const labels = useContext(LabelsContext);
 	const hasOptions = options.length > 0;
 	const matched = value === '' || options.some(o => o.value === value);
@@ -137,15 +156,7 @@ function DefaultSuggestedInput({
 					onChange={e => onChange(e.target.value)}
 					placeholder={placeholder}
 				/>
-				<button
-					type="button"
-					className="dm-mapping-key-back"
-					onClick={() => setAdvanced(false)}
-					aria-label={labels.useSchemaFields}
-					title={labels.useSchemaFields}
-				>
-					{labels.useSuggestionsSymbol}
-				</button>
+				<C.InputResetButton onClick={() => setAdvanced(false)} />
 			</span>
 		);
 	}
@@ -361,6 +372,7 @@ export const defaultComponents: MappingEditorComponents = {
 	ValueInput: DefaultValueInput,
 	SuggestedValueInput: DefaultSuggestedValueInput,
 	RemoveButton: DefaultRemoveButton,
+	InputResetButton: DefaultInputResetButton,
 	Reorder: DefaultReorder,
 	TypeSelector: DefaultTypeSelector,
 	AddElseButton: DefaultAddElseButton,

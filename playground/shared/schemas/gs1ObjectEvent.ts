@@ -21,13 +21,15 @@ export const gs1ObjectEvent: DocumentSchemaSample = {
 			...commonEventProperties(),
 			type: {
 				type: 'string',
-				description: 'Constant event type value: ObjectEvent'
+				description: 'Constant event type value: ObjectEvent',
+				enum: ['ObjectEvent']
 			},
 			epcList: epcList('List of EPC instance identifiers involved in the event'),
 			quantityList: quantityList('Class-level quantities involved in the event'),
 			action: {
 				type: 'string',
-				description: 'Object event action: ADD, OBSERVE, or DELETE'
+				description: 'Object event action: ADD, OBSERVE, or DELETE',
+				enum: ['ADD', 'OBSERVE', 'DELETE']
 			},
 			...commonWhyWhereHowProperties(),
 			ilmd

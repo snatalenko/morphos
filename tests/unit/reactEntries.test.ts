@@ -4,7 +4,7 @@ import {
 	entriesToProps,
 	rootToEntries,
 	type ExprEntryValue
-} from '../../src/react/entries.ts';
+} from '../../src/react/utils/entries.ts';
 
 describe('react entries', () => {
 
