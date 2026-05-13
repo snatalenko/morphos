@@ -9,12 +9,13 @@ Declarative Mapper
 
 ## Overview
 
-Declarative Mapper is a JSON data transformation and object mapping library for JavaScript/TypeScript. Define declarative mapping templates to convert documents quickly, with schema helpers and safe VM-based execution.
+Declarative Mapper is a JSON-to-JSON mapping library for JavaScript/TypeScript. Users define the mapping as JSON, so it can be stored, versioned, generated, or edited from a UI. Unlike many transformation tools, it does not invent a custom expression language: field transforms are plain JavaScript expressions, executed in a restricted VM context for predictable behavior without giving mappings access to the host environment.
 
 ### Table of Contents
 
 - [Overview](#overview)
   - [Reasoning](#reasoning)
+  - [Optional Packages](#optional-packages)
   - [Quick Start Example](#quick-start-example)
 - [Compatibility](#compatibility)
 - [Security](#security)
@@ -34,17 +35,23 @@ Declarative Mapper is a JSON data transformation and object mapping library for 
 
 ### Reasoning
 
-On several projects, I needed a library that could convert one JSON format to another (for example, an invoice from one system into another). It had to support **declarative mapping** instructions so users could configure mappings from a UI. It also had to be **flexible** enough for complex requirements, **secure** against JS injection, and **fast** enough to process streams with millions of records.
+On several projects, I needed a library that could convert one JSON document shape to another (for example, an invoice from one system into another). The mapping itself had to be plain JSON so business-facing tools could create and persist it, but the transformation logic still had to be expressive enough for real-world rules like calculations, conditionals, and array reductions.
 
 That is where Declarative Mapper came in:
 
-- **Declarative** - declarative mapping instructions allow configuration from a UI. In simple scenarios, no technical knowledge is needed.
-- **Flexible** - runs JavaScript under the hood to support complex instructions.
-- **Secure** - restricts access to the outside environment by executing mappings in a separate [V8 Virtual Machine](https://nodejs.org/api/vm.html) context.
+- **JSON-defined** - mappings are JSON documents, so they are easy to store, diff, generate, validate, and edit from a UI.
+- **JavaScript-native** - transformations use ordinary JavaScript expressions instead of a custom DSL.
+- **Secure** - expressions run in a separate [V8 Virtual Machine](https://nodejs.org/api/vm.html) context with restricted access to the outside environment.
 - **Fast** - mapping instructions are compiled once up front, allowing processing at ~200k objects/sec on Apple M1 Pro.
 - **Typed** - written in TypeScript
 - **Lightweight** - no dependencies
 
+### Optional Packages
+
+Declarative Mapper also ships optional subpath entries that are loaded only when imported:
+
+- [`declarative-mapper/react`](src/react/README.md) - a React visual mapping editor with schema-driven field suggestions, mapping type selection, and built-in default/Bootstrap themes.
+- [`declarative-mapper/openai`](src/openai/README.md) - an OpenAI-powered helper that generates a `RootMapping` from source and destination schemas, optionally guided by natural-language instructions.
 
 ### Quick Start Example
 
