@@ -21,6 +21,7 @@ export type {
 	RemoveButtonProps,
 	ReorderProps,
 	AddBarProps,
+	AddElseButtonProps,
 	SchemaAddBarProps,
 	SchemaFieldOption,
 	MappingSchema,

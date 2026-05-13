@@ -22,16 +22,20 @@ import type {
 	SourceFieldMatch
 } from './types.ts';
 
+const WILDCARD_KEY = '*';
+
 export function EntriesEditor({
 	entries,
 	onChange,
 	schema,
-	sourceSchema
+	sourceSchema,
+	sourceSuggestions = []
 }: {
 	entries: Entry[];
 	onChange: (next: Entry[]) => void;
 	schema?: MappingSchema;
 	sourceSchema?: MappingSchema;
+	sourceSuggestions?: SourceFieldMatch[];
 }) {
 	const C = useContext(ComponentsContext);
 	const labels = useContext(LabelsContext);
@@ -68,6 +72,8 @@ export function EntriesEditor({
 	const requiredSet = new Set(schema?.required ?? []);
 	const schemaPropNames = schema?.properties ? Object.keys(schema.properties) : [];
 	const mappedKeys = new Set(entries.map(e => e.key));
+	const currentValueMapped = mappedKeys.has(WILDCARD_KEY);
+	const canMapCurrentValue = entries.length <= 1;
 
 	const availableForEntry = (entry: Entry): SchemaFieldOption[] => {
 		const result: SchemaFieldOption[] = [];
@@ -86,7 +92,7 @@ export function EntriesEditor({
 	};
 
 	const updateEntryKey = (id: string, newKey: string) => {
-		const newSub = getPropertySchema(schema, newKey);
+		const newSub = newKey === WILDCARD_KEY ? schema : getPropertySchema(schema, newKey);
 		onChange(entries.map(e => {
 			if (e.id !== id)
 				return e;
@@ -107,7 +113,9 @@ export function EntriesEditor({
 	return (
 		<C.Container>
 			{entries.map((entry, index) => {
-				const subSchema = getPropertySchema(schema, entry.key);
+				const subSchema = entry.key === WILDCARD_KEY
+					? schema
+					: getPropertySchema(schema, entry.key);
 
 				const keyCell = schema ? (
 					<C.SuggestedKeyInput
@@ -115,6 +123,9 @@ export function EntriesEditor({
 						onChange={k => updateEntryKey(entry.id, k)}
 						available={availableForEntry(entry)}
 						placeholder={labels.keyPlaceholder}
+						allowCurrentValue={
+							entry.key === WILDCARD_KEY || (!currentValueMapped && canMapCurrentValue)
+						}
 					/>
 				) : (
 					<C.KeyInput
@@ -131,6 +142,7 @@ export function EntriesEditor({
 						onChange={v => updateEntry(entry.id, { value: v })}
 						schema={subSchema}
 						sourceSchema={sourceSchema}
+						sourceSuggestions={sourceSuggestions}
 					/>
 				);
 				const remove = <C.RemoveButton onClick={() => removeEntry(entry.id)} />;
@@ -173,7 +185,7 @@ export function EntriesEditor({
 					/>
 				);
 			})}
-			<C.AddBar onAdd={addEntry} />
+			{currentValueMapped ? null : <C.AddBar onAdd={addEntry} />}
 		</C.Container>
 	);
 }
@@ -210,6 +222,48 @@ function preferNameMatches(
 	return [
 		...fields.filter(s => matchedPaths.has(s.path)),
 		...fields.filter(s => !matchedPaths.has(s.path))
+	];
+}
+
+function arrayContextSuggestions(
+	recordSchema: MappingSchema | undefined,
+	collectionSchema: MappingSchema | undefined
+): SourceFieldMatch[] {
+	return [
+		{
+			path: '$index',
+			schema: {
+				type: 'integer',
+				description: 'Current array item index'
+			}
+		},
+		{
+			path: '$record',
+			schema: recordSchema ?? {
+				description: 'Current array item value'
+			}
+		},
+		{
+			path: '$collection',
+			schema: collectionSchema ?? {
+				type: 'array',
+				description: 'Current array collection'
+			}
+		}
+	];
+}
+
+function mergeSourceSuggestions(
+	fields: SourceFieldMatch[],
+	extraFields: SourceFieldMatch[]
+): SourceFieldMatch[] {
+	if (extraFields.length === 0)
+		return fields;
+
+	const seen = new Set(fields.map(f => f.path));
+	return [
+		...fields,
+		...extraFields.filter(f => !seen.has(f.path))
 	];
 }
 
@@ -251,7 +305,8 @@ function ConditionalBranch({
 	onChange,
 	onRemove,
 	schema,
-	sourceSchema
+	sourceSchema,
+	sourceSuggestions
 }: {
 	label: string;
 	value: EntryValue;
@@ -259,6 +314,7 @@ function ConditionalBranch({
 	onRemove?: () => void;
 	schema?: MappingSchema;
 	sourceSchema?: MappingSchema;
+	sourceSuggestions?: SourceFieldMatch[];
 }) {
 	const C = useContext(ComponentsContext);
 	const columns = onRemove
@@ -287,6 +343,7 @@ function ConditionalBranch({
 				onChange={onChange}
 				schema={schema}
 				sourceSchema={sourceSchema}
+				sourceSuggestions={sourceSuggestions}
 			/>
 			{onRemove ? <C.RemoveButton onClick={onRemove} /> : null}
 		</div>
@@ -298,13 +355,15 @@ function ValueView({
 	value,
 	onChange,
 	schema,
-	sourceSchema
+	sourceSchema,
+	sourceSuggestions = []
 }: {
 	name: string;
 	value: EntryValue;
 	onChange: (next: EntryValue) => void;
 	schema?: MappingSchema;
 	sourceSchema?: MappingSchema;
+	sourceSuggestions?: SourceFieldMatch[];
 }) {
 	const C = useContext(ComponentsContext);
 	const labels = useContext(LabelsContext);
@@ -314,13 +373,19 @@ function ValueView({
 		const allScalars = sourceSchema
 			? findSourceFields(sourceSchema, {}).filter(s => {
 				const t = schemaType(s.schema);
+				if (name === WILDCARD_KEY)
+					return typesCompatible(destType, t);
 				if (t === 'object' || t === 'array')
 					return false;
 
 				return typesCompatible(destType, t);
 			})
 			: [];
-		const suggestions = preferNameMatches(allScalars, sourceSchema, name);
+		const suggestions = preferNameMatches(
+			mergeSourceSuggestions(allScalars, sourceSuggestions),
+			sourceSchema,
+			name
+		);
 		return renderExpressionInput(
 			C,
 			value.expr,
@@ -334,7 +399,10 @@ function ValueView({
 	if (value.kind === 'array') {
 		const itemsSchema = getItemsSchema(schema);
 		const forEachSuggestions = preferNameMatches(
-			findSourceFields(sourceSchema, { type: 'array' }),
+			mergeSourceSuggestions(
+				findSourceFields(sourceSchema, { type: 'array' }),
+				sourceSuggestions.filter(s => schemaType(s.schema) === 'array')
+			),
 			sourceSchema,
 			name,
 			'array'
@@ -344,6 +412,7 @@ function ValueView({
 			? getItemsSchema(resolved)
 			: undefined;
 		const nestedSourceSchema = extendSourceSchema(resolvedItems, sourceSchema, value.forEach);
+		const nestedSourceSuggestions = arrayContextSuggestions(resolvedItems, resolved);
 
 		return (
 			<C.Section
@@ -366,6 +435,7 @@ function ValueView({
 						onChange={entries => onChange({ ...value, entries })}
 						schema={itemsSchema}
 						sourceSchema={nestedSourceSchema}
+						sourceSuggestions={nestedSourceSuggestions}
 					/>
 				}
 			/>
@@ -374,7 +444,10 @@ function ValueView({
 
 	if (value.kind === 'object') {
 		const fromSuggestions = preferNameMatches(
-			findSourceFields(sourceSchema, { type: 'object' }),
+			mergeSourceSuggestions(
+				findSourceFields(sourceSchema, { type: 'object' }),
+				sourceSuggestions.filter(s => schemaType(s.schema) === 'object')
+			),
 			sourceSchema,
 			name,
 			'object'
@@ -407,6 +480,7 @@ function ValueView({
 						onChange={entries => onChange({ ...value, entries })}
 						schema={schema}
 						sourceSchema={nestedSourceSchema}
+						sourceSuggestions={sourceSuggestions}
 					/>
 				}
 			/>
@@ -416,7 +490,10 @@ function ValueView({
 	if (value.kind === 'conditional') {
 		const addElse = () => onChange({ ...value, else: { kind: 'expr', expr: '' } });
 		const removeElse = () => onChange({ kind: 'conditional', when: value.when, then: value.then });
-		const whenSuggestions = findSourceFields(sourceSchema, {}).filter(s => {
+		const whenSuggestions = mergeSourceSuggestions(
+			findSourceFields(sourceSchema, {}),
+			sourceSuggestions
+		).filter(s => {
 			const t = schemaType(s.schema);
 			return t !== 'object' && t !== 'array';
 		});
@@ -446,6 +523,7 @@ function ValueView({
 							onChange={thenValue => onChange({ ...value, then: thenValue })}
 							schema={schema}
 							sourceSchema={sourceSchema}
+							sourceSuggestions={sourceSuggestions}
 						/>
 						{value.else === undefined ? (
 							<div className="dm-mapping-conditional-add-else" style={{ textAlign: 'right' }}>
@@ -459,6 +537,7 @@ function ValueView({
 								onRemove={removeElse}
 								schema={schema}
 								sourceSchema={sourceSchema}
+								sourceSuggestions={sourceSuggestions}
 							/>
 						)}
 					</>

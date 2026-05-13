@@ -96,7 +96,9 @@ mapping kind from each field's `type`, and show required-field markers.
 
 Keys not present in the schema render as free-form text inputs ("custom" fields). Schema-bound
 keys render as a dropdown with an `Advanced…` escape hatch — the same dropdown/input/reset
-pattern used for values.
+pattern used for values. When a mapping level has no sibling fields, it also exposes a
+`Current value` option, which writes the wildcard key `'*'` and maps the value of the current
+mapping level instead of one named property.
 
 ## Source schema
 
@@ -108,6 +110,9 @@ conditional `when` expressions:
 * **`forEach`** suggests array paths.
 * **`from`** suggests object paths.
 * **`when`** suggests scalar paths that can be used as truthy/falsy conditions.
+
+Inside a List mapping, value dropdowns also include array-context expressions:
+`$index`, `$record`, and `$collection`.
 
 Each dropdown has an `Advanced…` option that switches to a free-form expression input, and
 a back button that returns to the dropdown without losing the typed value.
@@ -211,6 +216,7 @@ override any subset — the rest fall back to defaults.
         advanced: 'Erweitert…',
         useSuggestions: 'Vorschläge verwenden',
         useSchemaFields: 'Schemafelder verwenden',
+        currentValue: 'Aktueller Wert',
         forEach: 'fürJedes',
         from: 'von',
         when: 'wenn',
@@ -243,6 +249,7 @@ override any subset — the rest fall back to defaults.
 | `advanced`                | `Advanced…`          | Switch-to-input option in dropdowns.             |
 | `useSuggestions`          | `Use suggestions`    | Back-button aria/title on value inputs.          |
 | `useSchemaFields`         | `Use schema fields`  | Back-button aria/title on key inputs.            |
+| `currentValue`             | `Current value`       | Key dropdown option for wildcard `'*'` mapping.  |
 | `forEach`                 | `forEach`            | Array section header label.                      |
 | `from`                    | `from`               | Object section optional source selector label.   |
 | `when`                    | `when`               | Conditional section header label.                |

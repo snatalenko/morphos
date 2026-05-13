@@ -15,6 +15,7 @@ export const defaultLabels: MappingEditorLabels = {
 	useSuggestions: 'Use suggestions',
 	useSchemaFields: 'Use schema fields',
 	customSuffix: 'custom',
+	currentValue: 'Current value',
 	forEach: 'forEach',
 	from: 'from',
 	when: 'when',

@@ -76,10 +76,13 @@ export const DefaultSuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = (
 	value,
 	onChange,
 	available,
-	placeholder
+	placeholder,
+	allowCurrentValue
 }) => {
 	const labels = useContext(LabelsContext);
-	const matched = value === '' || available.some(f => f.name === value);
+	const matched = value === ''
+		|| available.some(f => f.name === value)
+		|| (allowCurrentValue && value === '*');
 	const [advanced, setAdvanced] = useState(!matched);
 
 	if (advanced) {
@@ -91,7 +94,7 @@ export const DefaultSuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = (
 					onChange={e => onChange(e.target.value)}
 					placeholder={placeholder}
 				/>
-				{available.length > 0 && (
+				{(available.length > 0 || allowCurrentValue) && (
 					<button
 						type="button"
 						className="dm-mapping-key-back"
@@ -120,6 +123,7 @@ export const DefaultSuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = (
 			}}
 		>
 			<option value="" disabled>{labels.selectPlaceholder}</option>
+			{allowCurrentValue && <option value="*">{labels.currentValue}</option>}
 			{available.map(f => (
 				<option key={f.name} value={f.name}>
 					{f.name}{f.required ? ' *' : ''}

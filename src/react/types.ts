@@ -59,6 +59,7 @@ export interface SuggestedKeyInputProps {
 	onChange: (next: string) => void;
 	available: SchemaFieldOption[];
 	placeholder?: string;
+	allowCurrentValue?: boolean;
 }
 
 export interface ValueInputProps {
@@ -125,6 +126,7 @@ export interface MappingEditorLabels {
 	useSuggestions: string;
 	useSchemaFields: string;
 	customSuffix: string;
+	currentValue: string;
 	forEach: string;
 	from: string;
 	when: string;
