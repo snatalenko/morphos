@@ -57,6 +57,8 @@ export function EntriesEditor({
 			value = { kind: 'array', forEach: '', entries: [] };
 		else if (kind === 'object')
 			value = { kind: 'object', from: '', entries: [] };
+		else if (kind === 'conditional')
+			value = { kind: 'conditional', when: '', then: { kind: 'expr', expr: '' } };
 		else
 			value = { kind: 'expr', expr: '' };
 
@@ -218,7 +220,8 @@ function renderExpressionInput(
 	suggestions: SourceFieldMatch[],
 	placeholder: string,
 	forceSuggested = false,
-	emptyLabel?: string
+	emptyLabel?: string,
+	defaultAdvanced?: boolean
 ) {
 	if (suggestions.length > 0 || forceSuggested) {
 		return (
@@ -228,6 +231,7 @@ function renderExpressionInput(
 				suggestions={suggestions}
 				placeholder={placeholder}
 				emptyLabel={emptyLabel}
+				defaultAdvanced={defaultAdvanced}
 			/>
 		);
 	}
@@ -238,6 +242,54 @@ function renderExpressionInput(
 			onChange={onChange}
 			placeholder={placeholder}
 		/>
+	);
+}
+
+function ConditionalBranch({
+	label,
+	value,
+	onChange,
+	onRemove,
+	schema,
+	sourceSchema
+}: {
+	label: string;
+	value: EntryValue;
+	onChange: (next: EntryValue) => void;
+	onRemove?: () => void;
+	schema?: MappingSchema;
+	sourceSchema?: MappingSchema;
+}) {
+	const C = useContext(ComponentsContext);
+	const columns = onRemove
+		? '4rem 9rem minmax(0, 1fr) auto'
+		: '4rem 9rem minmax(0, 1fr)';
+
+	return (
+		<div
+			className="dm-mapping-conditional-branch"
+			style={{
+				display: 'grid',
+				gridTemplateColumns: columns,
+				gap: '0.5rem',
+				alignItems: 'start',
+				marginBottom: '0.5rem'
+			}}
+		>
+			<label className="dm-mapping-label" style={{ paddingTop: '0.35rem' }}>{label}</label>
+			<C.TypeSelector
+				kind={value.kind}
+				onChange={to => onChange(convertEntryValue(value, to))}
+			/>
+			<ValueView
+				name=""
+				value={value}
+				onChange={onChange}
+				schema={schema}
+				sourceSchema={sourceSchema}
+			/>
+			{onRemove ? <C.RemoveButton onClick={onRemove} /> : null}
+		</div>
 	);
 }
 
@@ -356,6 +408,60 @@ function ValueView({
 						schema={schema}
 						sourceSchema={nestedSourceSchema}
 					/>
+				}
+			/>
+		);
+	}
+
+	if (value.kind === 'conditional') {
+		const addElse = () => onChange({ ...value, else: { kind: 'expr', expr: '' } });
+		const removeElse = () => onChange({ kind: 'conditional', when: value.when, then: value.then });
+		const whenSuggestions = findSourceFields(sourceSchema, {}).filter(s => {
+			const t = schemaType(s.schema);
+			return t !== 'object' && t !== 'array';
+		});
+
+		return (
+			<C.Section
+				header={
+					<C.SectionHeader
+						label="when"
+						valueInput={renderExpressionInput(
+							C,
+							value.when,
+							when => onChange({ ...value, when }),
+							whenSuggestions,
+							labels.expressionPlaceholder,
+							!!sourceSchema,
+							undefined,
+							true
+						)}
+					/>
+				}
+				body={
+					<>
+						<ConditionalBranch
+							label={labels.then}
+							value={value.then}
+							onChange={thenValue => onChange({ ...value, then: thenValue })}
+							schema={schema}
+							sourceSchema={sourceSchema}
+						/>
+						{value.else === undefined ? (
+							<div className="dm-mapping-conditional-add-else" style={{ textAlign: 'right' }}>
+								<C.AddElseButton onClick={addElse} />
+							</div>
+						) : (
+							<ConditionalBranch
+								label={labels.else}
+								value={value.else}
+								onChange={elseValue => onChange({ ...value, else: elseValue })}
+								onRemove={removeElse}
+								schema={schema}
+								sourceSchema={sourceSchema}
+							/>
+						)}
+					</>
 				}
 			/>
 		);

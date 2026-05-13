@@ -53,6 +53,9 @@
                     "$ref": "#/definitions/ContextSwitch"
                 },
                 {
+                    "$ref": "#/definitions/ConditionalMapping"
+                },
+                {
                     "$ref": "#/definitions/TupleMapping"
                 },
                 {
@@ -81,7 +84,7 @@
             "type": "object",
             "minProperties": 1,
             "patternProperties": {
-                "^(?!(\\*)|(map)|(forEach)|(from)).+$": {
+                "^(?!(\\*)|(map)|(forEach)|(from)|(when)|(then)|(else)).+$": {
                     "$ref": "#/definitions/AnyMapping"
                 }
             },
@@ -175,6 +178,35 @@
                 "map"
             ],
             "additionalProperties": false
+        },
+        "ConditionalMapping": {
+            "title": "Conditional Mapping",
+            "description": "Maps a value only when a JavaScript condition is truthy. Without 'else', a false condition omits the destination field when used inside an object mapping.",
+            "type": "object",
+            "properties": {
+                "when": {
+                    "title": "Condition",
+                    "description": "A JavaScript expression evaluated in the current source context.",
+                    "$ref": "#/definitions/JsExpression"
+                },
+                "then": {
+                    "$ref": "#/definitions/AnyMapping"
+                },
+                "else": {
+                    "$ref": "#/definitions/AnyMapping"
+                }
+            },
+            "required": [
+                "when",
+                "then"
+            ],
+            "additionalProperties": false,
+            "examples": [
+                {
+                    "when": "shipment.billOfLadingNumber",
+                    "then": "shipment.billOfLadingNumber"
+                }
+            ]
         }
     }
 }

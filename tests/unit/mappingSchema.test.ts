@@ -56,6 +56,16 @@ describe('mappingSchema', () => {
 
 		v.validate(map, schema, { throwError: true });
 
+		map = {
+			foo: {
+				when: 'bar',
+				then: 'bar',
+				else: '"fallback"'
+			}
+		};
+
+		v.validate(map, schema, { throwError: true });
+
 		map = [
 			'foo',
 			{

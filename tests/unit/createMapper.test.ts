@@ -309,6 +309,90 @@ describe('createMapper', () => {
 		});
 	});
 
+	describe('when', () => {
+
+		it('omits object fields when condition is false and `else` is not provided', () => {
+
+			const mapper = createMapper({
+				shipment: {
+					id: 'shipment.asnNumber',
+					purchaseOrder: {
+						when: 'shipment.purchaseOrderNumber',
+						then: 'shipment.purchaseOrderNumber'
+					},
+					billOfLading: {
+						when: 'shipment.billOfLadingNumber',
+						then: 'shipment.billOfLadingNumber'
+					}
+				}
+			});
+
+			const result = mapper({
+				shipment: {
+					asnNumber: 'ASN-1',
+					purchaseOrderNumber: 'PO-1'
+				}
+			});
+
+			expect(result).to.eql({
+				shipment: {
+					id: 'ASN-1',
+					purchaseOrder: 'PO-1'
+				}
+			});
+		});
+
+		it('maps `else` when condition is false', () => {
+
+			const mapper = createMapper({
+				status: {
+					when: 'cancelledAt',
+					then: '"cancelled"',
+					else: '"active"'
+				}
+			});
+
+			const result = mapper({});
+
+			expect(result).to.eql({
+				status: 'active'
+			});
+		});
+
+		it('maps conditional objects', () => {
+
+			const mapper = createMapper({
+				carrier: {
+					when: 'shipment.carrierScac || shipment.carrierName',
+					then: {
+						scac: 'shipment.carrierScac',
+						name: 'shipment.carrierName'
+					}
+				}
+			});
+
+			const result = mapper({
+				shipment: {
+					carrierScac: 'ABCD',
+					carrierName: 'Acme Freight'
+				}
+			});
+
+			expect(result).to.eql({
+				carrier: {
+					scac: 'ABCD',
+					name: 'Acme Freight'
+				}
+			});
+		});
+
+		it('throws errors on incorrectly formatted instructions', () => {
+
+			expect(() => createMapper({ when: '', then: 'foo' })).to.throw('Property "when" is empty in mapping "{"when":"","then":"foo"}"');
+			expect(() => createMapper({ when: 'foo' })).to.throw('Property "then" is missing in mapping "{"when":"foo"}"');
+		});
+	});
+
 	it('maps array from array element index maps', () => {
 
 		const input = {
@@ -384,16 +468,24 @@ describe('createMapper', () => {
 		});
 
 		expect(log).to.have.length(1);
-		expect(log[0]).to.eql(
-			`
+		expect(log[0]).to.eql(`
+var $omit = Symbol('declarative-mapper.omit');
 with ($createGlobalContext($input)) {
   $result =
     (() => {
-      return {
-        [\`foo\`]: true,
-      };
+      return (() => {
+        var $output = {};
+        var $value;
+        $value =
+          true;
+        if ($value !== $omit)
+          $output[\`foo\`] = $value;
+        return $output;
+      })();
     })()
-}`);
+}
+if ($result === $omit)
+  $result = undefined;`);
 	});
 
 	it('accepts mapping runtime extensions', () => {

@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from 'react';
 
-export type AddKind = 'expr' | 'array' | 'object';
+export type AddKind = 'expr' | 'array' | 'object' | 'conditional';
 export type EntryKind = AddKind;
 
 export type { MappingSchema } from '../MappingSchema.ts';
@@ -72,6 +72,7 @@ export interface SuggestedValueInputProps {
 	onChange: (next: string) => void;
 	placeholder?: string;
 	emptyLabel?: string;
+	defaultAdvanced?: boolean;
 	suggestions: SourceFieldMatch[];
 }
 
@@ -90,6 +91,10 @@ export interface AddBarProps {
 	onAdd: (kind: AddKind) => void;
 }
 
+export interface AddElseButtonProps {
+	onClick: () => void;
+}
+
 export interface SchemaAddBarProps {
 	available: SchemaFieldOption[];
 	onAdd: (name: string) => void;
@@ -101,7 +106,7 @@ export interface SectionProps {
 }
 
 export interface SectionHeaderProps {
-	label: 'forEach' | 'from';
+	label: 'forEach' | 'from' | 'when';
 	valueInput: ReactNode;
 }
 
@@ -109,9 +114,11 @@ export interface MappingEditorLabels {
 	field: string;
 	array: string;
 	object: string;
+	conditional: string;
 	addField: string;
 	addArray: string;
 	addObject: string;
+	addConditional: string;
 	addSchemaField: string;
 	selectPlaceholder: string;
 	advanced: string;
@@ -120,6 +127,10 @@ export interface MappingEditorLabels {
 	customSuffix: string;
 	forEach: string;
 	from: string;
+	when: string;
+	then: string;
+	else: string;
+	addElse: string;
 	keyPlaceholder: string;
 	expressionPlaceholder: string;
 	removeField: string;
@@ -147,6 +158,7 @@ export interface MappingEditorComponents {
 	Reorder: ComponentType<ReorderProps>;
 	TypeSelector: ComponentType<TypeSelectorProps>;
 	AddBar: ComponentType<AddBarProps>;
+	AddElseButton: ComponentType<AddElseButtonProps>;
 	SchemaAddBar: ComponentType<SchemaAddBarProps>;
 	Section: ComponentType<SectionProps>;
 	SectionHeader: ComponentType<SectionHeaderProps>;

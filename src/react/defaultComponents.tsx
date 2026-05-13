@@ -12,6 +12,7 @@ import type {
 	RemoveButtonProps,
 	ReorderProps,
 	AddBarProps,
+	AddElseButtonProps,
 	SchemaAddBarProps,
 	SectionProps,
 	SectionHeaderProps,
@@ -145,11 +146,12 @@ export const DefaultSuggestedValueInput: ComponentType<SuggestedValueInputProps>
 	onChange,
 	placeholder,
 	emptyLabel,
+	defaultAdvanced,
 	suggestions
 }) => {
 	const labels = useContext(LabelsContext);
 	const isMatched = value === '' || suggestions.some(s => s.path === value);
-	const [advanced, setAdvanced] = useState(!isMatched);
+	const [advanced, setAdvanced] = useState(!!defaultAdvanced || !isMatched);
 
 	if (advanced) {
 		return (
@@ -239,7 +241,17 @@ export const DefaultAddBar: ComponentType<AddBarProps> = ({ onAdd }) => {
 			<button type="button" onClick={() => onAdd('expr')}>{labels.addField}</button>
 			<button type="button" onClick={() => onAdd('array')}>{labels.addArray}</button>
 			<button type="button" onClick={() => onAdd('object')}>{labels.addObject}</button>
+			<button type="button" onClick={() => onAdd('conditional')}>{labels.addConditional}</button>
 		</div>
+	);
+};
+
+export const DefaultAddElseButton: ComponentType<AddElseButtonProps> = ({ onClick }) => {
+	const labels = useContext(LabelsContext);
+	return (
+		<button type="button" className="dm-mapping-add-else" onClick={onClick}>
+			{labels.addElse}
+		</button>
 	);
 };
 
@@ -297,13 +309,18 @@ export const DefaultTypeSelector: ComponentType<TypeSelectorProps> = ({ kind, on
 			<option value="expr">{labels.field}</option>
 			<option value="array">{labels.array}</option>
 			<option value="object">{labels.object}</option>
+			<option value="conditional">{labels.conditional}</option>
 		</select>
 	);
 };
 
 export const DefaultSectionHeader: ComponentType<SectionHeaderProps> = ({ label, valueInput }) => {
 	const labels = useContext(LabelsContext);
-	const displayLabel = label === 'forEach' ? labels.forEach : labels.from;
+	const displayLabel = label === 'forEach'
+		? labels.forEach
+		: label === 'when'
+			? labels.when
+			: labels.from;
 	return (
 		<div className="dm-mapping-section-header">
 			<label className="dm-mapping-label">{displayLabel}</label>
@@ -325,6 +342,7 @@ export const defaultComponents: MappingEditorComponents = {
 	Reorder: DefaultReorder,
 	TypeSelector: DefaultTypeSelector,
 	AddBar: DefaultAddBar,
+	AddElseButton: DefaultAddElseButton,
 	SchemaAddBar: DefaultSchemaAddBar,
 	Section: DefaultSection,
 	SectionHeader: DefaultSectionHeader

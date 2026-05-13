@@ -4,14 +4,21 @@ import type {
 	PropertiesMap,
 	ArrayMapping,
 	ObjectInContextMapping,
-	ObjectMapping
+	ObjectMapping,
+	ConditionalMapping
 } from '../mappingTypes.ts';
 import type { MappingSchema, SourceFieldMatch } from './types.ts';
 
 export type ExprEntryValue = { kind: 'expr'; expr: string };
 export type ArrayEntryValue = { kind: 'array'; forEach: string; entries: Entry[] };
 export type ObjectEntryValue = { kind: 'object'; from: string; entries: Entry[] };
-export type EntryValue = ExprEntryValue | ArrayEntryValue | ObjectEntryValue;
+export type ConditionalEntryValue = {
+	kind: 'conditional';
+	when: string;
+	then: EntryValue;
+	else?: EntryValue;
+};
+export type EntryValue = ExprEntryValue | ArrayEntryValue | ObjectEntryValue | ConditionalEntryValue;
 
 export type Entry = {
 	id: string;
@@ -183,6 +190,15 @@ function valueToEntryValue(v: ValueMap): EntryValue {
 		return { kind: 'expr', expr: v };
 
 	if (isPlainObject(v)) {
+		if ('when' in v && 'then' in v) {
+			const cm = v as ConditionalMapping;
+			return {
+				kind: 'conditional',
+				when: cm.when,
+				then: valueToEntryValue(cm.then),
+				else: cm.else === undefined ? undefined : valueToEntryValue(cm.else)
+			};
+		}
 		if ('forEach' in v && 'map' in v) {
 			const am = v as ArrayMapping;
 			return { kind: 'array', forEach: am.forEach, entries: propsToEntries(am.map) };
@@ -229,12 +245,18 @@ export function entriesToProps(entries: Entry[]): PropertiesMap {
 	return out;
 }
 
-export function convertEntryValue(prev: EntryValue, to: 'expr' | 'array' | 'object'): EntryValue {
+export function convertEntryValue(prev: EntryValue, to: 'expr' | 'array' | 'object' | 'conditional'): EntryValue {
 	if (to === 'expr') {
 		if (prev.kind === 'expr')
 			return prev;
 		if (prev.kind === 'array')
 			return { kind: 'expr', expr: prev.forEach };
+		if (prev.kind === 'conditional') {
+			if (prev.then.kind === 'expr')
+				return prev.then;
+
+			return { kind: 'expr', expr: prev.when };
+		}
 
 		return { kind: 'expr', expr: prev.from };
 	}
@@ -244,14 +266,33 @@ export function convertEntryValue(prev: EntryValue, to: 'expr' | 'array' | 'obje
 			return prev;
 		if (prev.kind === 'object')
 			return { kind: 'array', forEach: prev.from, entries: prev.entries };
+		if (prev.kind === 'conditional') {
+			if (prev.then.kind === 'array')
+				return prev.then;
+
+			return { kind: 'array', forEach: prev.when, entries: [] };
+		}
 
 		return { kind: 'array', forEach: prev.expr, entries: [] };
+	}
+
+	if (to === 'conditional') {
+		if (prev.kind === 'conditional')
+			return prev;
+
+		return { kind: 'conditional', when: '', then: prev };
 	}
 
 	if (prev.kind === 'object')
 		return prev;
 	if (prev.kind === 'array')
 		return { kind: 'object', from: prev.forEach, entries: prev.entries };
+	if (prev.kind === 'conditional') {
+		if (prev.then.kind === 'object')
+			return prev.then;
+
+		return { kind: 'object', from: prev.when, entries: [] };
+	}
 
 	return { kind: 'object', from: prev.expr, entries: [] };
 }
@@ -268,6 +309,17 @@ function entryValueToValue(ev: EntryValue): ValueMap {
 			return entriesToProps(ev.entries);
 
 		return { from: ev.from, map: entriesToProps(ev.entries) };
+	}
+
+	if (ev.kind === 'conditional') {
+		const result: ConditionalMapping = {
+			when: ev.when,
+			then: entryValueToValue(ev.then)
+		};
+		if (ev.else !== undefined)
+			result.else = entryValueToValue(ev.else);
+
+		return result;
 	}
 
 	return assertNever(ev);

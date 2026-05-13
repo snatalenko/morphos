@@ -12,6 +12,7 @@ import type {
 	RemoveButtonProps,
 	ReorderProps,
 	AddBarProps,
+	AddElseButtonProps,
 	SchemaAddBarProps,
 	SectionProps,
 	SectionHeaderProps,
@@ -150,11 +151,12 @@ export const SuggestedValueInput: ComponentType<SuggestedValueInputProps> = ({
 	onChange,
 	placeholder,
 	emptyLabel,
+	defaultAdvanced,
 	suggestions
 }) => {
 	const labels = useContext(LabelsContext);
 	const isMatched = value === '' || suggestions.some(s => s.path === value);
-	const [advanced, setAdvanced] = useState(!isMatched);
+	const [advanced, setAdvanced] = useState(!!defaultAdvanced || !isMatched);
 
 	if (advanced) {
 		return (
@@ -229,6 +231,7 @@ export const TypeSelector: ComponentType<TypeSelectorProps> = ({ kind, onChange 
 			<option value="expr">{labels.field}</option>
 			<option value="array">{labels.array}</option>
 			<option value="object">{labels.object}</option>
+			<option value="conditional">{labels.conditional}</option>
 		</select>
 	);
 };
@@ -299,8 +302,20 @@ export const AddBar: ComponentType<AddBarProps> = ({ onAdd }) => {
 				<button type="button" className="btn btn-outline-primary" onClick={() => onAdd('object')}>
 					{labels.addObject}
 				</button>
+				<button type="button" className="btn btn-outline-primary" onClick={() => onAdd('conditional')}>
+					{labels.addConditional}
+				</button>
 			</div>
 		</div>
+	);
+};
+
+export const AddElseButton: ComponentType<AddElseButtonProps> = ({ onClick }) => {
+	const labels = useContext(LabelsContext);
+	return (
+		<button type="button" className="btn btn-outline-primary" onClick={onClick}>
+			{labels.addElse}
+		</button>
 	);
 };
 
@@ -313,7 +328,11 @@ export const Section: ComponentType<SectionProps> = ({ header, body }) => (
 
 export const SectionHeader: ComponentType<SectionHeaderProps> = ({ label, valueInput }) => {
 	const labels = useContext(LabelsContext);
-	const displayLabel = label === 'forEach' ? labels.forEach : labels.from;
+	const displayLabel = label === 'forEach'
+		? labels.forEach
+		: label === 'when'
+			? labels.when
+			: labels.from;
 	return (
 		<div className="d-flex align-items-center gap-2">
 			<code className="px-2 py-1 bg-body-secondary rounded text-nowrap">{displayLabel}</code>
@@ -335,6 +354,7 @@ const components: Partial<MappingEditorComponents> = {
 	Reorder,
 	TypeSelector,
 	AddBar,
+	AddElseButton,
 	SchemaAddBar,
 	Section,
 	SectionHeader

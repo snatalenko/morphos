@@ -30,6 +30,11 @@ Object mappings:
   { "customer": { "from": "CUSTOMER", "map": { "name": "NAME", "email": "EMAIL" } } }
 - "from" must be a non-empty expression selecting a source object. "map" contains mappings evaluated in that selected object's context.
 
+Conditional mappings:
+- Use { "when": "<condition>", "then": <mapping>, "else": <mapping> } for conditional values.
+- If "when" is false and "else" is omitted, omit the destination field.
+- Example: { "billOfLading": { "when": "shipment.billOfLadingNumber", "then": "shipment.billOfLadingNumber" } }
+
 Array mappings:
 - For destination arrays derived from source arrays, use:
   { "items": { "forEach": "LINE_ITEMS", "map": { "sku": "UPC", "quantity": "QTY" } } }

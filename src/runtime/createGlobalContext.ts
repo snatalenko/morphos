@@ -45,7 +45,8 @@ const STANDARD_OBJECT_NAMES = [
 	'JSON',
 	'Intl',
 	'$input',
-	'$result'
+	'$result',
+	'$omit'
 ];
 
 export default function createGlobalContext(context: object, extensionNames?: string[]): any {

@@ -100,12 +100,14 @@ pattern used for values.
 
 ## Source schema
 
-Passing `sourceSchema` populates dropdowns for value expressions, `forEach`, and `from`:
+Passing `sourceSchema` populates dropdowns for value expressions, `forEach`, `from`, and
+conditional `when` expressions:
 
 * **Field values** suggest scalar paths from the source schema (e.g. `QTY`, `CUSTOMER.NAME`).
   Name matches (`qty` ≈ `QTY`, `lineItems` ≈ `LINE_ITEMS`) are sorted to the top.
 * **`forEach`** suggests array paths.
 * **`from`** suggests object paths.
+* **`when`** suggests scalar paths that can be used as truthy/falsy conditions.
 
 Each dropdown has an `Advanced…` option that switches to a free-form expression input, and
 a back button that returns to the dropdown without losing the typed value.
@@ -116,7 +118,7 @@ nested suggestions (so inside `lineItems.forEach = LINE_ITEMS`, the `id` field s
 
 ## Theming
 
-The editor is composed from ~15 small components. Override any of them via the `components`
+The editor is composed from small components. Override any of them via the `components`
 prop. Each override receives the props for its slot and is responsible for rendering it.
 
 ```tsx
@@ -137,7 +139,7 @@ Built-in defaults render bare HTML with `dm-mapping-*` class hooks for styling.
 |-----------------------|------------------------------------------------------------------------------------------|
 | `Container`           | Wraps the list of rows in a level (root or nested).                                      |
 | `Row`                 | Renders a simple key→expression row. Receives `keyInput`, `typeSelector`, `value`, `reorder`, `remove` slots. |
-| `SectionRow`          | Renders a key→section row (List / Object). Same slots, `section` instead of `value`.      |
+| `SectionRow`          | Renders a key→section row (List / Object / Conditional). Same slots, `section` instead of `value`. |
 | `KeyInput`            | Free-form key text input.                                                                |
 | `KeyLabel`            | Read-only key display when bound to a schema field.                                      |
 | `SuggestedKeyInput`   | Schema-aware key dropdown + Advanced… fallback (used when destination schema is set).    |
@@ -145,11 +147,12 @@ Built-in defaults render bare HTML with `dm-mapping-*` class hooks for styling.
 | `SuggestedValueInput` | Source-schema-aware value dropdown + Advanced… fallback.                                  |
 | `RemoveButton`        | Per-row delete button.                                                                   |
 | `Reorder`             | Up/down buttons for moving a row within its parent list.                                 |
-| `TypeSelector`        | Per-row mapping-kind selector (Value / List / Object).                                   |
-| `AddBar`              | Add controls (Value / List / Object).                                                    |
+| `TypeSelector`        | Per-row mapping-kind selector (Value / List / Object / Conditional).                     |
+| `AddBar`              | Add controls (Value / List / Object / Conditional).                                      |
+| `AddElseButton`       | Adds the optional fallback branch inside a Conditional mapping.                           |
 | `SchemaAddBar`        | Legacy schema-fields dropdown (no longer rendered by default; kept for compatibility).    |
 | `Section`             | Wraps a section's `header` + `body`.                                                     |
-| `SectionHeader`       | Renders the `forEach` / optional `from` label next to its value input.                   |
+| `SectionHeader`       | Renders the `forEach`, optional `from`, or `when` label next to its value input.          |
 
 ### Built-in themes
 
@@ -199,15 +202,21 @@ override any subset — the rest fall back to defaults.
         field: 'Feld',
         array: 'Liste',
         object: 'Objekt',
+        conditional: 'Wenn / sonst',
         addField: '+ Feld',
         addArray: '+ Liste',
         addObject: '+ Objekt',
+        addConditional: '+ Wenn / sonst',
         selectPlaceholder: '— auswählen —',
         advanced: 'Erweitert…',
         useSuggestions: 'Vorschläge verwenden',
         useSchemaFields: 'Schemafelder verwenden',
         forEach: 'fürJedes',
         from: 'von',
+        when: 'wenn',
+        then: 'dann',
+        else: 'sonst',
+        addElse: '+ sonst',
         keyPlaceholder: 'Schlüssel',
         expressionPlaceholder: 'JS-Ausdruck',
         removeField: 'Feld entfernen',
@@ -224,9 +233,11 @@ override any subset — the rest fall back to defaults.
 | `field`                   | `Value`              | Type-selector option for `expr` kind.            |
 | `array`                   | `List`               | Type-selector option for `array` kind.           |
 | `object`                  | `Object`             | Type-selector option for `object` kind.          |
+| `conditional`             | `Conditional`        | Type-selector option for conditional kind.       |
 | `addField`                | `+ Value`            | Add-bar button.                                  |
 | `addArray`                | `+ List`             | Add-bar button.                                  |
 | `addObject`               | `+ Object`           | Add-bar button.                                  |
+| `addConditional`          | `+ Conditional`      | Add-bar button.                                  |
 | `addSchemaField`          | `+ Add field…`       | Legacy `SchemaAddBar` placeholder.               |
 | `selectPlaceholder`       | `— select —`         | Placeholder or empty option in dropdowns.        |
 | `advanced`                | `Advanced…`          | Switch-to-input option in dropdowns.             |
@@ -234,6 +245,10 @@ override any subset — the rest fall back to defaults.
 | `useSchemaFields`         | `Use schema fields`  | Back-button aria/title on key inputs.            |
 | `forEach`                 | `forEach`            | Array section header label.                      |
 | `from`                    | `from`               | Object section optional source selector label.   |
+| `when`                    | `when`               | Conditional section header label.                |
+| `then`                    | `then`               | Conditional truthy branch label.                 |
+| `else`                    | `else`               | Conditional fallback branch label.               |
+| `addElse`                 | `+ else`             | Add fallback branch button.                      |
 | `keyPlaceholder`          | `key`                | Free-form key input placeholder.                 |
 | `expressionPlaceholder`   | `js expression`      | Value input placeholder.                         |
 | `removeField`             | `Remove field`       | Remove-button aria-label.                        |
@@ -279,7 +294,6 @@ const MyAddBar = ({ onAdd }: AddBarProps) => {
 
 ## Limitations
 
-* `value` is read on demand via the imperative ref — there is no `onChange` callback yet.
 * Tuple-form `PropertiesMap` (`ValueMap[]`) inputs are currently ignored on load.
 * Schema features beyond `type`, `properties`, `items`, `required`, `title`, `description`
   are not interpreted (no `$ref`, `oneOf`, `additionalProperties`, etc.).

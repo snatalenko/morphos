@@ -1,4 +1,10 @@
-export type ValueMap = string | ObjectMapping | ArrayMapping | ObjectInContextMapping | PropertiesMap;
+export type ValueMap =
+	string |
+	ObjectMapping |
+	ArrayMapping |
+	ObjectInContextMapping |
+	ConditionalMapping |
+	PropertiesMap;
 
 export type PropertiesMap = {
 	[fieldName: string]: ValueMap
@@ -18,4 +24,10 @@ export type ObjectInContextMapping = {
 	map: PropertiesMap
 }
 
-export type RootMapping = ObjectMapping | ArrayMapping | ObjectInContextMapping | PropertiesMap;
+export type ConditionalMapping = {
+	when: string,
+	then: ValueMap,
+	else?: ValueMap
+}
+
+export type RootMapping = ObjectMapping | ArrayMapping | ObjectInContextMapping | ConditionalMapping | PropertiesMap;

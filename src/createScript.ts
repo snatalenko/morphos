@@ -3,54 +3,121 @@ import type {
 	RootMapping,
 	ArrayMapping,
 	ObjectInContextMapping,
-	ObjectMapping
+	ObjectMapping,
+	ValueMap,
+	ConditionalMapping
 } from './mappingTypes.ts';
 
-function* propertiesMapToJs(map: PropertiesMap, level: number) {
+function isConditionalMapping(mapping: RootMapping): mapping is ConditionalMapping {
+	const keys = Object.keys(mapping);
+	return keys.includes('when')
+		&& keys.every(k => k === 'when' || k === 'then' || k === 'else');
+}
+
+function isArrayMapping(mapping: RootMapping): mapping is ArrayMapping {
+	const keys = Object.keys(mapping);
+	return keys.length === 2 && keys.includes('forEach') && keys.includes('map');
+}
+
+function isObjectInContextMapping(mapping: RootMapping): mapping is ObjectInContextMapping {
+	const keys = Object.keys(mapping);
+	return keys.length === 2 && keys.includes('from') && keys.includes('map');
+}
+
+function isObjectMapping(mapping: RootMapping): mapping is ObjectMapping {
+	const keys = Object.keys(mapping);
+	return keys.length === 1 && keys.includes('map');
+}
+
+function isRootElementMapping(mapping: RootMapping): mapping is { '*': ValueMap } {
+	const keys = Object.keys(mapping);
+	return keys.length === 1 && keys[0] === '*';
+}
+
+function isTupleArrayMapping(mapping: RootMapping) {
+	const keys = Object.keys(mapping);
+	return keys.length && keys.every(k => k && !isNaN(Number(k)));
+}
+
+function* returnValueMapToJs(mappingInstruction: ValueMap, level: number): IterableIterator<string> {
+	const prefix = '  '.repeat(level);
+	if (typeof mappingInstruction === 'string') {
+		yield `${prefix}return ${mappingInstruction || 'null'};`;
+	}
+	else {
+		yield `${prefix}return (`;
+		// eslint-disable-next-line no-use-before-define
+		yield* mappingToJs(mappingInstruction, level);
+		yield `${prefix});`;
+	}
+}
+
+function* propertiesMapToJs(map: PropertiesMap, level: number): IterableIterator<string> {
 
 	const prefix = '  '.repeat(level);
-	const keys = Object.keys(map);
-	const isRootElementMapping = keys.length === 1 && keys[0] === '*';
-	if (isRootElementMapping) {
-		yield `${prefix}  return ${map[keys[0]] || null};`;
+	if (isRootElementMapping(map)) {
+		yield* returnValueMapToJs(map['*'], level + 1);
 		return;
 	}
 
-	const isArray = keys.length && keys.every(k => k && !isNaN(Number(k)));
-
-	if (isArray)
-		yield `${prefix}  return Object.assign([], {`;
+	const isTupleArray = isTupleArrayMapping(map);
+	if (isTupleArray)
+		yield `${prefix}  return Object.assign([], (() => {`;
 	else
-		yield `${prefix}  return {`;
+		yield `${prefix}  return (() => {`;
+
+	yield `${prefix}    var $output = {};`;
+	yield `${prefix}    var $value;`;
 
 	for (const [fieldName, mappingInstruction] of Object.entries(map)) {
 		const quotedFieldName = fieldName.replace(/`/g, '\\`');
 
+		yield `${prefix}    $value =`;
 		if (typeof mappingInstruction === 'string') {
-			yield `${prefix}    [\`${quotedFieldName}\`]: ${mappingInstruction || 'null'},`;
+			yield `${prefix}      ${mappingInstruction || 'null'};`;
 		}
 		else {
-			yield `${prefix}    [\`${quotedFieldName}\`]: `;
 			// eslint-disable-next-line no-use-before-define
 			yield* mappingToJs(mappingInstruction, level + 2);
-			yield ',';
+			yield `${prefix}    ;`;
 		}
+
+		yield `${prefix}    if ($value !== $omit)`;
+		yield `${prefix}      $output[\`${quotedFieldName}\`] = $value;`;
 	}
 
-	if (isArray)
-		yield `${prefix}  });`;
+	yield `${prefix}    return $output;`;
+
+	if (isTupleArray)
+		yield `${prefix}  })());`;
 	else
-		yield `${prefix}  };`;
+		yield `${prefix}  })();`;
 }
 
 function* mappingToJs(mapping: RootMapping, level: number) {
 
 	const prefix = '  '.repeat(level);
 
-	const mappingKeys = Object.keys(mapping);
+	if (isConditionalMapping(mapping)) {
+		const { when, then: thenMapping, else: elseMapping } = mapping;
 
-	if (mappingKeys.length === 2 && mappingKeys.includes('forEach') && mappingKeys.includes('map')) {
-		const { forEach, map } = mapping as ArrayMapping;
+		if (!when)
+			throw new TypeError(`Property "when" is empty in mapping "${JSON.stringify(mapping)}"`);
+		if (thenMapping === undefined)
+			throw new TypeError(`Property "then" is missing in mapping "${JSON.stringify(mapping)}"`);
+
+		yield `${prefix}  (() => {`;
+		yield `${prefix}    if (${when}) {`;
+		yield* returnValueMapToJs(thenMapping, level + 3);
+		yield `${prefix}    }`;
+		if (elseMapping === undefined)
+			yield `${prefix}    return $omit;`;
+		else
+			yield* returnValueMapToJs(elseMapping, level + 2);
+		yield `${prefix}  })()`;
+	}
+	else if (isArrayMapping(mapping)) {
+		const { forEach, map } = mapping;
 		if (!forEach)
 			throw new TypeError(`Property "forEach" is empty in mapping "${JSON.stringify(mapping)}"`);
 		if (!map)
@@ -62,8 +129,8 @@ function* mappingToJs(mapping: RootMapping, level: number) {
 		yield `${prefix}    }`;
 		yield `${prefix}  })`;
 	}
-	else if (mappingKeys.length === 2 && mappingKeys.includes('from') && mappingKeys.includes('map')) {
-		const { from, map } = mapping as ObjectInContextMapping;
+	else if (isObjectInContextMapping(mapping)) {
+		const { from, map } = mapping;
 		if (!from)
 			throw new TypeError(`Property "from" is empty in mapping "${JSON.stringify(mapping)}"`);
 		if (!map)
@@ -76,8 +143,8 @@ function* mappingToJs(mapping: RootMapping, level: number) {
 		yield `${prefix}    }`;
 		yield `${prefix}  })()`;
 	}
-	else if (mappingKeys.length === 1 && mappingKeys.includes('map')) {
-		const { map } = mapping as ObjectMapping;
+	else if (isObjectMapping(mapping)) {
+		const { map } = mapping;
 		if (!map)
 			throw new TypeError(`Property "map" is empty in mapping "${JSON.stringify(mapping)}"`);
 
@@ -86,10 +153,8 @@ function* mappingToJs(mapping: RootMapping, level: number) {
 		yield `${prefix}  })()`;
 	}
 	else {
-		const map = mapping as PropertiesMap;
-
 		yield `${prefix}  (() => {`;
-		yield* propertiesMapToJs(map, level + 1);
+		yield* propertiesMapToJs(mapping, level + 1);
 		yield `${prefix}  })()`;
 	}
 }
@@ -101,8 +166,11 @@ function* mappingToJs(mapping: RootMapping, level: number) {
  */
 export default function createScript(map: RootMapping) {
 	return `
+var $omit = Symbol('declarative-mapper.omit');
 with ($createGlobalContext($input)) {
   $result =
 ${Array.from(mappingToJs(map, 1)).join('\n')}
-}`;
+}
+if ($result === $omit)
+  $result = undefined;`;
 }

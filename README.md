@@ -26,6 +26,7 @@ Declarative Mapper is a JSON data transformation and object mapping library for 
   - [String\[\] from String\[\]](#string-from-string)
   - [Tuple Arrays](#tuple-arrays)
   - [Context Switching](#context-switching)
+  - [Conditional Fields](#conditional-fields)
   - [Dynamic Output Keys](#dynamic-output-keys)
 - [Extensions](#extensions)
 - [Complex Mapping Example](#complex-mapping-example)
@@ -125,6 +126,10 @@ The right side is either a string with a valid JS expression or an object with m
   "key": {                    // object mapping from a different context 
     "from": "some.nested.field",
     "map": { /*...*/ }
+  },
+  "key": {                    // conditionally include a value
+    "when": "someField",
+    "then": "someField"
   },
   "${prefix}_${id}": "value", // dynamic output key (template interpolation)
 }
@@ -325,6 +330,35 @@ Combined example (`forEach` + root reference):
     "lineNo": "$index + 1",
     "sourceId": "$input.id",
     "raw": "$record"
+  }
+}
+```
+
+### Conditional Fields
+
+Use `"when"` / `"then"` to include a field only when a condition is truthy:
+
+```json
+{
+  "shipment": {
+    "id": "shipment.asnNumber",
+    "billOfLading": {
+      "when": "shipment.billOfLadingNumber",
+      "then": "shipment.billOfLadingNumber"
+    }
+  }
+}
+```
+
+When the condition is false and no `"else"` is provided, the field is omitted.
+Use `"else"` when a fallback value should be emitted:
+
+```json
+{
+  "status": {
+    "when": "cancelledAt",
+    "then": "'cancelled'",
+    "else": "'active'"
   }
 }
 ```
