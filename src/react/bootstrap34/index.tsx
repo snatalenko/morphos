@@ -37,11 +37,19 @@ export const Row: ComponentType<RowProps> = ({ keyInput, typeSelector, value, re
 	</div>
 );
 
-export const SectionRow: ComponentType<SectionRowProps> = ({ keyInput, typeSelector, section, remove, reorder }) => (
+export const SectionRow: ComponentType<SectionRowProps> = ({
+	keyInput,
+	typeSelector,
+	value,
+	section,
+	remove,
+	reorder
+}) => (
 	<div className="row" style={{ marginBottom: 12 }}>
 		<div className={typeSelector ? 'col-xs-3' : 'col-xs-5'} style={{ marginBottom: 8 }}>{keyInput}</div>
 		{typeSelector ? <div className="col-xs-2" style={{ marginBottom: 8 }}>{typeSelector}</div> : null}
-		<div className="col-xs-2 col-xs-offset-5" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+		<div className="col-xs-5" style={{ marginBottom: 8 }}>{value}</div>
+		<div className="col-xs-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
 			{reorder}
 			{remove}
 		</div>
@@ -324,7 +332,7 @@ export const AddElseButton: ComponentType<AddElseButtonProps> = ({ onClick }) =>
 
 export const Section: ComponentType<SectionProps> = ({ header, body }) => (
 	<div className="panel panel-default" style={{ marginBottom: 0 }}>
-		<div className="panel-heading" style={{ padding: '8px 12px' }}>{header}</div>
+		{header === undefined ? null : <div className="panel-heading" style={{ padding: '8px 12px' }}>{header}</div>}
 		<div className="panel-body" style={{ padding: '12px' }}>{body}</div>
 	</div>
 );

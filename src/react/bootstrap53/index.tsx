@@ -37,11 +37,19 @@ export const Row: ComponentType<RowProps> = ({ keyInput, typeSelector, value, re
 	</div>
 );
 
-export const SectionRow: ComponentType<SectionRowProps> = ({ keyInput, typeSelector, section, remove, reorder }) => (
+export const SectionRow: ComponentType<SectionRowProps> = ({
+	keyInput,
+	typeSelector,
+	value,
+	section,
+	remove,
+	reorder
+}) => (
 	<div className="row g-2 mb-3 align-items-start">
 		<div className={typeSelector ? 'col-3' : 'col-5'}>{keyInput}</div>
 		{typeSelector ? <div className="col-2">{typeSelector}</div> : null}
-		<div className="col-2 offset-5 d-flex align-items-center justify-content-end gap-1">
+		<div className="col-5">{value}</div>
+		<div className="col-2 d-flex align-items-center justify-content-end gap-1">
 			{reorder}
 			{remove}
 		</div>
@@ -325,7 +333,7 @@ export const AddElseButton: ComponentType<AddElseButtonProps> = ({ onClick }) =>
 
 export const Section: ComponentType<SectionProps> = ({ header, body }) => (
 	<div className="card">
-		<div className="card-header py-2">{header}</div>
+		{header === undefined ? null : <div className="card-header py-2">{header}</div>}
 		<div className="card-body">{body}</div>
 	</div>
 );

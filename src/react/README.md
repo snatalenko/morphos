@@ -144,7 +144,7 @@ Built-in defaults render bare HTML with `dm-mapping-*` class hooks for styling.
 |-----------------------|------------------------------------------------------------------------------------------|
 | `Container`           | Wraps the list of rows in a level (root or nested).                                      |
 | `Row`                 | Renders a simple key→expression row. Receives `keyInput`, `typeSelector`, `value`, `reorder`, `remove` slots. |
-| `SectionRow`          | Renders a key→section row (List / Object / Conditional). Same slots, `section` instead of `value`. |
+| `SectionRow`          | Renders a key→section row (List / Object / Conditional). Receives `value` for the row control and `section` for the nested editor body. |
 | `KeyInput`            | Free-form key text input.                                                                |
 | `KeyLabel`            | Read-only key display when bound to a schema field.                                      |
 | `SuggestedKeyInput`   | Schema-aware key dropdown + Advanced… fallback (used when destination schema is set).    |
@@ -156,7 +156,7 @@ Built-in defaults render bare HTML with `dm-mapping-*` class hooks for styling.
 | `AddBar`              | Add controls (Value / List / Object / Conditional).                                      |
 | `AddElseButton`       | Adds the optional fallback branch inside a Conditional mapping.                           |
 | `SchemaAddBar`        | Legacy schema-fields dropdown (no longer rendered by default; kept for compatibility).    |
-| `Section`             | Wraps a section's `header` + `body`.                                                     |
+| `Section`             | Wraps a section's optional `header` + `body`.                                            |
 | `SectionHeader`       | Renders the `forEach`, optional `from`, or `when` label next to its value input.          |
 
 ### Built-in themes

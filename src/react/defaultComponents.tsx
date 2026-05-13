@@ -37,11 +37,19 @@ export const DefaultRow: ComponentType<RowProps> = ({ keyInput, typeSelector, va
 	</div>
 );
 
-export const DefaultSectionRow: ComponentType<SectionRowProps> = ({ keyInput, typeSelector, section, remove, reorder }) => (
+export const DefaultSectionRow: ComponentType<SectionRowProps> = ({
+	keyInput,
+	typeSelector,
+	value,
+	section,
+	remove,
+	reorder
+}) => (
 	<div className="dm-mapping-row dm-mapping-row-section">
 		<div className="dm-mapping-row-header">
 			{keyInput}
 			{typeSelector}
+			{value}
 			<span className="dm-mapping-actions">
 				{reorder}
 				{remove}
@@ -286,7 +294,7 @@ export const DefaultSchemaAddBar: ComponentType<SchemaAddBarProps> = ({ availabl
 
 export const DefaultSection: ComponentType<SectionProps> = ({ header, body }) => (
 	<div className="dm-mapping-section">
-		{header}
+		{header ?? null}
 		<div
 			className="dm-mapping-section-body"
 			style={{

@@ -32,6 +32,7 @@ export interface RowProps {
 export interface SectionRowProps {
 	keyInput: ReactNode;
 	typeSelector: ReactNode;
+	value: ReactNode;
 	section: ReactNode;
 	remove: ReactNode;
 	reorder: ReactNode;
@@ -102,7 +103,7 @@ export interface SchemaAddBarProps {
 }
 
 export interface SectionProps {
-	header: ReactNode;
+	header?: ReactNode;
 	body: ReactNode;
 }
 

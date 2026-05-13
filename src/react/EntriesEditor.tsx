@@ -143,6 +143,7 @@ export function EntriesEditor({
 						schema={subSchema}
 						sourceSchema={sourceSchema}
 						sourceSuggestions={sourceSuggestions}
+						part="full"
 					/>
 				);
 				const remove = <C.RemoveButton onClick={() => removeEntry(entry.id)} />;
@@ -179,7 +180,28 @@ export function EntriesEditor({
 						key={entry.id}
 						keyInput={keyCell}
 						typeSelector={typeSelector}
-						section={valueView}
+						value={
+							<ValueView
+								name={entry.key}
+								value={entry.value}
+								onChange={v => updateEntry(entry.id, { value: v })}
+								schema={subSchema}
+								sourceSchema={sourceSchema}
+								sourceSuggestions={sourceSuggestions}
+								part="control"
+							/>
+						}
+						section={
+							<ValueView
+								name={entry.key}
+								value={entry.value}
+								onChange={v => updateEntry(entry.id, { value: v })}
+								schema={subSchema}
+								sourceSchema={sourceSchema}
+								sourceSuggestions={sourceSuggestions}
+								part="body"
+							/>
+						}
 						remove={remove}
 						reorder={reorder}
 					/>
@@ -356,7 +378,8 @@ function ValueView({
 	onChange,
 	schema,
 	sourceSchema,
-	sourceSuggestions = []
+	sourceSuggestions = [],
+	part = 'full'
 }: {
 	name: string;
 	value: EntryValue;
@@ -364,6 +387,7 @@ function ValueView({
 	schema?: MappingSchema;
 	sourceSchema?: MappingSchema;
 	sourceSuggestions?: SourceFieldMatch[];
+	part?: 'full' | 'control' | 'body';
 }) {
 	const C = useContext(ComponentsContext);
 	const labels = useContext(LabelsContext);
@@ -413,31 +437,38 @@ function ValueView({
 			: undefined;
 		const nestedSourceSchema = extendSourceSchema(resolvedItems, sourceSchema, value.forEach);
 		const nestedSourceSuggestions = arrayContextSuggestions(resolvedItems, resolved);
+		const valueInput = renderExpressionInput(
+			C,
+			value.forEach,
+			forEach => onChange({ ...value, forEach }),
+			forEachSuggestions,
+			labels.expressionPlaceholder,
+			!!sourceSchema
+		);
+		const body = (
+			<EntriesEditor
+				entries={value.entries}
+				onChange={entries => onChange({ ...value, entries })}
+				schema={itemsSchema}
+				sourceSchema={nestedSourceSchema}
+				sourceSuggestions={nestedSourceSuggestions}
+			/>
+		);
+
+		if (part === 'control')
+			return valueInput;
+		if (part === 'body')
+			return <C.Section body={body} />;
 
 		return (
 			<C.Section
 				header={
 					<C.SectionHeader
 						label="forEach"
-						valueInput={renderExpressionInput(
-							C,
-							value.forEach,
-							forEach => onChange({ ...value, forEach }),
-							forEachSuggestions,
-							labels.expressionPlaceholder,
-							!!sourceSchema
-						)}
+						valueInput={valueInput}
 					/>
 				}
-				body={
-					<EntriesEditor
-						entries={value.entries}
-						onChange={entries => onChange({ ...value, entries })}
-						schema={itemsSchema}
-						sourceSchema={nestedSourceSchema}
-						sourceSuggestions={nestedSourceSuggestions}
-					/>
-				}
+				body={body}
 			/>
 		);
 	}
@@ -457,32 +488,39 @@ function ValueView({
 			? resolved
 			: undefined;
 		const nestedSourceSchema = extendSourceSchema(resolvedFrom, sourceSchema, value.from);
+		const valueInput = renderExpressionInput(
+			C,
+			value.from,
+			from => onChange({ ...value, from }),
+			fromSuggestions,
+			'',
+			!!sourceSchema,
+			''
+		);
+		const body = (
+			<EntriesEditor
+				entries={value.entries}
+				onChange={entries => onChange({ ...value, entries })}
+				schema={schema}
+				sourceSchema={nestedSourceSchema}
+				sourceSuggestions={sourceSuggestions}
+			/>
+		);
+
+		if (part === 'control')
+			return valueInput;
+		if (part === 'body')
+			return <C.Section body={body} />;
 
 		return (
 			<C.Section
 				header={
 					<C.SectionHeader
 						label="from"
-						valueInput={renderExpressionInput(
-							C,
-							value.from,
-							from => onChange({ ...value, from }),
-							fromSuggestions,
-							'',
-							!!sourceSchema,
-							''
-						)}
+						valueInput={valueInput}
 					/>
 				}
-				body={
-					<EntriesEditor
-						entries={value.entries}
-						onChange={entries => onChange({ ...value, entries })}
-						schema={schema}
-						sourceSchema={nestedSourceSchema}
-						sourceSuggestions={sourceSuggestions}
-					/>
-				}
+				body={body}
 			/>
 		);
 	}
@@ -497,51 +535,58 @@ function ValueView({
 			const t = schemaType(s.schema);
 			return t !== 'object' && t !== 'array';
 		});
+		const valueInput = renderExpressionInput(
+			C,
+			value.when,
+			when => onChange({ ...value, when }),
+			whenSuggestions,
+			labels.expressionPlaceholder,
+			!!sourceSchema,
+			undefined,
+			true
+		);
+		const body = (
+			<>
+				<ConditionalBranch
+					label={labels.then}
+					value={value.then}
+					onChange={thenValue => onChange({ ...value, then: thenValue })}
+					schema={schema}
+					sourceSchema={sourceSchema}
+					sourceSuggestions={sourceSuggestions}
+				/>
+				{value.else === undefined ? (
+					<div className="dm-mapping-conditional-add-else" style={{ textAlign: 'right' }}>
+						<C.AddElseButton onClick={addElse} />
+					</div>
+				) : (
+					<ConditionalBranch
+						label={labels.else}
+						value={value.else}
+						onChange={elseValue => onChange({ ...value, else: elseValue })}
+						onRemove={removeElse}
+						schema={schema}
+						sourceSchema={sourceSchema}
+						sourceSuggestions={sourceSuggestions}
+					/>
+				)}
+			</>
+		);
+
+		if (part === 'control')
+			return valueInput;
+		if (part === 'body')
+			return <C.Section body={body} />;
 
 		return (
 			<C.Section
 				header={
 					<C.SectionHeader
 						label="when"
-						valueInput={renderExpressionInput(
-							C,
-							value.when,
-							when => onChange({ ...value, when }),
-							whenSuggestions,
-							labels.expressionPlaceholder,
-							!!sourceSchema,
-							undefined,
-							true
-						)}
+						valueInput={valueInput}
 					/>
 				}
-				body={
-					<>
-						<ConditionalBranch
-							label={labels.then}
-							value={value.then}
-							onChange={thenValue => onChange({ ...value, then: thenValue })}
-							schema={schema}
-							sourceSchema={sourceSchema}
-							sourceSuggestions={sourceSuggestions}
-						/>
-						{value.else === undefined ? (
-							<div className="dm-mapping-conditional-add-else" style={{ textAlign: 'right' }}>
-								<C.AddElseButton onClick={addElse} />
-							</div>
-						) : (
-							<ConditionalBranch
-								label={labels.else}
-								value={value.else}
-								onChange={elseValue => onChange({ ...value, else: elseValue })}
-								onRemove={removeElse}
-								schema={schema}
-								sourceSchema={sourceSchema}
-								sourceSuggestions={sourceSuggestions}
-							/>
-						)}
-					</>
-				}
+				body={body}
 			/>
 		);
 	}
