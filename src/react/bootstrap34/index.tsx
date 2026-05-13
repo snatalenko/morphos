@@ -7,6 +7,7 @@ import type {
 	SectionRowProps,
 	KeyInputProps,
 	KeyLabelProps,
+	RowLabelProps,
 	SuggestedKeyInputProps,
 	ValueInputProps,
 	SuggestedValueInputProps,
@@ -25,18 +26,18 @@ import type {
 } from '../types.ts';
 
 export const Container: ComponentType<ContainerProps> = ({ children }) => (
-	<div className="dm-bs34-container">{children}</div>
+	<div className="dm-bs34-container form-horizontal">{children}</div>
 );
 
 export const Row: ComponentType<RowProps> = ({ keyInput, typeSelector, value, remove, reorder }) => {
 	const isTemplate = !typeSelector && !value && !remove && !reorder;
 	return (
-		<div className="row" style={{ marginBottom: 8 }}>
-			<div className={typeSelector || isTemplate ? 'col-xs-3' : 'col-xs-5'}>{keyInput}</div>
-			{typeSelector ? <div className="col-xs-2">{typeSelector}</div> : null}
-			{value ? <div className="col-xs-5">{value}</div> : null}
+		<div className="form-group">
+			<div className={typeSelector || isTemplate ? 'col-sm-3' : 'col-sm-5'}>{keyInput}</div>
+			{typeSelector ? <div className="col-sm-2">{typeSelector}</div> : null}
+			{value ? <div className="col-sm-5">{value}</div> : null}
 			{reorder || remove ? (
-				<div className="col-xs-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+				<div className="col-sm-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
 					{reorder}
 					{remove}
 				</div>
@@ -53,16 +54,18 @@ export const SectionRow: ComponentType<SectionRowProps> = ({
 	remove,
 	reorder
 }) => (
-	<div className="row" style={{ marginBottom: 12 }}>
-		<div className={typeSelector ? 'col-xs-3' : 'col-xs-5'} style={{ marginBottom: 8 }}>{keyInput}</div>
-		{typeSelector ? <div className="col-xs-2" style={{ marginBottom: 8 }}>{typeSelector}</div> : null}
-		<div className="col-xs-5" style={{ marginBottom: 8 }}>{value}</div>
-		<div className="col-xs-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
-			{reorder}
-			{remove}
+	<>
+		<div className="form-group">
+			<div className={typeSelector ? 'col-sm-3' : 'col-sm-5'}>{keyInput}</div>
+			{typeSelector ? <div className="col-sm-2">{typeSelector}</div> : null}
+			<div className="col-sm-5">{value}</div>
+			<div className="col-sm-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 4 }}>
+				{reorder}
+				{remove}
+			</div>
 		</div>
-		<div className="col-xs-12">{section}</div>
-	</div>
+		{section}
+	</>
 );
 
 export const KeyInput: ComponentType<KeyInputProps> = ({ value, onChange, placeholder }) => (
@@ -78,16 +81,16 @@ export const KeyInput: ComponentType<KeyInputProps> = ({ value, onChange, placeh
 export const KeyLabel: ComponentType<KeyLabelProps> = ({ name, schema, required }) => {
 	const labels = useContext(LabelsContext);
 	return (
-		<p
-			className="form-control-static"
-			title={schema.description}
-			style={{ margin: 0, paddingTop: 7 }}
-		>
+		<label className="control-label" title={schema.description}>
 			<strong>{name}</strong>
 			{required && <span className="text-danger" aria-label={labels.required}> *</span>}
-		</p>
+		</label>
 	);
 };
+
+export const RowLabel: ComponentType<RowLabelProps> = ({ label }) => (
+	<label className="control-label">{label}</label>
+);
 
 export const InputResetButton: ComponentType<InputResetButtonProps> = ({ onClick }) => {
 	const labels = useContext(LabelsContext);
@@ -142,7 +145,7 @@ function SuggestedInput({
 				ref={inputRef}
 				type="text"
 				className="form-control"
-				value={value}
+								value={value}
 				onChange={e => onChange(e.target.value)}
 				placeholder={placeholder}
 			/>
@@ -156,7 +159,7 @@ function SuggestedInput({
 					ref={inputRef}
 					type="text"
 					className="form-control"
-					value={value}
+										value={value}
 					onChange={e => onChange(e.target.value)}
 					placeholder={placeholder}
 				/>
@@ -168,7 +171,7 @@ function SuggestedInput({
 	return (
 		<select
 			className="form-control"
-			value={matched ? value : ''}
+						value={matched ? value : ''}
 			onChange={e => {
 				const v = e.target.value;
 				if (v === BS34_ADVANCED) {
@@ -314,9 +317,9 @@ export const AddItemButton: ComponentType<AddItemButtonProps> = ({ onClick }) =>
 };
 
 export const Section: ComponentType<SectionProps> = ({ header, body }) => (
-	<div className="panel panel-default" style={{ marginBottom: 0 }}>
+	<div className="panel panel-default">
 		{header === undefined ? null : <div className="panel-heading" style={{ padding: '8px 12px' }}>{header}</div>}
-		<div className="panel-body" style={{ padding: '12px' }}>{body}</div>
+		<div className="panel-body">{body}</div>
 	</div>
 );
 
@@ -341,6 +344,7 @@ const components: Partial<MappingEditorComponents> = {
 	SectionRow,
 	KeyInput,
 	KeyLabel,
+	RowLabel,
 	SuggestedKeyInput,
 	ValueInput,
 	SuggestedValueInput,

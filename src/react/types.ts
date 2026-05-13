@@ -85,6 +85,10 @@ export interface SuggestedValueInputProps {
 	options: FieldOption[];
 }
 
+export interface RowLabelProps {
+	label: string;
+}
+
 export interface RemoveButtonProps {
 	onClick: () => void;
 }
@@ -165,6 +169,7 @@ export interface MappingEditorComponents {
 	SectionRow: ComponentType<SectionRowProps>;
 	KeyInput: ComponentType<KeyInputProps>;
 	KeyLabel: ComponentType<KeyLabelProps>;
+	RowLabel: ComponentType<RowLabelProps>;
 	SuggestedKeyInput: ComponentType<SuggestedKeyInputProps>;
 	ValueInput: ComponentType<ValueInputProps>;
 	SuggestedValueInput: ComponentType<SuggestedValueInputProps>;

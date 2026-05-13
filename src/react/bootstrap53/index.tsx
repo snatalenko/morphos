@@ -7,6 +7,7 @@ import type {
 	SectionRowProps,
 	KeyInputProps,
 	KeyLabelProps,
+	RowLabelProps,
 	SuggestedKeyInputProps,
 	ValueInputProps,
 	SuggestedValueInputProps,
@@ -73,6 +74,10 @@ export const KeyInput: ComponentType<KeyInputProps> = ({ value, onChange, placeh
 		onChange={e => onChange(e.target.value)}
 		placeholder={placeholder}
 	/>
+);
+
+export const RowLabel: ComponentType<RowLabelProps> = ({ label }) => (
+	<label className="col-form-label">{label}</label>
 );
 
 export const KeyLabel: ComponentType<KeyLabelProps> = ({ name, schema, required }) => {
@@ -372,6 +377,7 @@ const components: Partial<MappingEditorComponents> = {
 	SectionRow,
 	KeyInput,
 	KeyLabel,
+	RowLabel,
 	SuggestedKeyInput,
 	ValueInput,
 	SuggestedValueInput,

@@ -8,6 +8,7 @@ import type {
 	SectionRowProps,
 	KeyInputProps,
 	KeyLabelProps,
+	RowLabelProps,
 	SuggestedKeyInputProps,
 	ValueInputProps,
 	SuggestedValueInputProps,
@@ -72,6 +73,10 @@ export const DefaultKeyInput: ComponentType<KeyInputProps> = ({ value, onChange,
 		onChange={e => onChange(e.target.value)}
 		placeholder={placeholder}
 	/>
+);
+
+export const DefaultRowLabel: ComponentType<RowLabelProps> = ({ label }) => (
+	<label className="dm-mapping-label">{label}</label>
 );
 
 export const DefaultKeyLabel: ComponentType<KeyLabelProps> = ({ name, schema, required }) => {
@@ -368,6 +373,7 @@ export const defaultComponents: MappingEditorComponents = {
 	SectionRow: DefaultSectionRow,
 	KeyInput: DefaultKeyInput,
 	KeyLabel: DefaultKeyLabel,
+	RowLabel: DefaultRowLabel,
 	SuggestedKeyInput: DefaultSuggestedKeyInput,
 	ValueInput: DefaultValueInput,
 	SuggestedValueInput: DefaultSuggestedValueInput,

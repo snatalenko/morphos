@@ -404,41 +404,37 @@ function App() {
 						borderRadius: 4
 					}}>
 						<h3 style={{ margin: '0 0 0.5rem', fontSize: '0.9rem' }}>Generate with OpenAI</h3>
-						<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end' }}>
-							<div style={{ flex: 1 }}>
-								<label style={labelStyle}>API key (not stored — memory only)</label>
-								<input
-									type="password"
-									value={apiKey}
-									onChange={e => setApiKey(e.target.value)}
-									placeholder="sk-..."
-									style={{
-										width: '100%',
-										fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-										fontSize: '0.85rem',
-										padding: '0.4rem 0.5rem',
-										boxSizing: 'border-box',
-										border: '1px solid #ccc',
-										borderRadius: 4
-									}}
-								/>
-							</div>
-							<div>
-								<label style={labelStyle}>Model</label>
-								<select
-									value={aiModel}
-									onChange={e => setAiModel(e.target.value)}
-									style={{ fontSize: '0.85rem', padding: '0.4rem 0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
-								>
-									<option value="gpt-4.1">gpt-4.1</option>
-									<option value="gpt-4.1-mini">gpt-4.1-mini</option>
-									<option value="gpt-4o">gpt-4o</option>
-									<option value="gpt-4o-mini">gpt-4o-mini</option>
-									<option value="o4-mini">o4-mini</option>
-									<option value="o3">o3</option>
-									<option value="gpt-5.5">gpt-5.5</option>
-								</select>
-							</div>
+						<label style={labelStyle}>API key (not stored — memory only)</label>
+						<input
+							type="password"
+							value={apiKey}
+							onChange={e => setApiKey(e.target.value)}
+							placeholder="sk-..."
+							style={{
+								width: '100%',
+								fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+								fontSize: '0.85rem',
+								padding: '0.4rem 0.5rem',
+								boxSizing: 'border-box',
+								border: '1px solid #ccc',
+								borderRadius: 4
+							}}
+						/>
+						<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
+							<label style={{ ...labelStyle, marginBottom: 0 }}>Model</label>
+							<select
+								value={aiModel}
+								onChange={e => setAiModel(e.target.value)}
+								style={{ fontSize: '0.85rem', padding: '0.4rem 0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
+							>
+								<option value="gpt-4.1">gpt-4.1</option>
+								<option value="gpt-4.1-mini">gpt-4.1-mini</option>
+								<option value="gpt-4o">gpt-4o</option>
+								<option value="gpt-4o-mini">gpt-4o-mini</option>
+								<option value="o4-mini">o4-mini</option>
+								<option value="o3">o3</option>
+								<option value="gpt-5.5">gpt-5.5</option>
+							</select>
 						</div>
 						<label style={{ ...labelStyle, marginTop: '0.5rem' }}>Instructions (optional)</label>
 						<textarea

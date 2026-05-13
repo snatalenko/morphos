@@ -77,38 +77,22 @@ function ConditionalBranch({
 }) {
 	const C = useContext(ComponentsContext);
 	const isSection = value.kind !== 'expr';
-	const columns = onRemove
-		? '4rem 9rem minmax(0, 1fr) auto'
-		: '4rem 9rem minmax(0, 1fr)';
 
-	return (
-		<div
-			className="dm-mapping-conditional-branch"
-			style={{
-				display: 'grid',
-				gridTemplateColumns: columns,
-				gap: '0.5rem',
-				alignItems: 'start',
-				marginBottom: '0.5rem'
-			}}
-		>
-			<label className="dm-mapping-label" style={{ paddingTop: '0.35rem' }}>{label}</label>
-			<C.TypeSelector
-				kind={value.kind}
-				onChange={to => onChange(convertEntryValue(value, to))}
-			/>
-			<ValueView
-				name=""
-				value={value}
-				onChange={onChange}
-				schema={schema}
-				sourceSchema={sourceSchema}
-				sourceSuggestions={sourceSuggestions}
-				part={isSection ? 'control' : 'full'}
-			/>
-			{onRemove ? <C.RemoveButton onClick={onRemove} /> : null}
-			{isSection && (
-				<div style={{ gridColumn: '1 / -1' }}>
+	const keyInput = <C.RowLabel label={label} />;
+	const typeSelector = (
+		<C.TypeSelector
+			kind={value.kind}
+			onChange={to => onChange(convertEntryValue(value, to))}
+		/>
+	);
+	const remove = onRemove ? <C.RemoveButton onClick={onRemove} /> : null;
+
+	if (!isSection) {
+		return (
+			<C.Row
+				keyInput={keyInput}
+				typeSelector={typeSelector}
+				value={
 					<ValueView
 						name=""
 						value={value}
@@ -116,11 +100,44 @@ function ConditionalBranch({
 						schema={schema}
 						sourceSchema={sourceSchema}
 						sourceSuggestions={sourceSuggestions}
-						part="body"
+						part="full"
 					/>
-				</div>
-			)}
-		</div>
+				}
+				reorder={null}
+				remove={remove}
+			/>
+		);
+	}
+
+	return (
+		<C.SectionRow
+			keyInput={keyInput}
+			typeSelector={typeSelector}
+			value={
+				<ValueView
+					name=""
+					value={value}
+					onChange={onChange}
+					schema={schema}
+					sourceSchema={sourceSchema}
+					sourceSuggestions={sourceSuggestions}
+					part="control"
+				/>
+			}
+			section={
+				<ValueView
+					name=""
+					value={value}
+					onChange={onChange}
+					schema={schema}
+					sourceSchema={sourceSchema}
+					sourceSuggestions={sourceSuggestions}
+					part="body"
+				/>
+			}
+			reorder={null}
+			remove={remove}
+		/>
 	);
 }
 
@@ -153,44 +170,29 @@ function ConcatItemView({
 	const labels = useContext(LabelsContext);
 	const isSection = value.kind !== 'expr';
 
-	return (
-		<div
-			className="dm-mapping-concat-item"
-			style={{
-				display: 'grid',
-				gridTemplateColumns: '4rem 9rem minmax(0, 1fr) auto',
-				gap: '0.5rem',
-				alignItems: 'start',
-				marginBottom: '0.5rem'
-			}}
-		>
-			<label className="dm-mapping-label" style={{ paddingTop: '0.35rem' }}>
-				{labels.concatItem} {index + 1}
-			</label>
-			<C.TypeSelector
-				kind={value.kind}
-				onChange={to => onChange(convertEntryValue(value, to))}
-			/>
-			<ValueView
-				name=""
-				value={value}
-				onChange={onChange}
-				schema={schema}
-				sourceSchema={sourceSchema}
-				sourceSuggestions={sourceSuggestions}
-				part={isSection ? 'control' : 'full'}
-			/>
-			<span className="dm-mapping-actions">
-				<C.Reorder
-					canMoveUp={canMoveUp}
-					canMoveDown={canMoveDown}
-					onMoveUp={onMoveUp}
-					onMoveDown={onMoveDown}
-				/>
-				<C.RemoveButton onClick={onRemove} />
-			</span>
-			{isSection && (
-				<div style={{ gridColumn: '1 / -1' }}>
+	const keyInput = <C.RowLabel label={`${labels.concatItem} ${index + 1}`} />;
+	const typeSelector = (
+		<C.TypeSelector
+			kind={value.kind}
+			onChange={to => onChange(convertEntryValue(value, to))}
+		/>
+	);
+	const reorder = (
+		<C.Reorder
+			canMoveUp={canMoveUp}
+			canMoveDown={canMoveDown}
+			onMoveUp={onMoveUp}
+			onMoveDown={onMoveDown}
+		/>
+	);
+	const remove = <C.RemoveButton onClick={onRemove} />;
+
+	if (!isSection) {
+		return (
+			<C.Row
+				keyInput={keyInput}
+				typeSelector={typeSelector}
+				value={
 					<ValueView
 						name=""
 						value={value}
@@ -198,11 +200,44 @@ function ConcatItemView({
 						schema={schema}
 						sourceSchema={sourceSchema}
 						sourceSuggestions={sourceSuggestions}
-						part="body"
+						part="full"
 					/>
-				</div>
-			)}
-		</div>
+				}
+				reorder={reorder}
+				remove={remove}
+			/>
+		);
+	}
+
+	return (
+		<C.SectionRow
+			keyInput={keyInput}
+			typeSelector={typeSelector}
+			value={
+				<ValueView
+					name=""
+					value={value}
+					onChange={onChange}
+					schema={schema}
+					sourceSchema={sourceSchema}
+					sourceSuggestions={sourceSuggestions}
+					part="control"
+				/>
+			}
+			section={
+				<ValueView
+					name=""
+					value={value}
+					onChange={onChange}
+					schema={schema}
+					sourceSchema={sourceSchema}
+					sourceSuggestions={sourceSuggestions}
+					part="body"
+				/>
+			}
+			reorder={reorder}
+			remove={remove}
+		/>
 	);
 }
 

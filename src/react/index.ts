@@ -15,6 +15,7 @@ export type {
 	SectionRowProps,
 	KeyInputProps,
 	KeyLabelProps,
+	RowLabelProps,
 	SuggestedKeyInputProps,
 	ValueInputProps,
 	SuggestedValueInputProps,
