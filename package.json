@@ -52,6 +52,14 @@
       "types": "./types/openai/index.d.ts"
     }
   },
+  "files": [
+    "dist/**",
+    "!dist/.tsbuildinfo*",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "CHANGELOG.md"
+  ],
   "peerDependencies": {
     "react": ">=18",
     "openai": ">=4"
