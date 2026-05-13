@@ -473,15 +473,13 @@ var $omit = Symbol('declarative-mapper.omit');
 with ($createGlobalContext($input)) {
   $result =
     (() => {
-      return (() => {
-        var $output = {};
-        var $value;
-        $value =
-          true;
-        if ($value !== $omit)
-          $output[\`foo\`] = $value;
-        return $output;
-      })();
+      var $output = {};
+      var $value;
+      $value =
+        true;
+      if ($value !== $omit)
+        $output[\`foo\`] = $value;
+      return $output;
     })()
 }
 if ($result === $omit)

@@ -56,42 +56,32 @@ function* propertiesMapToJs(map: PropertiesMap, level: number): IterableIterator
 
 	const prefix = '  '.repeat(level);
 	if (isRootElementMapping(map)) {
-		yield* returnValueMapToJs(map['*'], level + 1);
+		yield* returnValueMapToJs(map['*'], level);
 		return;
 	}
 
 	const isTupleArray = isTupleArrayMapping(map);
-	if (isTupleArray)
-		yield `${prefix}  return Object.assign([], (() => {`;
-	else
-		yield `${prefix}  return (() => {`;
-
-	yield `${prefix}    var $output = {};`;
-	yield `${prefix}    var $value;`;
+	yield `${prefix}var $output = ${isTupleArray ? '[]' : '{}'};`;
+	yield `${prefix}var $value;`;
 
 	for (const [fieldName, mappingInstruction] of Object.entries(map)) {
 		const quotedFieldName = fieldName.replace(/`/g, '\\`');
 
-		yield `${prefix}    $value =`;
+		yield `${prefix}$value =`;
 		if (typeof mappingInstruction === 'string') {
-			yield `${prefix}      ${mappingInstruction || 'null'};`;
+			yield `${prefix}  ${mappingInstruction || 'null'};`;
 		}
 		else {
 			// eslint-disable-next-line no-use-before-define
-			yield* mappingToJs(mappingInstruction, level + 2);
-			yield `${prefix}    ;`;
+			yield* mappingToJs(mappingInstruction, level);
+			yield `${prefix};`;
 		}
 
-		yield `${prefix}    if ($value !== $omit)`;
-		yield `${prefix}      $output[\`${quotedFieldName}\`] = $value;`;
+		yield `${prefix}if ($value !== $omit)`;
+		yield `${prefix}  $output[\`${quotedFieldName}\`] = $value;`;
 	}
 
-	yield `${prefix}    return $output;`;
-
-	if (isTupleArray)
-		yield `${prefix}  })());`;
-	else
-		yield `${prefix}  })();`;
+	yield `${prefix}return $output;`;
 }
 
 function* mappingToJs(mapping: RootMapping, level: number) {
@@ -125,7 +115,7 @@ function* mappingToJs(mapping: RootMapping, level: number) {
 
 		yield `${prefix}  ${forEach}?.map(($record, $index, $collection) => {`;
 		yield `${prefix}    with ($record) {`;
-		yield* propertiesMapToJs(map, level + 2);
+		yield* propertiesMapToJs(map, level + 3);
 		yield `${prefix}    }`;
 		yield `${prefix}  })`;
 	}
@@ -139,7 +129,7 @@ function* mappingToJs(mapping: RootMapping, level: number) {
 		yield `${prefix}  (() => {`;
 		yield `${prefix}    var $context = ${from} ?? {};`;
 		yield `${prefix}    with ($context) {`;
-		yield* propertiesMapToJs(map, level + 2);
+		yield* propertiesMapToJs(map, level + 3);
 		yield `${prefix}    }`;
 		yield `${prefix}  })()`;
 	}
@@ -149,12 +139,12 @@ function* mappingToJs(mapping: RootMapping, level: number) {
 			throw new TypeError(`Property "map" is empty in mapping "${JSON.stringify(mapping)}"`);
 
 		yield `${prefix}  (() => {`;
-		yield* propertiesMapToJs(map, level + 1);
+		yield* propertiesMapToJs(map, level + 2);
 		yield `${prefix}  })()`;
 	}
 	else {
 		yield `${prefix}  (() => {`;
-		yield* propertiesMapToJs(mapping, level + 1);
+		yield* propertiesMapToJs(mapping, level + 2);
 		yield `${prefix}  })()`;
 	}
 }
