@@ -546,7 +546,7 @@ describe('createMapper', () => {
 
 		expect(log).to.have.length(1);
 		expect(log[0]).to.eql(`
-var $omit = Symbol('declarative-mapper.omit');
+var $omit = Symbol('morphos.omit');
 with ($createGlobalContext($input)) {
   $result =
     (() => {

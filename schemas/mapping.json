@@ -1,6 +1,6 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
-    "id": "https://github.com/snatalenko/declarative-mapper/mapping",
+    "id": "https://github.com/snatalenko/morphos/mapping",
     "title": "Mapping Schema for JSON Data Transformations",
     "description": "A schema defining a structure for JSON mappings. Field names in the mappings correspond to fields in the destination JSON format, while field values can be any valid JavaScript expression.",
     "oneOf": [

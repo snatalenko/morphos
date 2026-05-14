@@ -189,7 +189,7 @@ function* mappingToJs(mapping: RootMapping, level: number) {
  */
 export default function createScript(map: RootMapping) {
 	return `
-var $omit = Symbol('declarative-mapper.omit');
+var $omit = Symbol('morphos.omit');
 with ($createGlobalContext($input)) {
   $result =
 ${Array.from(mappingToJs(map, 1)).join('\n')}

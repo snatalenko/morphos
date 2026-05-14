@@ -1,5 +1,5 @@
 {
-  "name": "declarative-mapper",
+  "name": "morphos",
   "version": "1.7.2",
   "description": "JSON-to-JSON mapper with user-defined JSON mapping specs, plain JS transformation expressions, and secure VM execution.",
   "keywords": [
@@ -13,6 +13,7 @@
     "json",
     "mapper",
     "mapping",
+    "declarative-mapper",
     "nodejs",
     "object-mapper",
     "object-mapping",
@@ -90,14 +91,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+ssh://git@github.com/snatalenko/declarative-mapper.git"
+    "url": "git+ssh://git@github.com/snatalenko/morphos.git"
   },
   "author": "@snatalenko",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/snatalenko/declarative-mapper/issues"
+    "url": "https://github.com/snatalenko/morphos/issues"
   },
-  "homepage": "https://github.com/snatalenko/declarative-mapper#readme",
+  "homepage": "https://github.com/snatalenko/morphos#readme",
   "devDependencies": {
     "@types/chai": "^4.3.20",
     "@types/jest": "^29.5.14",

@@ -1,15 +1,21 @@
-Declarative Mapper
-==================
+Morphos
+=======
 
-[![Version](https://img.shields.io/npm/v/declarative-mapper.svg)](https://www.npmjs.com/package/declarative-mapper)
-[![Coverage](https://coveralls.io/repos/github/snatalenko/declarative-mapper/badge.svg?branch=master&v=1.7.1)](https://coveralls.io/github/snatalenko/declarative-mapper?branch=master)
-[![Downloads](https://img.shields.io/npm/dm/declarative-mapper.svg)](https://www.npmjs.com/package/declarative-mapper)
-[![License](https://img.shields.io/github/license/snatalenko/declarative-mapper.svg?v=1.7.1)](https://github.com/snatalenko/declarative-mapper)
-[![Tests/Audit](https://github.com/snatalenko/declarative-mapper/actions/workflows/ci.yml/badge.svg)](https://github.com/snatalenko/declarative-mapper/actions)
+[![Version](https://img.shields.io/npm/v/morphos.svg)](https://www.npmjs.com/package/morphos)
+[![Coverage](https://coveralls.io/repos/github/snatalenko/morphos/badge.svg?branch=master&v=1.7.1)](https://coveralls.io/github/snatalenko/morphos?branch=master)
+[![Downloads](https://img.shields.io/npm/dm/morphos.svg)](https://www.npmjs.com/package/morphos)
+[![License](https://img.shields.io/github/license/snatalenko/morphos.svg?v=1.7.1)](https://github.com/snatalenko/morphos)
+[![Tests/Audit](https://github.com/snatalenko/morphos/actions/workflows/ci.yml/badge.svg)](https://github.com/snatalenko/morphos/actions)
+
+<p align="center">
+  <img src="docs/images/morphos_logo.svg" width="250" />
+</p>
 
 ## Overview
 
-Declarative Mapper is a JSON-to-JSON mapping library for JavaScript/TypeScript. Users define the mapping as JSON, so it can be stored, versioned, generated, or edited from a UI. Unlike many transformation tools, it does not invent a custom expression language: field transforms are plain JavaScript expressions, executed in a restricted VM context for predictable behavior without giving mappings access to the host environment.
+JSON-to-JSON mapper with user-defined JSON mapping specs, plain JS transformation expressions, and secure VM execution.
+
+Users define the mapping as JSON, so it can be stored, versioned, generated, or edited from a UI. Unlike many transformation tools, it does not invent a custom expression language: field transforms are plain JavaScript expressions, executed in a restricted VM context for predictable behavior without giving mappings access to the host environment.
 
 Try it in the [interactive playground](https://snatalenko.github.io/declarative-mapper/playground/).
 
@@ -39,7 +45,7 @@ Try it in the [interactive playground](https://snatalenko.github.io/declarative-
 
 On several projects, I needed a library that could convert one JSON document shape to another (for example, an invoice from one system into another). The mapping itself had to be plain JSON so business-facing tools could create and persist it, but the transformation logic still had to be expressive enough for real-world rules like calculations, conditionals, and array reductions.
 
-That is where Declarative Mapper came in:
+That is where Morphos came in:
 
 - **JSON-defined** - mappings are JSON documents, so they are easy to store, diff, generate, validate, and edit from a UI.
 - **JavaScript-native** - transformations use ordinary JavaScript expressions instead of a custom DSL.
@@ -50,15 +56,15 @@ That is where Declarative Mapper came in:
 
 ### Optional Packages
 
-Declarative Mapper also ships optional subpath entries that are loaded only when imported:
+Morphos also ships optional subpath entries that are loaded only when imported:
 
-- [`declarative-mapper/react`](src/react/README.md) - a React visual mapping editor with schema-driven field suggestions, mapping type selection, and built-in default/Bootstrap themes.
-- [`declarative-mapper/openai`](src/openai/README.md) - an OpenAI-powered helper that generates a `RootMapping` from source and destination schemas, optionally guided by natural-language instructions.
+- [`morphos/react`](src/react/README.md) - a React visual mapping editor with schema-driven field suggestions, mapping type selection, and built-in default/Bootstrap themes.
+- [`morphos/openai`](src/openai/README.md) - an OpenAI-powered helper that generates a `RootMapping` from source and destination schemas, optionally guided by natural-language instructions.
 
 ### Quick Start Example
 
 ```ts
-import { createMapper } from 'declarative-mapper';
+import { createMapper } from 'morphos';
 
 // Source records from system A
 const sourceOrders = [

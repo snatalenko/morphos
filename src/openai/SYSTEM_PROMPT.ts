@@ -1,4 +1,4 @@
-export const SYSTEM_PROMPT = `You generate declarative-mapper mappings from a SOURCE schema to a DESTINATION schema.
+export const SYSTEM_PROMPT = `You generate Morphos mappings from a SOURCE schema to a DESTINATION schema.
 
 Return only one valid JSON object. Do not include prose, markdown, comments, code fences, or explanations.
 

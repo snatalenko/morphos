@@ -1,10 +1,12 @@
-# declarative-mapper/openai
+# morphos/openai
 
-OpenAI-powered mapping generator for `declarative-mapper`. Given a source schema, a
+## Overview
+
+OpenAI-powered mapping generator for `morphos`. Given a source schema, a
 destination schema, and an OpenAI API token, returns a `RootMapping` JSON that
 transforms data of the source shape into data of the destination shape.
 
-This entry is published as a subpath of `declarative-mapper`. It is **not** loaded unless
+This entry is published as a subpath of `morphos`. It is **not** loaded unless
 imported, so consumers of the main package pay nothing for the OpenAI SDK.
 
 ## Installation
@@ -18,8 +20,8 @@ npm install openai
 ## Usage
 
 ```ts
-import { generateMapping } from 'declarative-mapper/openai';
-import type { MappingSchema } from 'declarative-mapper';
+import { generateMapping } from 'morphos/openai';
+import type { MappingSchema } from 'morphos';
 
 const sourceSchema: MappingSchema = {
     type: 'object',
@@ -88,7 +90,7 @@ the main package, or used as the initial `value` of the `MappingEditor`.
 The function instantiates an `OpenAI` client with the supplied token and calls
 `chat.completions.create` with:
 
-* A system prompt describing the `declarative-mapper` mapping format (expression strings,
+* A system prompt describing the `morphos` mapping format (expression strings,
   `forEach`/`from` wrappers, plain nested objects, type-conversion conventions).
 * A user message that includes both schemas as pretty-printed JSON and your `instructions`
   if provided.
@@ -107,7 +109,7 @@ JSON, the function throws.
 
 ## Notes
 
-* The returned mapping is **not** validated against the `declarative-mapper` mapping
+* The returned mapping is **not** validated against the `morphos` mapping
   schema. Pass it through `createMapper` (which performs its own validation) or wrap the
   call in your own validator if strict guarantees are required.
 * For browser usage, instantiate your own `OpenAI` client with

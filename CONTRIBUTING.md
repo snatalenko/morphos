@@ -12,8 +12,8 @@ Prerequisites:
 Clone and install:
 
 ```bash
-git clone git@github.com:snatalenko/declarative-mapper.git
-cd declarative-mapper
+git clone git@github.com:snatalenko/morphos.git
+cd morphos
 npm ci
 ```
 

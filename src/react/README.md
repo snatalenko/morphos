@@ -1,6 +1,8 @@
-# declarative-mapper/react
+# morphos/react
 
-A React-based visual editor for `declarative-mapper` mapping objects. Provides an editable
+## Overview
+
+A React-based visual editor for `morphos` mapping objects. Provides an editable
 form whose value can be read back as a `RootMapping`, with optional **destination** and
 **source** JSON Schemas to drive field suggestions, type inference, and dropdowns.
 
@@ -16,8 +18,17 @@ npm install react react-dom
 
 ```tsx
 import { useState } from 'react';
-import { MappingEditor } from 'declarative-mapper/react';
-import type { RootMapping } from 'declarative-mapper';
+import { MappingEditor } from 'morphos/react';
+import type { RootMapping } from 'morphos';
+
+const initialMapping: RootMapping = {
+    code: 'UPC.substring(0, 5)',
+    qty: 'QTY',
+    lineItems: {
+        forEach: 'LINE_ITEMS',
+        map: { id: 'ID', qty: 'QTY' }
+    }
+};
 
 function Example() {
     const [snapshot, setSnapshot] = useState<RootMapping>({});
@@ -26,14 +37,7 @@ function Example() {
         <>
             <MappingEditor
                 onChange={setSnapshot}
-                defaultValue={{
-                    code: 'UPC.substring(0, 5)',
-                    qty: 'QTY',
-                    lineItems: {
-                        forEach: 'LINE_ITEMS',
-                        map: { id: 'ID', qty: 'QTY' }
-                    }
-                }}
+                defaultValue={initialMapping}
             />
             <pre>{JSON.stringify(snapshot, null, 2)}</pre>
         </>
@@ -75,20 +79,20 @@ Passing `schema` makes the editor list fields from the schema as drop-down optio
 mapping kind from each field's `type`, and show required-field markers.
 
 ```tsx
-<MappingEditor
-    schema={{
-        type: 'object',
-        required: ['code', 'amount'],
-        properties: {
-            code: { type: 'string' },
-            qty: { type: 'number' },
-            lineItems: {
-                type: 'array',
-                items: { type: 'object', properties: { id: { type: 'string' } } }
-            }
+const destinationSchema = {
+    type: 'object',
+    required: ['code', 'amount'],
+    properties: {
+        code: { type: 'string' },
+        qty: { type: 'number' },
+        lineItems: {
+            type: 'array',
+            items: { type: 'object', properties: { id: { type: 'string' } } }
         }
-    }}
-/>
+    }
+};
+
+<MappingEditor schema={destinationSchema} />
 ```
 
 Keys not present in the schema render as free-form text inputs ("custom" fields). Schema-bound
@@ -128,13 +132,15 @@ The editor is composed from small components. Override any of them via the `comp
 prop. Each override receives the props for its slot and is responsible for rendering it.
 
 ```tsx
-import { MappingEditor, type KeyInputProps } from 'declarative-mapper/react';
+import { MappingEditor, type KeyInputProps } from 'morphos/react';
 
 const MyKeyInput = ({ value, onChange, placeholder }: KeyInputProps) => (
     <input className="my-key" value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} />
 );
 
-<MappingEditor components={{ KeyInput: MyKeyInput }} />
+const components = { KeyInput: MyKeyInput };
+
+<MappingEditor components={components} />
 ```
 
 Built-in defaults render bare HTML with `dm-mapping-*` class hooks for styling.
@@ -166,8 +172,8 @@ Pre-built component sets are published as separate subpath exports — each come
 classes for its target Bootstrap version:
 
 ```tsx
-import bootstrap34 from 'declarative-mapper/react/bootstrap34';
-import bootstrap53 from 'declarative-mapper/react/bootstrap53';
+import bootstrap34 from 'morphos/react/bootstrap34';
+import bootstrap53 from 'morphos/react/bootstrap53';
 
 <MappingEditor components={bootstrap34} />
 <MappingEditor components={bootstrap53} />
@@ -178,7 +184,7 @@ Bootstrap CSS file or CDN link). Individual components are also re-exported from
 in case you want to mix-and-match:
 
 ```tsx
-import { Row, SuggestedValueInput } from 'declarative-mapper/react/bootstrap53';
+import { Row, SuggestedValueInput } from 'morphos/react/bootstrap53';
 ```
 
 ### Default components
@@ -187,14 +193,14 @@ If you want to extend the default rendering rather than replace it, import the
 `defaultComponents` map and spread it:
 
 ```tsx
-import { defaultComponents, MappingEditor } from 'declarative-mapper/react';
+import { defaultComponents, MappingEditor } from 'morphos/react';
 
-<MappingEditor
-    components={{
-        ...defaultComponents,
-        AddItemButton: MyFancyAddItemButton
-    }}
-/>
+const components = {
+    ...defaultComponents,
+    AddItemButton: MyFancyAddItemButton
+};
+
+<MappingEditor components={components} />
 ```
 
 ## Localization
@@ -203,34 +209,34 @@ Every user-visible string lives in the `MappingEditorLabels` dictionary. Pass `l
 override any subset — the rest fall back to defaults.
 
 ```tsx
-<MappingEditor
-    labels={{
-        field: 'Feld',
-        array: 'Liste',
-        object: 'Objekt',
-        conditional: 'Wenn / sonst',
-        concat: 'Verketten',
-        addItem: 'Element hinzufügen',
-        newField: 'Neues Feld',
-        selectPlaceholder: '— auswählen —',
-        advanced: 'Erweitert…',
-        useSuggestions: 'Vorschläge verwenden',
-        useSchemaFields: 'Schemafelder verwenden',
-        currentValue: 'Aktueller Wert',
-        forEach: 'fürJedes',
-        from: 'von',
-        when: 'wenn',
-        then: 'dann',
-        else: 'sonst',
-        concatItem: 'Element',
-        addElse: '+ sonst',
-        keyPlaceholder: 'Schlüssel',
-        expressionPlaceholder: 'JS-Ausdruck',
-        removeField: 'Feld entfernen',
-        moveUp: 'Nach oben',
-        moveDown: 'Nach unten'
-    }}
-/>
+const labels = {
+    field: 'Feld',
+    array: 'Liste',
+    object: 'Objekt',
+    conditional: 'Wenn / sonst',
+    concat: 'Verketten',
+    addItem: 'Element hinzufügen',
+    newField: 'Neues Feld',
+    selectPlaceholder: '— auswählen —',
+    advanced: 'Erweitert…',
+    useSuggestions: 'Vorschläge verwenden',
+    useSchemaFields: 'Schemafelder verwenden',
+    currentValue: 'Aktueller Wert',
+    forEach: 'fürJedes',
+    from: 'von',
+    when: 'wenn',
+    then: 'dann',
+    else: 'sonst',
+    concatItem: 'Element',
+    addElse: '+ sonst',
+    keyPlaceholder: 'Schlüssel',
+    expressionPlaceholder: 'JS-Ausdruck',
+    removeField: 'Feld entfernen',
+    moveUp: 'Nach oben',
+    moveDown: 'Nach unten'
+};
+
+<MappingEditor labels={labels} />
 ```
 
 ### Available label keys
@@ -278,7 +284,7 @@ Bootstrap 3 keeps glyphicons (`glyphicon-chevron-up`, etc.) for icon-font reason
 Import `defaultLabels` if you need to spread-and-override or build a localized object:
 
 ```tsx
-import { defaultLabels, MappingEditor } from 'declarative-mapper/react';
+import { defaultLabels, MappingEditor } from 'morphos/react';
 
 const ru = { ...defaultLabels, field: 'Поле', array: 'Массив', /* … */ };
 <MappingEditor labels={ru} />
@@ -290,7 +296,7 @@ When writing your own components, read labels from the exported `LabelsContext`:
 
 ```tsx
 import { useContext } from 'react';
-import { LabelsContext, type AddItemButtonProps } from 'declarative-mapper/react';
+import { LabelsContext, type AddItemButtonProps } from 'morphos/react';
 
 const MyAddItemButton = ({ onClick }: AddItemButtonProps) => {
     const labels = useContext(LabelsContext);

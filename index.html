@@ -4,8 +4,8 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>declarative-mapper · Documentation</title>
-	<!-- <link rel="icon" type="image/svg+xml" href="docs/images/logo.svg" /> -->
+	<title>Morphos · Documentation</title>
+	<link rel="icon" type="image/svg+xml" href="docs/images/morphos_logo.svg" />
 
 	<script>
 		// pre-paint, before tailwind loads — sets the .dark class so there's no flash of light theme
@@ -244,9 +244,9 @@
 
 	<header class="sticky top-0 z-20 bg-white dark:bg-[#0d1117] border-b border-slate-200 dark:border-slate-800">
 		<div class="max-w-screen-2xl mx-auto px-4 py-3 flex items-center gap-3">
-			<!-- <img src="docs/images/logo.svg" alt="declarative-mapper" class="h-8 w-16 dark:invert" /> -->
+			<img src="docs/images/morphos_logo.svg" alt="Morphos" class="h-8 w-16" />
 			<div class="flex-1">
-				<h1 class="text-lg font-semibold text-slate-900 dark:text-slate-100">declarative-mapper</h1>
+				<h1 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Morphos</h1>
 				<p class="text-xs text-slate-500 dark:text-slate-400 -mt-0.5">JSON-to-JSON mapper with user-defined JSON mapping specs, plain JS transformation expressions, and secure VM execution</p>
 			</div>
 			<button id="theme-toggle" type="button" aria-label="Toggle dark mode" class="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white p-1.5 border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800">
@@ -258,10 +258,10 @@
 					<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
 				</svg>
 			</button>
-			<a href="https://github.com/snatalenko/declarative-mapper" class="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800">
+			<a href="https://github.com/snatalenko/morphos" class="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800">
 				GitHub
 			</a>
-			<a href="https://www.npmjs.com/package/declarative-mapper" class="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800">
+			<a href="https://www.npmjs.com/package/morphos" class="text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white px-3 py-1.5 border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800">
 				npm
 			</a>
 		</div>
@@ -316,8 +316,8 @@
 					<ul class="space-y-0.5 text-slate-600 dark:text-slate-300">
 						<li><a href="playground" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Editor Playground</a></li>
 						<li><a href="#/CHANGELOG.md" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Changelog</a></li>
-						<li><a href="https://github.com/snatalenko/declarative-mapper/issues" class="block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Issues ↗</a></li>
-						<li><a href="https://github.com/snatalenko/declarative-mapper?tab=Apache-2.0-1-ov-file" class="block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Apache-2.0 License ↗</a></li>
+						<li><a href="https://github.com/snatalenko/morphos/issues" class="block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Issues ↗</a></li>
+						<li><a href="https://github.com/snatalenko/morphos?tab=Apache-2.0-1-ov-file" class="block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Apache-2.0 License ↗</a></li>
 					</ul>
 				</div>
 			</nav>
@@ -359,7 +359,7 @@
 			if (!localStorage.getItem('theme')) applyTheme(e.matches);
 		});
 
-		const REPO = 'snatalenko/declarative-mapper';
+		const REPO = 'snatalenko/morphos';
 		const REPO_BRANCH = 'master';
 		const DEFAULT_DOC = 'README.md';
 
@@ -523,12 +523,13 @@
 		}
 
 		function stripLeadingH1(html) {
-			// the page header already shows "declarative-mapper" — drop the first <h1> at the top of the doc
+			// the page header already shows "Morphos" — drop the first <h1> at the top of the doc
 			return html.replace(/^\s*<h1[^>]*>[\s\S]*?<\/h1>\s*/i, '');
 		}
 
-		function stripBadges(html) {
-			return html.replace(/<p\b[^>]*>\s*(?:<a\b[^>]*>\s*<img\b[^>]*>\s*<\/a>\s*)+<\/p>/g, '');
+		function stripBeforeFirstH2(html) {
+			const idx = html.search(/<h2[\s>]/i);
+			return idx === -1 ? html : html.slice(idx);
 		}
 
 		function stripEmbeddedToc(html) {
@@ -652,7 +653,7 @@
 				const htmlRaw = marked.parse(md);
 				const htmlWithoutToc = stripEmbeddedToc(htmlRaw);
 				const htmlWithoutH1 = stripLeadingH1(htmlWithoutToc);
-				const html = stripBadges(htmlWithoutH1);
+				const html = stripBeforeFirstH2(htmlWithoutH1);
 				contentEl.innerHTML = html;
 
 				const rootDir = file.includes('/') ? file.slice(0, file.lastIndexOf('/') + 1) : '';
