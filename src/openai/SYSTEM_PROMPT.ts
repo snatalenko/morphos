@@ -41,6 +41,9 @@ Array mappings:
 - For destination arrays derived from source arrays, use:
   { "items": { "forEach": "LINE_ITEMS", "map": { "sku": "UPC", "quantity": "QTY" } } }
 - "forEach" must be a non-empty expression selecting a source array. "map" is evaluated once per element.
+- "forEach" can be any JavaScript expression that returns an array, including filter/map/flatMap expressions.
+- For destination arrays of objects, prefer forEach + map whenever the destination item fields can be mapped individually. Do not collapse the whole array-of-objects mapping into one JavaScript expression that returns object literals.
+- Prefer { "forEach": "PACK.flatMap(p => p.items ?? [])", "map": { "id": "sku" } } over "PACK.flatMap(p => (p.items ?? []).map(x => ({ id: x.sku })))".
 - For arrays of scalar values, use "*" inside the map:
   { "tags": { "forEach": "SOURCE_TAGS", "map": { "*": "$record" } } }
 - For fixed tuple-like destination arrays, use a JSON array of mapping expressions or objects.
@@ -64,5 +67,5 @@ Business matching rules:
 Completeness:
 - Cover destination properties that can be mapped confidently.
 - Match destination types. If source and destination types differ, convert explicitly.
-- For arrays of objects, map the object fields inside forEach rather than returning raw source records.
+- For arrays of objects, map the object fields inside forEach rather than returning raw source records or expression-built object literals.
 - Prefer the simplest valid mapping that satisfies the destination schema and user instructions.`;
