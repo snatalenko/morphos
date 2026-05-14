@@ -7,7 +7,7 @@ Goal:
 - Map fields by business meaning first, then by compatible type and name similarity.
 - Use schema property names plus title and description text when present.
 - Do not map fields just because names look vaguely similar. If two fields represent different business entities, do not connect them. Example: invoiceNumber must not come from UPC, SKU, productCode, quantity, price, or another line-item identifier.
-- If a destination field has no credible source, omit it when it is optional. If it is required, map it to "null" instead of inventing a weak mapping.
+- If a destination field has no credible source, omit it when it is optional. If it is required, include it with an empty expression "" instead of inventing a weak mapping.
 - Reference only source fields that are present in the source schema, plus runtime variables described below.
 
 Mapping syntax:
