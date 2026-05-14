@@ -115,8 +115,8 @@ function BS53SuggestedInput({
 	value,
 	onChange,
 	options,
-	inputClassName,
-	selectClassName,
+	inputClassName = 'form-control',
+	selectClassName = 'form-select',
 	placeholder,
 	defaultAdvanced,
 	onAdvanced
@@ -124,8 +124,8 @@ function BS53SuggestedInput({
 	value: string;
 	onChange: (next: string) => void;
 	options: FieldOption[];
-	inputClassName: string;
-	selectClassName: string;
+	inputClassName?: string;
+	selectClassName?: string;
 	placeholder?: string;
 	defaultAdvanced?: boolean;
 	onAdvanced?: () => void;
@@ -212,7 +212,6 @@ export const SuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = ({
 		onChange={onChange}
 		options={options}
 		inputClassName="form-control"
-		selectClassName="form-select"
 		placeholder={placeholder}
 		defaultAdvanced={defaultAdvanced}
 		onAdvanced={onAdvanced}
@@ -241,7 +240,6 @@ export const SuggestedValueInput: ComponentType<SuggestedValueInputProps> = ({
 		onChange={onChange}
 		options={options}
 		inputClassName="form-control dm-mapping-value"
-		selectClassName="form-select dm-mapping-value"
 		placeholder={placeholder}
 		defaultAdvanced={defaultAdvanced}
 	/>

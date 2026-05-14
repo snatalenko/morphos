@@ -115,7 +115,8 @@ function SuggestedInput({
 	value,
 	onChange,
 	options,
-	inputClassName,
+	inputClassName = 'form-control',
+	selectClassName = 'form-control',
 	placeholder,
 	defaultAdvanced,
 	onAdvanced
@@ -123,7 +124,8 @@ function SuggestedInput({
 	value: string;
 	onChange: (next: string) => void;
 	options: FieldOption[];
-	inputClassName: string;
+	inputClassName?: string;
+	selectClassName?: string;
 	placeholder?: string;
 	defaultAdvanced?: boolean;
 	onAdvanced?: () => void;
@@ -172,7 +174,7 @@ function SuggestedInput({
 
 	return (
 		<select
-			className={inputClassName}
+			className={selectClassName}
 			value={matched ? value : ''}
 			onChange={e => {
 				const v = e.target.value;
@@ -196,9 +198,7 @@ function SuggestedInput({
 	);
 }
 
-export const SuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = props => (
-	<SuggestedInput {...props} inputClassName="form-control" />
-);
+export const SuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = SuggestedInput;
 
 export const SuggestedValueInput: ComponentType<SuggestedValueInputProps> = props => (
 	<SuggestedInput {...props} inputClassName="form-control dm-mapping-value" />
@@ -250,7 +250,7 @@ export const TypeSelector: ComponentType<TypeSelectorProps> = ({ kind, onChange 
 export const Reorder: ComponentType<ReorderProps> = ({ canMoveUp, canMoveDown, onMoveUp, onMoveDown }) => {
 	const labels = useContext(LabelsContext);
 	return (
-		<div className="btn-group btn-group-sm" role="group" aria-label={labels.reorder}>
+		<div className="btn-group btn-group-sm" role="group" aria-label={labels.reorder} style={{ minWidth: '47px' }}>
 			<button
 				type="button"
 				className="btn btn-default"
