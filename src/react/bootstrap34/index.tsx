@@ -115,6 +115,7 @@ function SuggestedInput({
 	value,
 	onChange,
 	options,
+	inputClassName,
 	placeholder,
 	defaultAdvanced,
 	onAdvanced
@@ -122,6 +123,7 @@ function SuggestedInput({
 	value: string;
 	onChange: (next: string) => void;
 	options: FieldOption[];
+	inputClassName: string;
 	placeholder?: string;
 	defaultAdvanced?: boolean;
 	onAdvanced?: () => void;
@@ -144,8 +146,8 @@ function SuggestedInput({
 			<input
 				ref={inputRef}
 				type="text"
-				className="form-control"
-								value={value}
+				className={inputClassName}
+				value={value}
 				onChange={e => onChange(e.target.value)}
 				placeholder={placeholder}
 			/>
@@ -158,8 +160,8 @@ function SuggestedInput({
 				<input
 					ref={inputRef}
 					type="text"
-					className="form-control"
-										value={value}
+					className={inputClassName}
+					value={value}
 					onChange={e => onChange(e.target.value)}
 					placeholder={placeholder}
 				/>
@@ -170,8 +172,8 @@ function SuggestedInput({
 
 	return (
 		<select
-			className="form-control"
-						value={matched ? value : ''}
+			className={inputClassName}
+			value={matched ? value : ''}
 			onChange={e => {
 				const v = e.target.value;
 				if (v === BS34_ADVANCED) {
@@ -194,13 +196,18 @@ function SuggestedInput({
 	);
 }
 
-export const SuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = SuggestedInput;
-export const SuggestedValueInput: ComponentType<SuggestedValueInputProps> = SuggestedInput;
+export const SuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = props => (
+	<SuggestedInput {...props} inputClassName="form-control" />
+);
+
+export const SuggestedValueInput: ComponentType<SuggestedValueInputProps> = props => (
+	<SuggestedInput {...props} inputClassName="form-control dm-mapping-value" />
+);
 
 export const ValueInput: ComponentType<ValueInputProps> = ({ value, onChange, placeholder }) => (
 	<input
 		type="text"
-		className="form-control"
+		className="form-control dm-mapping-value"
 		value={value}
 		onChange={e => onChange(e.target.value)}
 		placeholder={placeholder}

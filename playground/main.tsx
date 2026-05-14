@@ -308,6 +308,13 @@ function App() {
 			maxWidth: 1800,
 			margin: '0 auto'
 		}}>
+			<style>
+				{`
+					.dm-mapping-value {
+						font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
+					}
+				`}
+			</style>
 			<header style={{ marginBottom: '1rem' }}>
 				<h1 style={{ marginBottom: '0.25rem', fontSize: '1.5rem' }}>declarative-mapper playground</h1>
 				<p style={{ margin: 0, color: '#666', fontSize: '0.85rem' }}>
