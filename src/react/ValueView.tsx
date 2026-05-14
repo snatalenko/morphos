@@ -241,6 +241,28 @@ function ConcatItemView({
 	);
 }
 
+function schemaForConcatItem(
+	schema: MappingSchema | undefined,
+	value: EntryValue
+): MappingSchema | undefined {
+	if (schemaType(schema) !== 'array')
+		return schema;
+
+	const itemSchema = getItemsSchema(schema) ?? schema;
+	if (value.kind === 'array' || value.kind === 'concat')
+		return schema;
+	if (value.kind === 'conditional') {
+		const branchReturnsArray = value.then.kind === 'array'
+			|| value.then.kind === 'concat'
+			|| value.else?.kind === 'array'
+			|| value.else?.kind === 'concat';
+
+		return branchReturnsArray ? schema : itemSchema;
+	}
+
+	return itemSchema;
+}
+
 export function ValueView({
 	name,
 	value,
@@ -501,7 +523,7 @@ export function ValueView({
 						canMoveDown={index < value.items.length - 1}
 						onMoveUp={() => moveItem(index, -1)}
 						onMoveDown={() => moveItem(index, 1)}
-						schema={schema}
+						schema={schemaForConcatItem(schema, item)}
 						sourceSchema={sourceSchema}
 						sourceSuggestions={sourceSuggestions}
 					/>

@@ -27,15 +27,15 @@ export const initial: RootMapping = {
 	},
 	invoiceStatus: {
 		when: 'PREPAID',
-		then: '"paid"',
-		else: '"draft"'
+		then: "'paid'",
+		else: "'draft'"
 	},
 	charges: {
 		concat: [
 			{
 				forEach: 'LINES',
 				map: {
-					kind: '"item"',
+					kind: "'item'",
 					description: 'ITEM_NO',
 					amount: 'QTY * UNIT_PRICE'
 				}
@@ -43,8 +43,8 @@ export const initial: RootMapping = {
 			{
 				when: 'FREIGHT_AMT > 0',
 				then: {
-					kind: '"freight"',
-					description: '"Freight"',
+					kind: "'freight'",
+					description: "'Freight'",
 					amount: 'FREIGHT_AMT'
 				}
 			}
@@ -141,7 +141,11 @@ export const destinationSchema: MappingSchema = {
 				}
 			}
 		},
-		invoiceStatus: { type: 'string', description: 'Invoice workflow status' },
+		invoiceStatus: {
+			type: 'string',
+			description: 'Invoice workflow status',
+			enum: ['paid', 'draft']
+		},
 		charges: {
 			type: 'array',
 			description: 'Item and freight charges',
@@ -149,7 +153,7 @@ export const destinationSchema: MappingSchema = {
 				type: 'object',
 				required: ['kind', 'amount'],
 				properties: {
-					kind: { type: 'string', description: 'Charge type' },
+					kind: { type: 'string', enum: ['item', 'freight'], description: 'Charge type' },
 					description: { type: 'string', description: 'Charge description' },
 					amount: { type: 'number', description: 'Charge amount' }
 				}
