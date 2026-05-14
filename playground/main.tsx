@@ -286,7 +286,7 @@ function App() {
 	const schemaSampleOptions = (
 		<>
 			<option value="">Load…</option>
-			<option value="sample">E-commerce sample</option>
+			<option value="sample">PO to invoice sample</option>
 			{documentTypes.map(documentType => (
 				<optgroup key={documentType} label={documentType}>
 					{documentSchemaSamples
