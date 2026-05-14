@@ -3,5 +3,4 @@
 /dist/
 /node_modules/
 /types/
-/playground/dist/
 *.tgz

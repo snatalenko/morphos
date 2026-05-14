@@ -18,11 +18,10 @@
 		})();
 	</script>
 
-	<script src="https://cdn.tailwindcss.com"></script>
-	<script>
-		// tailwind Play CDN reads config from this global *after* the script loads
-		tailwind.config = { darkMode: 'class' };
-	</script>
+	<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+	<style type="text/tailwindcss">
+		@custom-variant dark (&:where(.dark, .dark *));
+	</style>
 
 	<link id="hljs-light" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github.min.css" />
 	<link id="hljs-dark" rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.9.0/build/styles/github-dark.min.css" disabled />
@@ -315,6 +314,7 @@
 						Resources
 					</h2>
 					<ul class="space-y-0.5 text-slate-600 dark:text-slate-300">
+						<li><a href="playground" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Editor Playground</a></li>
 						<li><a href="#/CHANGELOG.md" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Changelog</a></li>
 						<li><a href="https://github.com/snatalenko/declarative-mapper/issues" class="block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Issues ↗</a></li>
 						<li><a href="https://github.com/snatalenko/declarative-mapper?tab=Apache-2.0-1-ov-file" class="block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Apache-2.0 License ↗</a></li>
