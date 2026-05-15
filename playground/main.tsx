@@ -9,13 +9,25 @@ import {
 import bootstrap34 from '../src/react/bootstrap34/index.tsx';
 import bootstrap53 from '../src/react/bootstrap53/index.tsx';
 import { generateMapping } from '../src/openai/index.ts';
+import sampleForSchema from '../src/sampleForSchema.ts';
+import createScript from '../src/createScript.ts';
+import { createGlobalContext } from '../src/runtime/index.ts';
 import type { RootMapping } from '../src/mappingTypes.ts';
 import type { MappingSchema } from '../src/MappingSchema.ts';
-import { initial, sourceSchema as sampleSource, destinationSchema as sampleDest } from './shared/initial.ts';
+import {
+	initial,
+	sourceData as sampleSourceData,
+	sourceSchema as sampleSource,
+	destinationSchema as sampleDest
+} from './shared/initial.ts';
 import { documentSchemaSamples } from './shared/schemas/index.ts';
 import type { DocumentSchemaSample } from './shared/schemas/index.ts';
+import type { JSONSchema4 } from 'json-schema';
 
 type EditorType = 'default' | 'bs34' | 'bs53' | 'json';
+type WorkspaceMode = 'design' | 'test';
+type SourceTab = 'schema' | 'data';
+type DestinationTab = 'schema' | 'result';
 
 function isEmptyMapping(m: RootMapping): boolean {
 	return typeof m === 'object' && m !== null && !Array.isArray(m) && Object.keys(m).length === 0;
@@ -103,15 +115,46 @@ function JsonTextarea({
 const labelStyle = { fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem', display: 'block' } as const;
 const errStyle = { color: '#c00', fontSize: '0.8rem', marginTop: '0.25rem' } as const;
 const sectionStyle = { display: 'flex', flexDirection: 'column' as const, gap: '0.5rem', minWidth: 0 };
+const buttonStyle = {
+	padding: '0.4rem 0.8rem',
+	background: '#1a73e8',
+	color: '#fff',
+	border: 'none',
+	borderRadius: 4,
+	cursor: 'pointer'
+} as const;
+
+function tabStyle(active: boolean) {
+	return {
+		padding: '0.35rem 0.7rem',
+		border: '1px solid #ccd3dd',
+		borderRadius: 4,
+		background: active ? '#1a73e8' : '#fff',
+		color: active ? '#fff' : '#333',
+		cursor: 'pointer',
+		fontSize: '0.8rem'
+	} as const;
+}
 
 function App() {
+	const [mode, setMode] = useState<WorkspaceMode>('design');
+	const [sourceTab, setSourceTab] = useState<SourceTab>('schema');
+	const [destinationTab, setDestinationTab] = useState<DestinationTab>('schema');
+
 	const [sourceText, setSourceText] = useState(JSON.stringify(sampleSource, null, 2));
 	const [sourceSchema, setSourceSchema] = useState<MappingSchema | undefined>(sampleSource);
 	const [sourceError, setSourceError] = useState<string | null>(null);
+	const [sourceSchemaSelection, setSourceSchemaSelection] = useState('sample');
+	const [sourceDataText, setSourceDataText] = useState(JSON.stringify(sampleSourceData, null, 2));
+	const [sourceDataError, setSourceDataError] = useState<string | null>(null);
 
 	const [destText, setDestText] = useState(JSON.stringify(sampleDest, null, 2));
 	const [destSchema, setDestSchema] = useState<MappingSchema | undefined>(sampleDest);
 	const [destError, setDestError] = useState<string | null>(null);
+	const [destSchemaSelection, setDestSchemaSelection] = useState('sample');
+	const [resultText, setResultText] = useState('');
+	const [runError, setRunError] = useState<string | null>(null);
+	const [runMs, setRunMs] = useState<number | null>(null);
 
 	const [editorType, setEditorType] = useState<EditorType>('default');
 	const [mapping, setMapping] = useState<RootMapping>(initial);
@@ -152,8 +195,10 @@ function App() {
 		text: string,
 		setText: (s: string) => void,
 		setSchema: (s: MappingSchema | undefined) => void,
-		setError: (s: string | null) => void
+		setError: (s: string | null) => void,
+		onUserEdit: () => void
 	) => {
+		onUserEdit();
 		setText(text);
 		if (text.trim() === '') {
 			setSchema(undefined);
@@ -166,6 +211,49 @@ function App() {
 		}
 		catch (e) {
 			setError((e as Error).message);
+		}
+	};
+
+	const updateSourceDataText = (text: string) => {
+		setSourceDataText(text);
+		if (text.trim() === '') {
+			setSourceDataError(null);
+			return;
+		}
+		try {
+			JSON.parse(text);
+			setSourceDataError(null);
+		}
+		catch (e) {
+			setSourceDataError((e as Error).message);
+		}
+	};
+
+	const formatSourceData = () => {
+		try {
+			const parsed = sourceDataText.trim() ? JSON.parse(sourceDataText) : {};
+			setSourceDataText(JSON.stringify(parsed, null, 2));
+			setSourceDataError(null);
+		}
+		catch (e) {
+			setSourceDataError((e as Error).message);
+		}
+	};
+
+	const generateSourceDataSample = (schema = sourceSchema) => {
+		if (!schema) {
+			setSourceDataError('Source schema is required');
+			return;
+		}
+		try {
+			const sample = sampleForSchema(schema as unknown as JSONSchema4);
+			setSourceDataText(JSON.stringify(sample, null, 2));
+			setSourceDataError(null);
+			if (mode === 'test')
+				setSourceTab('data');
+		}
+		catch (e) {
+			setSourceDataError((e as Error).message);
 		}
 	};
 
@@ -207,7 +295,42 @@ function App() {
 			loadSample(selected.schema, setText, setSchema, setError);
 	};
 
+	const handleSourceSchemaSelect = (value: string) => {
+		setSourceSchemaSelection(value);
+		if (value === '')
+			return;
+
+		loadSchemaSelection(value, sampleSource, setSourceText, setSourceSchema, setSourceError);
+
+		const schema = value === 'sample'
+			? sampleSource
+			: value === 'empty'
+				? undefined
+				: documentSchemaSamples.find(s => s.id === value)?.schema;
+		if (value === 'sample') {
+			setSourceDataText(JSON.stringify(sampleSourceData, null, 2));
+			setSourceDataError(null);
+		}
+		else if (schema) {
+			try {
+				setSourceDataText(JSON.stringify(sampleForSchema(schema as unknown as JSONSchema4), null, 2));
+				setSourceDataError(null);
+			}
+			catch {
+				setSourceDataText('');
+			}
+		}
+		else if (value === 'empty') {
+			setSourceDataText('');
+			setSourceDataError(null);
+		}
+	};
+
 	const handleDestSchemaSelect = (value: string) => {
+		setDestSchemaSelection(value);
+		if (value === '')
+			return;
+
 		loadSchemaSelection(value, sampleDest, setDestText, setDestSchema, setDestError);
 
 		if (!userModifiedRef.current || isEmptyMapping(mapping)) {
@@ -229,6 +352,18 @@ function App() {
 		setEditorType(next);
 	};
 
+	const switchMode = (next: WorkspaceMode) => {
+		setMode(next);
+		if (next === 'design') {
+			setSourceTab('schema');
+			setDestinationTab('schema');
+		}
+		else {
+			setSourceTab('data');
+			setDestinationTab('result');
+		}
+	};
+
 	const updateMappingText = (text: string) => {
 		userModifiedRef.current = true;
 		setMappingText(text);
@@ -243,6 +378,33 @@ function App() {
 		}
 		catch (e) {
 			setMappingError((e as Error).message);
+		}
+	};
+
+	const runMapping = () => {
+		setRunError(null);
+		setRunMs(null);
+		try {
+			const currentMapping = editorType === 'json'
+				? JSON.parse(mappingText || '{}') as RootMapping
+				: mapping;
+			const sourceData = sourceDataText.trim() ? JSON.parse(sourceDataText) : {};
+			const start = performance.now();
+			const script = createScript(currentMapping);
+			const run = new Function(
+				'$input',
+				'$createGlobalContext',
+				`var $result;\n${script}\nreturn $result;`
+			);
+			const result = run(sourceData, createGlobalContext);
+			setRunMs(performance.now() - start);
+			setResultText(JSON.stringify(result, null, 2));
+			setDestinationTab('result');
+		}
+		catch (e) {
+			setRunError((e as Error).message);
+			setResultText('');
+			setDestinationTab('result');
 		}
 	};
 
@@ -328,32 +490,66 @@ function App() {
 				gap: '1rem',
 				alignItems: 'start'
 			}}>
-				{/* Source schema */}
+				{/* Source */}
 				<section style={sectionStyle}>
 					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-						<h2 style={{ margin: 0, fontSize: '1rem' }}>Source schema</h2>
-						<select
-							value=""
-							onChange={e => loadSchemaSelection(
-								e.target.value,
-								sampleSource,
-								setSourceText,
-								setSourceSchema,
-								setSourceError
-							)}
-							style={{ fontSize: '0.85rem' }}
-						>
-							{schemaSampleOptions}
-						</select>
+						<h2 style={{ margin: 0, fontSize: '1rem' }}>Source</h2>
+						<div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+							<button type="button" style={tabStyle(sourceTab === 'schema')} onClick={() => setSourceTab('schema')}>
+								Schema
+							</button>
+							<button type="button" style={tabStyle(sourceTab === 'data')} onClick={() => setSourceTab('data')}>
+								Data
+							</button>
+						</div>
 					</div>
-					<label style={labelStyle}>JSON Schema describing the input data</label>
-					<JsonTextarea
-						value={sourceText}
-						onChange={text => updateSchemaText(text, setSourceText, setSourceSchema, setSourceError)}
-						placeholder='{ "type": "object", "properties": { ... } }'
-						sizeKey={editorType}
-					/>
-					{sourceError && <div style={errStyle}>{sourceError}</div>}
+					{sourceTab === 'schema' ? (
+						<>
+							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+								<select
+									value={sourceSchemaSelection}
+									onChange={e => handleSourceSchemaSelect(e.target.value)}
+									style={{ width: '100%', fontSize: '0.85rem' }}
+								>
+									{schemaSampleOptions}
+								</select>
+							</div>
+							<JsonTextarea
+								value={sourceText}
+								onChange={text => updateSchemaText(
+									text,
+									setSourceText,
+									setSourceSchema,
+									setSourceError,
+									() => setSourceSchemaSelection('')
+								)}
+								placeholder='{ "type": "object", "properties": { ... } }'
+								sizeKey={`${editorType}-${sourceTab}`}
+							/>
+							{sourceError && <div style={errStyle}>{sourceError}</div>}
+						</>
+					) : (
+						<>
+							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+								<label style={{ ...labelStyle, marginBottom: 0 }}>JSON document to transform</label>
+								<div style={{ display: 'flex', gap: '0.35rem' }}>
+									<button type="button" style={tabStyle(false)} onClick={() => generateSourceDataSample()}>
+										Generate sample
+									</button>
+									<button type="button" style={tabStyle(false)} onClick={formatSourceData}>
+										Format
+									</button>
+								</div>
+							</div>
+							<JsonTextarea
+								value={sourceDataText}
+								onChange={updateSourceDataText}
+								placeholder='{ "PO_HDR": { ... }, "LINES": [ ... ] }'
+								sizeKey={`${editorType}-${sourceTab}`}
+							/>
+							{sourceDataError && <div style={errStyle}>{sourceDataError}</div>}
+						</>
+					)}
 				</section>
 
 				{/* Mapping */}
@@ -361,6 +557,14 @@ function App() {
 					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
 						<h2 style={{ margin: 0, fontSize: '1rem' }}>Mapping</h2>
 						<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+							<div style={{ display: 'flex', gap: '0.25rem' }}>
+								<button type="button" style={tabStyle(mode === 'design')} onClick={() => switchMode('design')}>
+									Design
+								</button>
+								<button type="button" style={tabStyle(mode === 'test')} onClick={() => switchMode('test')}>
+									Test
+								</button>
+							</div>
 							<label style={{ fontSize: '0.85rem', color: '#666' }}>Editor:</label>
 							<select
 								value={editorType}
@@ -403,107 +607,168 @@ function App() {
 						{mappingError && <div style={errStyle}>{mappingError}</div>}
 					</div>
 
-					<div style={{
-						marginTop: '0.5rem',
-						padding: '0.75rem',
-						background: '#f5f7fa',
-						border: '1px solid #e3e7ec',
-						borderRadius: 4
-					}}>
-						<h3 style={{ margin: '0 0 0.5rem', fontSize: '0.9rem' }}>Generate with OpenAI</h3>
-						<label style={labelStyle}>API key (not stored — memory only)</label>
-						<input
-							type="password"
-							value={apiKey}
-							onChange={e => setApiKey(e.target.value)}
-							placeholder="sk-..."
-							style={{
-								width: '100%',
-								fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-								fontSize: '0.85rem',
-								padding: '0.4rem 0.5rem',
-								boxSizing: 'border-box',
-								border: '1px solid #ccc',
-								borderRadius: 4
-							}}
-						/>
-						<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
-							<label style={{ ...labelStyle, marginBottom: 0 }}>Model</label>
-							<select
-								value={aiModel}
-								onChange={e => setAiModel(e.target.value)}
-								style={{ fontSize: '0.85rem', padding: '0.4rem 0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
-							>
-								<option value="gpt-4.1">gpt-4.1</option>
-								<option value="gpt-4.1-mini">gpt-4.1-mini</option>
-								<option value="gpt-4o">gpt-4o</option>
-								<option value="gpt-4o-mini">gpt-4o-mini</option>
-								<option value="o4-mini">o4-mini</option>
-								<option value="o3">o3</option>
-								<option value="gpt-5.5">gpt-5.5</option>
-							</select>
-						</div>
-						<label style={{ ...labelStyle, marginTop: '0.5rem' }}>Instructions (optional)</label>
-						<textarea
-							value={aiInstructions}
-							onChange={e => setAiInstructions(e.target.value)}
-							rows={2}
-							placeholder="e.g. use snake_case for all field names, map dates to ISO 8601 strings…"
-							style={{
-								width: '100%',
-								fontFamily: 'system-ui, -apple-system, sans-serif',
-								fontSize: '0.85rem',
-								padding: '0.4rem 0.5rem',
-								boxSizing: 'border-box',
-								border: '1px solid #ccc',
-								borderRadius: 4,
-								resize: 'vertical'
-							}}
-						/>
-						<div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-							<button
-								type="button"
-								onClick={generateFromAi}
-								disabled={loading || !apiKey.trim() || !sourceSchema || !destSchema}
+					{mode === 'design' ? (
+						<div style={{
+							marginTop: '0.5rem',
+							padding: '0.75rem',
+							background: '#f5f7fa',
+							border: '1px solid #e3e7ec',
+							borderRadius: 4
+						}}>
+							<h3 style={{ margin: '0 0 0.5rem', fontSize: '0.9rem' }}>Generate with OpenAI</h3>
+							<label style={labelStyle}>API key (not stored — memory only)</label>
+							<input
+								type="password"
+								value={apiKey}
+								onChange={e => setApiKey(e.target.value)}
+								placeholder="sk-..."
 								style={{
-									padding: '0.4rem 0.8rem',
-									background: loading ? '#999' : '#1a73e8',
-									color: '#fff',
-									border: 'none',
-									borderRadius: 4,
-									cursor: loading ? 'wait' : 'pointer'
+									width: '100%',
+									fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+									fontSize: '0.85rem',
+									padding: '0.4rem 0.5rem',
+									boxSizing: 'border-box',
+									border: '1px solid #ccc',
+									borderRadius: 4
 								}}
-							>
-								{loading ? 'Generating…' : 'Generate mapping'}
-							</button>
-							<span style={{ fontSize: '0.75rem', color: '#888' }}>
-								Uses both schemas above. Output replaces the mapping.
-							</span>
+							/>
+							<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
+								<label style={{ ...labelStyle, marginBottom: 0 }}>Model</label>
+								<select
+									value={aiModel}
+									onChange={e => setAiModel(e.target.value)}
+									style={{ fontSize: '0.85rem', padding: '0.4rem 0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
+								>
+									<option value="gpt-4.1">gpt-4.1</option>
+									<option value="gpt-4.1-mini">gpt-4.1-mini</option>
+									<option value="gpt-4o">gpt-4o</option>
+									<option value="gpt-4o-mini">gpt-4o-mini</option>
+									<option value="o4-mini">o4-mini</option>
+									<option value="o3">o3</option>
+									<option value="gpt-5.5">gpt-5.5</option>
+								</select>
+							</div>
+							<label style={{ ...labelStyle, marginTop: '0.5rem' }}>Instructions (optional)</label>
+							<textarea
+								value={aiInstructions}
+								onChange={e => setAiInstructions(e.target.value)}
+								rows={2}
+								placeholder="e.g. use snake_case for all field names, map dates to ISO 8601 strings…"
+								style={{
+									width: '100%',
+									fontFamily: 'system-ui, -apple-system, sans-serif',
+									fontSize: '0.85rem',
+									padding: '0.4rem 0.5rem',
+									boxSizing: 'border-box',
+									border: '1px solid #ccc',
+									borderRadius: 4,
+									resize: 'vertical'
+								}}
+							/>
+							<div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+								<button
+									type="button"
+									onClick={generateFromAi}
+									disabled={loading || !apiKey.trim() || !sourceSchema || !destSchema}
+									style={{
+										...buttonStyle,
+										background: loading ? '#999' : buttonStyle.background,
+										cursor: loading ? 'wait' : buttonStyle.cursor
+									}}
+								>
+									{loading ? 'Generating…' : 'Generate mapping'}
+								</button>
+								<span style={{ fontSize: '0.75rem', color: '#888' }}>
+									Uses both schemas above. Output replaces the mapping.
+								</span>
+							</div>
+							{aiError && <div style={errStyle}>{aiError}</div>}
 						</div>
-						{aiError && <div style={errStyle}>{aiError}</div>}
-					</div>
+					) : (
+						<div style={{
+							marginTop: '0.5rem',
+							padding: '0.75rem',
+							background: '#f5f7fa',
+							border: '1px solid #e3e7ec',
+							borderRadius: 4
+						}}>
+							<h3 style={{ margin: '0 0 0.5rem', fontSize: '0.9rem' }}>Run transformation</h3>
+							<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+								<button type="button" onClick={runMapping} style={buttonStyle}>
+									Run
+								</button>
+								<span style={{ fontSize: '0.75rem', color: '#888' }}>
+									Uses Source Data and the current mapping.
+								</span>
+							</div>
+							{runMs !== null && !runError && (
+								<div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.35rem' }}>
+									Ran in {runMs.toFixed(2)} ms.
+								</div>
+							)}
+							{runError && <div style={errStyle}>{runError}</div>}
+						</div>
+					)}
 				</section>
 
-				{/* Destination schema */}
+				{/* Destination */}
 				<section style={sectionStyle}>
 					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-						<h2 style={{ margin: 0, fontSize: '1rem' }}>Destination schema</h2>
-						<select
-							value=""
-							onChange={e => handleDestSchemaSelect(e.target.value)}
-							style={{ fontSize: '0.85rem' }}
-						>
-							{schemaSampleOptions}
-						</select>
+						<h2 style={{ margin: 0, fontSize: '1rem' }}>Destination</h2>
+						<div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
+							<button
+								type="button"
+								style={tabStyle(destinationTab === 'schema')}
+								onClick={() => setDestinationTab('schema')}
+							>
+								Schema
+							</button>
+							<button
+								type="button"
+								style={tabStyle(destinationTab === 'result')}
+								onClick={() => setDestinationTab('result')}
+							>
+								Result
+							</button>
+						</div>
 					</div>
-					<label style={labelStyle}>JSON Schema describing the output data</label>
-					<JsonTextarea
-						value={destText}
-						onChange={text => updateSchemaText(text, setDestText, setDestSchema, setDestError)}
-						placeholder='{ "type": "object", "properties": { ... } }'
-						sizeKey={editorType}
-					/>
-					{destError && <div style={errStyle}>{destError}</div>}
+					{destinationTab === 'schema' ? (
+						<>
+							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+								<select
+									value={destSchemaSelection}
+									onChange={e => handleDestSchemaSelect(e.target.value)}
+									style={{ width: '100%', fontSize: '0.85rem' }}
+								>
+									{schemaSampleOptions}
+								</select>
+							</div>
+							<JsonTextarea
+								value={destText}
+								onChange={text => updateSchemaText(
+									text,
+									setDestText,
+									setDestSchema,
+									setDestError,
+									() => setDestSchemaSelection('')
+								)}
+								placeholder='{ "type": "object", "properties": { ... } }'
+								sizeKey={`${editorType}-${destinationTab}`}
+							/>
+							{destError && <div style={errStyle}>{destError}</div>}
+						</>
+					) : (
+						<>
+							<label style={labelStyle}>Transformation output</label>
+							<JsonTextarea
+								value={resultText}
+								onChange={setResultText}
+								placeholder="Run the mapping to see the result."
+								sizeKey={`${editorType}-${destinationTab}`}
+							/>
+							{runError && <div style={errStyle}>{runError}</div>}
+						</>
+					)}
 				</section>
 			</div>
 		</div>

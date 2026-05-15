@@ -11,6 +11,8 @@ Declarative Mapper
 
 Declarative Mapper is a JSON-to-JSON mapping library for JavaScript/TypeScript. Users define the mapping as JSON, so it can be stored, versioned, generated, or edited from a UI. Unlike many transformation tools, it does not invent a custom expression language: field transforms are plain JavaScript expressions, executed in a restricted VM context for predictable behavior without giving mappings access to the host environment.
 
+Try it in the [interactive playground](https://snatalenko.github.io/declarative-mapper/playground/).
+
 ### Table of Contents
 
 - [Overview](#overview)

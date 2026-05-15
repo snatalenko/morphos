@@ -4,8 +4,6 @@ A React-based visual editor for `declarative-mapper` mapping objects. Provides a
 form whose value can be read back as a `RootMapping`, with optional **destination** and
 **source** JSON Schemas to drive field suggestions, type inference, and dropdowns.
 
-Try it in the [interactive playground](https://snatalenko.github.io/declarative-mapper/playground/).
-
 ## Installation
 
 `react` is declared as an optional peer dependency. Install it (and `react-dom`) in your app:

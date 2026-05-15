@@ -1,6 +1,27 @@
 import type { RootMapping } from '../../src/mappingTypes.ts';
 import type { MappingSchema } from '../../src/react/index.ts';
 
+export const sourceData = {
+	PO_HDR: {
+		PO_NO: 'PO-450001',
+		CURR: 'USD'
+	},
+	TERMS_DAYS: 30,
+	PREPAID: false,
+	FREIGHT_AMT: 25,
+	BUYER: {
+		NAME: 'Acme Retail',
+		TAX_ID: 'US-123456789'
+	},
+	SHIP_TO: {
+		CITY: 'Chicago'
+	},
+	LINES: [
+		{ ITEM_NO: 'SKU-100', QTY: 2, UNIT_PRICE: 12.5 },
+		{ ITEM_NO: 'SKU-200', QTY: 1, UNIT_PRICE: 40 }
+	]
+};
+
 export const initial: RootMapping = {
 	invoiceNumber: "'INV-' + PO_HDR.PO_NO",
 	purchaseOrderNumber: 'PO_HDR.PO_NO',
