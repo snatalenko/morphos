@@ -1,3 +1,36 @@
+# [1.8.0-alpha.0](https://github.com/snatalenko/morphos/compare/v1.7.2...v1.8.0-alpha.0) (2026-05-15)
+
+
+### Features
+
+* OpenAI integration for schema-to-schema mapping creation ([1bb28eb](https://github.com/snatalenko/morphos/commit/1bb28eb0e31f09e4c974bbaecb61d0c0b4582e3f))
+* Mapping editor in React with bootstrap 3.4/5.3 themes ([24d1b18](https://github.com/snatalenko/morphos/commit/24d1b18aad5fed2bdee480e87946f0837c560691))
+* `concat` instruction for composing arrays from multiple optional sources ([0c6b964](https://github.com/snatalenko/morphos/commit/0c6b9643b0f0f6dbe06b23bdef0289df41b082be))
+* Conditional when/then statements ([d98b402](https://github.com/snatalenko/morphos/commit/d98b4020d6b9747c4dbc6ae29f61901e1ff4ac76))
+
+### Changes
+
+* Playground page for experimenting with the editor and mapping auto-generation ([9b264bf](https://github.com/snatalenko/morphos/commit/9b264bf81370d002324aea32e56c802d20d7994f))
+* Patch vulnerabilities in dev dependencies ([fcd7764](https://github.com/snatalenko/morphos/commit/fcd7764398a7ccbcd3b1773f87bda4addf46529e))
+* Set min-release-age=7 for npm packages ([073c6ee](https://github.com/snatalenko/morphos/commit/073c6eec0558e6b233362872164b3b318af59a37))
+* Change name "declarative-mapper" to "morphos" ([5b1a7a9](https://github.com/snatalenko/morphos/commit/5b1a7a9d5bd431ee67d2d17402f87da01bdaa0c2))
+
+### Documentation
+
+* Update readme, add index.html ([2751e39](https://github.com/snatalenko/morphos/commit/2751e399c889bba85824b9a3650558ffd3e9bffa))
+* Publish the interactive editor playground ([9771069](https://github.com/snatalenko/morphos/commit/9771069d0b42a4f7c247e1f39ed26979afe81f3b))
+
+### Tests
+
+* Add security tests ([55952eb](https://github.com/snatalenko/morphos/commit/55952eb7c519cfc4101797fa054aa0e5a22f9771))
+
+### Build System
+
+* Add alpha/beta tag support to GH publish workflow ([716f221](https://github.com/snatalenko/morphos/commit/716f22174a57d3407286c092018b7419c192a455))
+* Update tags cleanup script with alpha/beta/rc version support ([36f3c03](https://github.com/snatalenko/morphos/commit/36f3c035ac938b359fd918bccd0adee4d0b0f21d))
+* Replace npmignore with "files" list ([b7a73f1](https://github.com/snatalenko/morphos/commit/b7a73f146fdcd84a6ffa7241d6d935d66acc09b0))
+
+
 ## [1.7.2](https://github.com/snatalenko/morphos/compare/v1.7.1...v1.7.2) (2026-03-04)
 
 
