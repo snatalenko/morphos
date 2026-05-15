@@ -478,7 +478,7 @@ function App() {
 				`}
 			</style>
 			<header style={{ marginBottom: '1.5rem' }}>
-				<h1 style={{ marginBottom: '0.25rem', fontSize: '1.5rem' }}>declarative-mapper playground</h1>
+				<h1 style={{ marginBottom: '0.25rem', fontSize: '1.5rem' }}>Morphos Playground</h1>
 				<p style={{ margin: 0, color: '#666', fontSize: '0.85rem' }}>
 					Edit the schemas on the sides, the mapping in the middle, or generate one with OpenAI.
 				</p>
