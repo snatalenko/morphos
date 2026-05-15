@@ -114,6 +114,7 @@ function DefaultSuggestedInput({
 	wrapperClassName,
 	placeholder,
 	defaultAdvanced,
+	focusOnAdvancedMount,
 	onAdvanced
 }: {
 	value: string;
@@ -123,6 +124,7 @@ function DefaultSuggestedInput({
 	wrapperClassName: string;
 	placeholder?: string;
 	defaultAdvanced?: boolean;
+	focusOnAdvancedMount?: boolean;
 	onAdvanced?: () => void;
 }) {
 	const C = useContext(ComponentsContext);
@@ -131,12 +133,14 @@ function DefaultSuggestedInput({
 	const matched = value === '' || options.some(o => o.value === value);
 	const [advanced, setAdvanced] = useState(!!defaultAdvanced || !matched);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const focusAdvancedRef = useRef(!!focusOnAdvancedMount && (!!defaultAdvanced || !matched));
 
 	useEffect(() => {
-		if (advanced) {
+		if (advanced && focusAdvancedRef.current) {
 			inputRef.current?.focus();
 			inputRef.current?.select();
 		}
+		focusAdvancedRef.current = false;
 	}, [advanced]);
 
 	if (!hasOptions) {
@@ -173,6 +177,7 @@ function DefaultSuggestedInput({
 			onChange={e => {
 				const v = e.target.value;
 				if (v === DM_ADVANCED_SENTINEL) {
+					focusAdvancedRef.current = true;
 					setAdvanced(true);
 					if (onAdvanced)
 						onAdvanced();
@@ -198,6 +203,7 @@ export const DefaultSuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = (
 	options,
 	placeholder,
 	defaultAdvanced,
+	focusOnAdvancedMount,
 	onAdvanced
 }) => (
 	<DefaultSuggestedInput
@@ -208,6 +214,7 @@ export const DefaultSuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = (
 		wrapperClassName="dm-mapping-key-advanced"
 		placeholder={placeholder}
 		defaultAdvanced={defaultAdvanced}
+		focusOnAdvancedMount={focusOnAdvancedMount}
 		onAdvanced={onAdvanced}
 	/>
 );

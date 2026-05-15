@@ -119,6 +119,7 @@ function BS53SuggestedInput({
 	selectClassName = 'form-select',
 	placeholder,
 	defaultAdvanced,
+	focusOnAdvancedMount,
 	onAdvanced
 }: {
 	value: string;
@@ -128,6 +129,7 @@ function BS53SuggestedInput({
 	selectClassName?: string;
 	placeholder?: string;
 	defaultAdvanced?: boolean;
+	focusOnAdvancedMount?: boolean;
 	onAdvanced?: () => void;
 }) {
 	const C = useContext(ComponentsContext);
@@ -136,12 +138,14 @@ function BS53SuggestedInput({
 	const matched = value === '' || options.some(o => o.value === value);
 	const [advanced, setAdvanced] = useState(!!defaultAdvanced || !matched);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const focusAdvancedRef = useRef(!!focusOnAdvancedMount && (!!defaultAdvanced || !matched));
 
 	useEffect(() => {
-		if (advanced) {
+		if (advanced && focusAdvancedRef.current) {
 			inputRef.current?.focus();
 			inputRef.current?.select();
 		}
+		focusAdvancedRef.current = false;
 	}, [advanced]);
 
 	if (!hasOptions) {
@@ -180,6 +184,7 @@ function BS53SuggestedInput({
 			onChange={e => {
 				const v = e.target.value;
 				if (v === BS53_ADVANCED) {
+					focusAdvancedRef.current = true;
 					setAdvanced(true);
 					if (onAdvanced)
 						onAdvanced();
@@ -205,6 +210,7 @@ export const SuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = ({
 	options,
 	placeholder,
 	defaultAdvanced,
+	focusOnAdvancedMount,
 	onAdvanced
 }) => (
 	<BS53SuggestedInput
@@ -214,6 +220,7 @@ export const SuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = ({
 		inputClassName="form-control"
 		placeholder={placeholder}
 		defaultAdvanced={defaultAdvanced}
+		focusOnAdvancedMount={focusOnAdvancedMount}
 		onAdvanced={onAdvanced}
 	/>
 );

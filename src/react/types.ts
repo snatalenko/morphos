@@ -68,6 +68,7 @@ export interface SuggestedKeyInputProps {
 	options: FieldOption[];
 	placeholder?: string;
 	defaultAdvanced?: boolean;
+	focusOnAdvancedMount?: boolean;
 	onAdvanced?: () => void;
 }
 

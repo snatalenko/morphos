@@ -119,6 +119,7 @@ function SuggestedInput({
 	selectClassName = 'form-control',
 	placeholder,
 	defaultAdvanced,
+	focusOnAdvancedMount,
 	onAdvanced
 }: {
 	value: string;
@@ -128,6 +129,7 @@ function SuggestedInput({
 	selectClassName?: string;
 	placeholder?: string;
 	defaultAdvanced?: boolean;
+	focusOnAdvancedMount?: boolean;
 	onAdvanced?: () => void;
 }) {
 	const C = useContext(ComponentsContext);
@@ -135,12 +137,14 @@ function SuggestedInput({
 	const matched = value === '' || options.some(o => o.value === value);
 	const [advanced, setAdvanced] = useState(!!defaultAdvanced || !matched);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const focusAdvancedRef = useRef(!!focusOnAdvancedMount && (!!defaultAdvanced || !matched));
 
 	useEffect(() => {
-		if (advanced) {
+		if (advanced && focusAdvancedRef.current) {
 			inputRef.current?.focus();
 			inputRef.current?.select();
 		}
+		focusAdvancedRef.current = false;
 	}, [advanced]);
 
 	if (!options.length) {
@@ -179,6 +183,7 @@ function SuggestedInput({
 			onChange={e => {
 				const v = e.target.value;
 				if (v === BS34_ADVANCED) {
+					focusAdvancedRef.current = true;
 					setAdvanced(true);
 					if (onAdvanced)
 						onAdvanced();

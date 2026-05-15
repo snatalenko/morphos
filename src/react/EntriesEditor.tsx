@@ -1,4 +1,4 @@
-import { useContext, useRef } from 'react';
+import { useContext, useEffect, useRef } from 'react';
 import { ComponentsContext } from './ComponentsContext.ts';
 import { LabelsContext } from './LabelsContext.ts';
 import {
@@ -34,6 +34,11 @@ export function EntriesEditor({
 	const C = useContext(ComponentsContext);
 	const labels = useContext(LabelsContext);
 	const draftEntryId = useRef(genId());
+	const focusAdvancedEntryId = useRef<string | null>(null);
+
+	useEffect(() => {
+		focusAdvancedEntryId.current = null;
+	});
 
 	const updateEntry = (id: string, patch: Partial<Entry>) => {
 		onChange(entries.map(e => (e.id === id ? { ...e, ...patch } : e)));
@@ -123,6 +128,7 @@ export function EntriesEditor({
 	const promoteTemplateToAdvanced = () => {
 		const nextId = draftEntryId.current;
 		draftEntryId.current = genId();
+		focusAdvancedEntryId.current = nextId;
 		addEntry('expr', '', true, nextId);
 	};
 
@@ -149,6 +155,7 @@ export function EntriesEditor({
 						options={availableForEntry(entry)}
 						placeholder={isTemplate ? labels.newField : labels.keyPlaceholder}
 						defaultAdvanced={!isTemplate && entry.keyAdvanced}
+						focusOnAdvancedMount={!isTemplate && focusAdvancedEntryId.current === entry.id}
 						onAdvanced={isTemplate ? promoteTemplateToAdvanced : undefined}
 					/>
 				) : (

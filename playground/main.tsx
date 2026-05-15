@@ -156,7 +156,7 @@ function App() {
 	const [runError, setRunError] = useState<string | null>(null);
 	const [runMs, setRunMs] = useState<number | null>(null);
 
-	const [editorType, setEditorType] = useState<EditorType>('default');
+	const [editorType, setEditorType] = useState<EditorType>('json');
 	const [mapping, setMapping] = useState<RootMapping>(initial);
 	const [mappingText, setMappingText] = useState(JSON.stringify(initial, null, 2));
 	const [mappingError, setMappingError] = useState<string | null>(null);
@@ -477,11 +477,19 @@ function App() {
 					}
 				`}
 			</style>
-			<header style={{ marginBottom: '1rem' }}>
+			<header style={{ marginBottom: '1.5rem' }}>
 				<h1 style={{ marginBottom: '0.25rem', fontSize: '1.5rem' }}>declarative-mapper playground</h1>
 				<p style={{ margin: 0, color: '#666', fontSize: '0.85rem' }}>
 					Edit the schemas on the sides, the mapping in the middle, or generate one with OpenAI.
 				</p>
+				<div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.75rem' }}>
+					<button type="button" style={tabStyle(mode === 'design')} onClick={() => switchMode('design')}>
+						Design
+					</button>
+					<button type="button" style={tabStyle(mode === 'test')} onClick={() => switchMode('test')}>
+						Test
+					</button>
+				</div>
 			</header>
 
 			<div style={{
@@ -557,25 +565,20 @@ function App() {
 					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
 						<h2 style={{ margin: 0, fontSize: '1rem' }}>Mapping</h2>
 						<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-							<div style={{ display: 'flex', gap: '0.25rem' }}>
-								<button type="button" style={tabStyle(mode === 'design')} onClick={() => switchMode('design')}>
-									Design
+							<div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+								<button type="button" style={tabStyle(editorType === 'json')} onClick={() => switchEditor('json')}>
+									Raw Json
 								</button>
-								<button type="button" style={tabStyle(mode === 'test')} onClick={() => switchMode('test')}>
-									Test
+								<button type="button" style={tabStyle(editorType === 'default')} onClick={() => switchEditor('default')}>
+									Plain HTML
+								</button>
+								<button type="button" style={tabStyle(editorType === 'bs34')} onClick={() => switchEditor('bs34')}>
+									Bootstrap 3.4
+								</button>
+								<button type="button" style={tabStyle(editorType === 'bs53')} onClick={() => switchEditor('bs53')}>
+									Bootstrap 5.3
 								</button>
 							</div>
-							<label style={{ fontSize: '0.85rem', color: '#666' }}>Editor:</label>
-							<select
-								value={editorType}
-								onChange={e => switchEditor(e.target.value as EditorType)}
-								style={{ fontSize: '0.85rem' }}
-							>
-								<option value="default">Default HTML</option>
-								<option value="bs34">Bootstrap 3.4</option>
-								<option value="bs53">Bootstrap 5.3</option>
-								<option value="json">Plain JSON</option>
-							</select>
 						</div>
 					</div>
 
