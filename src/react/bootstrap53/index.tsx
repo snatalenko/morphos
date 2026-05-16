@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState, type ComponentType } from 'react';
+import { useContext, useEffect, useRef, useState, type ComponentType, Fragment } from 'react';
 import { LabelsContext } from '../LabelsContext.ts';
 import { ComponentsContext } from '../ComponentsContext.ts';
 import type {
@@ -26,7 +26,7 @@ import type {
 } from '../types.ts';
 
 export const Container: ComponentType<ContainerProps> = ({ children }) => (
-	<div className="dm-bs53-container">{children}</div>
+	<Fragment>{children}</Fragment>
 );
 
 export const Row: ComponentType<RowProps> = ({ keyInput, typeSelector, value, remove, reorder }) => {
@@ -257,7 +257,7 @@ export const RemoveButton: ComponentType<RemoveButtonProps> = ({ onClick }) => {
 	return (
 		<button
 			type="button"
-			className="btn btn-sm btn-outline-danger"
+			className="btn btn-outline-danger"
 			onClick={onClick}
 			aria-label={labels.removeField}
 		>
@@ -287,7 +287,7 @@ export const TypeSelector: ComponentType<TypeSelectorProps> = ({ kind, onChange 
 export const Reorder: ComponentType<ReorderProps> = ({ canMoveUp, canMoveDown, onMoveUp, onMoveDown }) => {
 	const labels = useContext(LabelsContext);
 	return (
-		<div className="btn-group btn-group-sm" role="group" aria-label={labels.reorder}>
+		<div className="btn-group" role="group" aria-label={labels.reorder}>
 			<button
 				type="button"
 				className="btn btn-outline-secondary"

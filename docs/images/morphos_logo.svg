@@ -66,15 +66,15 @@
             <stop stop-color="#5BF2FA" stop-opacity="0.0382156906" offset="0%"></stop>
             <stop stop-color="#2EE0F4" stop-opacity="0.15747924" offset="100%"></stop>
         </linearGradient>
-        <linearGradient x1="-13.2175833%" y1="39.8903673%" x2="109.636395%" y2="39.8903673%" id="linearGradient-17">
-            <stop stop-color="#6A52C2" offset="0%"></stop>
-            <stop stop-color="#FFFFFF" offset="51.596606%"></stop>
-            <stop stop-color="#2EE0F4" offset="100%"></stop>
+        <linearGradient x1="13.5356906%" y1="39.8903673%" x2="84.8214041%" y2="39.8903673%" id="linearGradient-17">
+            <stop stop-color="#6A52C2" stop-opacity="0.75" offset="0%"></stop>
+            <stop stop-color="#CFEBFF" stop-opacity="0.75" offset="51.596606%"></stop>
+            <stop stop-color="#2EE0F4" stop-opacity="0.75" offset="100%"></stop>
         </linearGradient>
-        <linearGradient x1="0%" y1="39.7837069%" x2="100%" y2="39.7837072%" id="linearGradient-18">
-            <stop stop-color="#6A52C2" offset="0%"></stop>
-            <stop stop-color="#DDECEE" offset="50.1124008%"></stop>
-            <stop stop-color="#2EE0F4" offset="100%"></stop>
+        <linearGradient x1="21.25008%" y1="39.7837069%" x2="77.701367%" y2="39.7837069%" id="linearGradient-18">
+            <stop stop-color="#6A52C2" stop-opacity="0.75" offset="0%"></stop>
+            <stop stop-color="#DDECEE" stop-opacity="0.75" offset="50.1124008%"></stop>
+            <stop stop-color="#2EE0F4" stop-opacity="0.75" offset="100%"></stop>
         </linearGradient>
     </defs>
     <g id="morphos_logo" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">

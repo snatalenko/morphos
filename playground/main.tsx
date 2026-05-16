@@ -475,6 +475,34 @@ function App() {
 					.dm-mapping-value {
 						font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
 					}
+					.dm-mapping-editor .form-control,
+					.dm-mapping-editor .form-select,
+					.dm-mapping-editor .control-label,
+					.dm-mapping-editor .col-form-label,
+					.dm-mapping-editor .btn {
+						font-size: 12px;
+						line-height: 1.25;
+						padding-top: 3px;
+						padding-bottom: 3px;
+						height: auto;
+					}
+					.dm-mapping-editor .btn {
+						padding-left: 5px;
+						padding-right: 5px;
+					}
+					.dm-mapping-editor .form-group {
+						margin-bottom: 5px;
+					}
+					.dm-mapping-editor .panel-body,
+					.dm-mapping-editor .card-body {
+						padding: 7px;
+					}
+					.dm-mapping-editor .panel-body .form-group:last-child {
+						margin-bottom: 0;
+					}
+					.panel-body > .panel {
+						margin-bottom: 5px;
+					}
 				`}
 			</style>
 			<header style={{ marginBottom: '1.5rem' }}>

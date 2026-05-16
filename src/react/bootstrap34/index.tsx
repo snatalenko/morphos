@@ -224,7 +224,7 @@ export const RemoveButton: ComponentType<RemoveButtonProps> = ({ onClick }) => {
 	return (
 		<button
 			type="button"
-			className="btn btn-sm btn-default"
+			className="btn btn-default"
 			onClick={onClick}
 			aria-label={labels.removeField}
 			style={{ paddingLeft: 5, paddingRight: 5 }}
@@ -255,14 +255,13 @@ export const TypeSelector: ComponentType<TypeSelectorProps> = ({ kind, onChange 
 export const Reorder: ComponentType<ReorderProps> = ({ canMoveUp, canMoveDown, onMoveUp, onMoveDown }) => {
 	const labels = useContext(LabelsContext);
 	return (
-		<div className="btn-group btn-group-sm" role="group" aria-label={labels.reorder} style={{ minWidth: '47px' }}>
+		<div className="btn-group" role="group" aria-label={labels.reorder} style={{ minWidth: '47px' }}>
 			<button
 				type="button"
 				className="btn btn-default"
 				onClick={onMoveUp}
 				disabled={!canMoveUp}
 				aria-label={labels.moveUp}
-				style={{ paddingLeft: 5, paddingRight: 5 }}
 			>
 				<span className="glyphicon glyphicon-chevron-up" aria-hidden="true" />
 			</button>
@@ -272,7 +271,6 @@ export const Reorder: ComponentType<ReorderProps> = ({ canMoveUp, canMoveDown, o
 				onClick={onMoveDown}
 				disabled={!canMoveDown}
 				aria-label={labels.moveDown}
-				style={{ paddingLeft: 5, paddingRight: 5 }}
 			>
 				<span className="glyphicon glyphicon-chevron-down" aria-hidden="true" />
 			</button>
