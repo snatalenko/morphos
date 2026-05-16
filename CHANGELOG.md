@@ -1,3 +1,11 @@
+# [1.8.0-alpha.1](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.0...v1.8.0-alpha.1) (2026-05-16)
+
+
+### Build System
+
+* Enable CI scripts on alpha and beta branches ([bf763fa](https://github.com/snatalenko/morphos/commit/bf763fab8fbb559699f725e5a7e69d9239b3cf10))
+
+
 # [1.8.0-alpha.0](https://github.com/snatalenko/morphos/compare/v1.7.2...v1.8.0-alpha.0) (2026-05-15)
 
 
