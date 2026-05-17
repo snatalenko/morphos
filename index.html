@@ -188,6 +188,90 @@
 			opacity: 1;
 		}
 
+		.butterfly-button {
+			position: relative;
+			display: inline-flex;
+			width: 4rem;
+			height: 2rem;
+			flex: 0 0 auto;
+			align-items: center;
+			justify-content: center;
+			overflow: visible;
+			border: 0;
+			padding: 0;
+			background: transparent;
+		}
+
+		.butterfly-logo {
+			transform-origin: 50% 52%;
+			will-change: transform, opacity, filter;
+		}
+
+		.butterfly-logo.is-flying {
+			animation: butterfly-fly-away 3.1s cubic-bezier(0.42, 0, 0.2, 1) forwards;
+			pointer-events: none;
+		}
+
+		@keyframes butterfly-fly-away {
+			0% {
+				opacity: 1;
+				filter: drop-shadow(0 1px 0 rgba(15, 23, 42, 0));
+				transform: translate3d(0, 0, 0) rotate(0deg) scaleX(1) scaleY(1);
+			}
+			10% {
+				transform: translate3d(0.05rem, 0, 0) rotate(-1deg) scaleX(0.32) scaleY(1.08);
+			}
+			20% {
+				transform: translate3d(0.12rem, -0.04rem, 0) rotate(1deg) scaleX(1.18) scaleY(0.94);
+			}
+			30% {
+				transform: translate3d(0.18rem, -0.06rem, 0) rotate(-1deg) scaleX(0.36) scaleY(1.07);
+			}
+			34% {
+				transform: translate3d(0.45rem, -0.18rem, 0) rotate(2deg) scaleX(0.72) scaleY(1);
+			}
+			38% {
+				transform: translate3d(0.95rem, -0.42rem, 0) rotate(5deg) scaleX(1.12) scaleY(0.95);
+			}
+			41% {
+				transform: translate3d(2.3rem, -0.9rem, 0) rotate(10deg) scaleX(0.76) scaleY(1.02);
+			}
+			44% {
+				filter: drop-shadow(0 8px 8px rgba(15, 23, 42, 0.18));
+				transform: translate3d(4.8rem, -1.55rem, 0) rotate(14deg) scaleX(0.42) scaleY(1.06);
+			}
+			50% {
+				transform: translate3d(9vw, -3.1rem, 0) rotate(22deg) scaleX(0.8) scaleY(1);
+			}
+			56% {
+				transform: translate3d(15vw, -4.8rem, 0) rotate(26deg) scaleX(1.12) scaleY(0.95);
+			}
+			62% {
+				transform: translate3d(22vw, -6.7rem, 0) rotate(20deg) scaleX(0.62) scaleY(1.04);
+			}
+			68% {
+				transform: translate3d(30vw, -8.8rem, 0) rotate(17deg) scaleX(0.36) scaleY(1.07);
+			}
+			74% {
+				transform: translate3d(40vw, -11.2rem, 0) rotate(24deg) scaleX(0.78) scaleY(1);
+			}
+			80% {
+				transform: translate3d(52vw, -14rem, 0) rotate(29deg) scaleX(1.08) scaleY(0.96);
+			}
+			87% {
+				transform: translate3d(66vw, -17.4rem, 0) rotate(22deg) scaleX(0.44) scaleY(1.05);
+			}
+			94% {
+				opacity: 1;
+				transform: translate3d(84vw, -21.6rem, 0) rotate(31deg) scaleX(1.05) scaleY(0.98);
+			}
+			100% {
+				opacity: 0;
+				filter: drop-shadow(0 16px 12px rgba(15, 23, 42, 0));
+				transform: translate3d(105vw, -27rem, 0) rotate(36deg) scaleX(0.22) scaleY(1.12);
+			}
+		}
+
 		/* --- dark theme ----------------------------------------------------------------- */
 		.dark .prose pre {
 			background: #161b22;
@@ -244,7 +328,9 @@
 
 	<header class="sticky top-0 z-20 bg-white dark:bg-[#0d1117] border-b border-slate-200 dark:border-slate-800">
 		<div class="max-w-screen-2xl mx-auto px-4 py-3 flex items-center gap-3">
-			<img src="docs/images/morphos_logo.svg" alt="Morphos" class="h-8 w-16" />
+			<button id="butterfly-logo" type="button" class="butterfly-button" aria-label="Let the butterfly fly away">
+				<img id="butterfly-logo-image" src="docs/images/morphos_logo.svg" alt="Morphos" class="butterfly-logo h-8 w-16" />
+			</button>
 			<div class="flex-1">
 				<h1 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Morphos</h1>
 				<p class="text-xs text-slate-500 dark:text-slate-400 -mt-0.5 hidden sm:block">JSON-to-JSON mapper with user-defined JSON mapping specs, plain JS transformation expressions, and secure VM execution</p>
@@ -358,6 +444,22 @@
 		// follow system preference until the user makes an explicit choice
 		window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
 			if (!localStorage.getItem('theme')) applyTheme(e.matches);
+		});
+
+		const butterflyButton = document.getElementById('butterfly-logo');
+		const butterflyImage = document.getElementById('butterfly-logo-image');
+
+		butterflyButton.addEventListener('click', () => {
+			if (butterflyImage.classList.contains('is-flying')) return;
+
+			butterflyButton.disabled = true;
+			butterflyImage.classList.add('is-flying');
+			butterflyImage.addEventListener('animationend', () => {
+				window.setTimeout(() => {
+					butterflyImage.classList.remove('is-flying');
+					butterflyButton.disabled = false;
+				}, 800);
+			}, { once: true });
 		});
 
 		const REPO = 'snatalenko/morphos';
