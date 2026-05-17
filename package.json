@@ -18,7 +18,8 @@
     "object-mapper",
     "object-mapping",
     "transformation",
-    "typescript"
+    "typescript",
+    "react"
   ],
   "type": "module",
   "engines": {

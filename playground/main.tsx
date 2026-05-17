@@ -89,26 +89,25 @@ function JsonTextarea({
 	}, [value, sizeKey]);
 
 	return (
-		<textarea
-			ref={ref}
-			value={value}
-			onChange={e => onChange(e.target.value)}
-			rows={minRows}
-			placeholder={placeholder}
-			spellCheck={false}
-			style={{
-				width: '100%',
-				fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-				fontSize: '0.8rem',
-				boxSizing: 'border-box',
-				resize: 'vertical',
-				padding: '0.5rem',
-				border: '1px solid #ccc',
-				borderRadius: 4,
-				background: '#fff',
-				overflow: 'hidden'
-			}}
-		/>
+		<div className="dm-code-frame">
+			<div className="dm-code-toolbar">
+				<span className="dm-code-dots" aria-hidden="true">
+					<span />
+					<span />
+					<span />
+				</span>
+				<span className="dm-code-label">JSON</span>
+			</div>
+			<textarea
+				ref={ref}
+				className="dm-code-textarea"
+				value={value}
+				onChange={e => onChange(e.target.value)}
+				rows={minRows}
+				placeholder={placeholder}
+				spellCheck={false}
+			/>
+		</div>
 	);
 }
 
@@ -140,6 +139,7 @@ function App() {
 	const [mode, setMode] = useState<WorkspaceMode>('design');
 	const [sourceTab, setSourceTab] = useState<SourceTab>('schema');
 	const [destinationTab, setDestinationTab] = useState<DestinationTab>('schema');
+	const [editorExpanded, setEditorExpanded] = useState(false);
 
 	const [sourceText, setSourceText] = useState(JSON.stringify(sampleSource, null, 2));
 	const [sourceSchema, setSourceSchema] = useState<MappingSchema | undefined>(sampleSource);
@@ -190,6 +190,13 @@ function App() {
 	useEffect(() => {
 		document.documentElement.style.fontSize = editorType === 'bs34' ? '16px' : '';
 	}, [editorType]);
+
+	useEffect(() => {
+		document.body.style.overflow = editorExpanded ? 'hidden' : '';
+		return () => {
+			document.body.style.overflow = '';
+		};
+	}, [editorExpanded]);
 
 	const updateSchemaText = (
 		text: string,
@@ -463,48 +470,13 @@ function App() {
 	);
 
 	return (
-		<div style={{
+		<div className="dm-playground" style={{
 			fontFamily: 'system-ui, -apple-system, sans-serif',
 			padding: '1rem 1.5rem',
 			color: '#222',
 			maxWidth: 1800,
 			margin: '0 auto'
 		}}>
-			<style>
-				{`
-					.dm-mapping-value {
-						font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace !important;
-					}
-					.dm-mapping-editor .form-control,
-					.dm-mapping-editor .form-select,
-					.dm-mapping-editor .control-label,
-					.dm-mapping-editor .col-form-label,
-					.dm-mapping-editor .btn {
-						font-size: 12px;
-						line-height: 1.25;
-						padding-top: 3px;
-						padding-bottom: 3px;
-						height: auto;
-					}
-					.dm-mapping-editor .btn {
-						padding-left: 5px;
-						padding-right: 5px;
-					}
-					.dm-mapping-editor .form-group {
-						margin-bottom: 5px;
-					}
-					.dm-mapping-editor .panel-body,
-					.dm-mapping-editor .card-body {
-						padding: 7px;
-					}
-					.dm-mapping-editor .panel-body .form-group:last-child {
-						margin-bottom: 0;
-					}
-					.panel-body > .panel {
-						margin-bottom: 5px;
-					}
-				`}
-			</style>
 			<header style={{ marginBottom: '1.5rem' }}>
 				<h1 style={{ marginBottom: '0.25rem', fontSize: '1.5rem' }}>Morphos Playground</h1>
 				<p style={{ margin: 0, color: '#666', fontSize: '0.85rem' }}>
@@ -527,7 +499,7 @@ function App() {
 				alignItems: 'start'
 			}}>
 				{/* Source */}
-				<section style={sectionStyle}>
+				{!editorExpanded && <section style={sectionStyle}>
 					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 						<h2 style={{ margin: 0, fontSize: '1rem' }}>Source</h2>
 						<div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
@@ -543,6 +515,7 @@ function App() {
 						<>
 							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
 								<select
+									className="dm-playground-select"
 									value={sourceSchemaSelection}
 									onChange={e => handleSourceSchemaSelect(e.target.value)}
 									style={{ width: '100%', fontSize: '0.85rem' }}
@@ -586,13 +559,27 @@ function App() {
 							{sourceDataError && <div style={errStyle}>{sourceDataError}</div>}
 						</>
 					)}
-				</section>
+				</section>}
 
 				{/* Mapping */}
-				<section style={sectionStyle}>
-					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-						<h2 style={{ margin: 0, fontSize: '1rem' }}>Mapping</h2>
-						<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+				<section style={editorExpanded ? {
+					...sectionStyle,
+					position: 'fixed',
+					inset: 0,
+					zIndex: 1000,
+					padding: '1rem 1.5rem',
+					background: '#f8fafc',
+					overflow: 'auto'
+				} : sectionStyle}>
+					<div style={{
+						display: 'flex',
+						alignItems: 'flex-start',
+						justifyContent: 'space-between',
+						gap: '0.75rem',
+						flexWrap: 'wrap'
+					}}>
+						<h2 style={{ margin: '0.35rem 0 0', fontSize: '1rem' }}>Mapping</h2>
+						<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
 							<div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
 								<button type="button" style={tabStyle(editorType === 'json')} onClick={() => switchEditor('json')}>
 									Raw Json
@@ -607,6 +594,9 @@ function App() {
 									Bootstrap 5.3
 								</button>
 							</div>
+							<button type="button" style={tabStyle(false)} onClick={() => setEditorExpanded(v => !v)}>
+								{editorExpanded ? 'Exit full screen' : 'Full screen'}
+							</button>
 						</div>
 					</div>
 
@@ -615,14 +605,16 @@ function App() {
 						borderRadius: 4,
 						padding: '0.75rem',
 						background: '#fff',
-						minHeight: 200
+						minHeight: editorExpanded ? 'calc(100vh - 6.5rem)' : 200,
+						overflow: 'auto'
 					}}>
 						{editorType === 'json' ? (
 							<JsonTextarea
 								value={mappingText}
 								onChange={updateMappingText}
 								placeholder='{ "field": "EXPRESSION" }'
-								sizeKey={editorType}
+								minRows={editorExpanded ? 30 : 5}
+								sizeKey={`${editorType}-${editorExpanded ? 'expanded' : 'normal'}`}
 							/>
 						) : (
 							<MappingEditor
@@ -638,7 +630,7 @@ function App() {
 						{mappingError && <div style={errStyle}>{mappingError}</div>}
 					</div>
 
-					{mode === 'design' ? (
+					{!editorExpanded && (mode === 'design' ? (
 						<div style={{
 							marginTop: '0.5rem',
 							padding: '0.75rem',
@@ -666,6 +658,7 @@ function App() {
 							<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
 								<label style={{ ...labelStyle, marginBottom: 0 }}>Model</label>
 								<select
+									className="dm-playground-select"
 									value={aiModel}
 									onChange={e => setAiModel(e.target.value)}
 									style={{ fontSize: '0.85rem', padding: '0.4rem 0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
@@ -739,11 +732,11 @@ function App() {
 							)}
 							{runError && <div style={errStyle}>{runError}</div>}
 						</div>
-					)}
+					))}
 				</section>
 
 				{/* Destination */}
-				<section style={sectionStyle}>
+				{!editorExpanded && <section style={sectionStyle}>
 					<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
 						<h2 style={{ margin: 0, fontSize: '1rem' }}>Destination</h2>
 						<div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center' }}>
@@ -767,6 +760,7 @@ function App() {
 						<>
 							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
 								<select
+									className="dm-playground-select"
 									value={destSchemaSelection}
 									onChange={e => handleDestSchemaSelect(e.target.value)}
 									style={{ width: '100%', fontSize: '0.85rem' }}
@@ -800,7 +794,7 @@ function App() {
 							{runError && <div style={errStyle}>{runError}</div>}
 						</>
 					)}
-				</section>
+				</section>}
 			</div>
 		</div>
 	);

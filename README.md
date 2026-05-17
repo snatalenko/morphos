@@ -23,7 +23,8 @@ Try it in the [interactive playground](https://snatalenko.github.io/morphos/play
 
 - [Overview](#overview)
   - [Reasoning](#reasoning)
-  - [Optional Packages](#optional-packages)
+  - [Visual Mapping Editor](#visual-mapping-editor)
+  - [AI Mapping Generation](#ai-mapping-generation)
   - [Quick Start Example](#quick-start-example)
 - [Compatibility](#compatibility)
 - [Security](#security)
@@ -31,8 +32,8 @@ Try it in the [interactive playground](https://snatalenko.github.io/morphos/play
   - [Runtime Variables Quick Reference](#runtime-variables-quick-reference)
   - [Objects](#objects)
   - [Arrays](#arrays)
-  - [String\[\] from Object\[\]](#string-from-object)
-  - [String\[\] from String\[\]](#string-from-string)
+    - [String\[\] from Object\[\]](#string-from-object)
+    - [String\[\] from String\[\]](#string-from-string)
   - [Tuple Arrays](#tuple-arrays)
   - [Context Switching](#context-switching)
   - [Conditional Fields](#conditional-fields)
@@ -54,12 +55,44 @@ That is where Morphos came in:
 - **Typed** - written in TypeScript
 - **Lightweight** - no dependencies
 
-### Optional Packages
+### Visual Mapping Editor
 
-Morphos also ships optional subpath entries that are loaded only when imported:
+Need users to build or maintain mappings in a web app? Use the React mapping editor and save the result as the same JSON mapping spec the runtime executes.
 
-- [`morphos/react`](src/react/README.md) - a React visual mapping editor with schema-driven field suggestions, mapping type selection, and built-in default/Bootstrap themes.
-- [`morphos/openai`](src/openai/README.md) - an OpenAI-powered helper that generates a `RootMapping` from source and destination schemas, optionally guided by natural-language instructions.
+<table>
+  <tr>
+    <td width="50%" style="border: none">
+      <img src="docs/images/mapping-editor-browser.png" alt="Mapping editor in browser" width="100%" />
+    </td>
+    <td width="50%" style="border: none">
+      <img src="docs/images/mapping-editor-code.png" alt="Mapping JSON in code editor" width="100%" />
+    </td>
+  </tr>
+</table>
+
+The editor can suggest source and destination fields from JSON Schemas, lets users choose mapping instructions such as fields, objects, arrays, conditionals, and concatenation, and outputs plain JSON. A typical flow is: users build mappings in a web app, the app saves those JSON specs, and the server executes them later in the secure runtime.
+
+The UI is available as an optional subpath import and is loaded only when used:
+
+```ts
+import { MappingEditor } from 'morphos/react';
+```
+
+See [`morphos/react`](src/react/README.md) for the editor API, schema-driven suggestions, change handling, and built-in default/Bootstrap themes.
+
+### AI Mapping Generation
+
+When both incoming and outgoing formats are known, OpenAI can generate a first-pass mapping from two JSON Schemas.
+
+This is useful for document-to-document transformations, API payload conversions, imports, exports, and other structured JSON workflows: as long as the source and destination formats are known, the model can infer likely field matches, calculations, object mappings, list mappings, and conditional rules. The generated output is still just a JSON mapping spec, so it can be reviewed in the editor, adjusted, stored, and executed by the same runtime.
+
+The OpenAI helper is also an optional subpath import:
+
+```ts
+import { generateMapping } from 'morphos/openai';
+```
+
+See [`morphos/openai`](src/openai/README.md) for schema-based mapping generation and natural-language instructions.
 
 ### Quick Start Example
 
