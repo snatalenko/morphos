@@ -89,6 +89,7 @@ import { Row, TextFieldSetting } from 'morphos/react-schema-editor/bootstrap53';
 <SchemaEditor
 	value={schema}
 	onChange={setSchema}
+	hideRootElement
 	components={components}
 	labels={labels}
 />
@@ -99,8 +100,20 @@ import { Row, TextFieldSetting } from 'morphos/react-schema-editor/bootstrap53';
 | `value`        | `JsonSchema`                          | Controlled schema value.                                                 |
 | `defaultValue` | `JsonSchema`                          | Uncontrolled initial schema. Used once on mount.                         |
 | `onChange`     | `(next: JsonSchema) => void`           | Called after each edit with the complete current schema.                 |
+| `hideRootElement` | `boolean`                          | Hide the root row and render only the root object's properties or array item editor. |
 | `components`   | `Partial<SchemaEditorComponents>`     | Override any built-in UI slot.                                           |
 | `labels`       | `Partial<SchemaEditorLabels>`         | Override any user-visible strings.                                       |
+
+Use `hideRootElement` when the parent UI already shows the root context. The root schema still comes from `value`
+or `defaultValue`, including its `type`, `properties`, and `items`.
+
+```tsx
+<SchemaEditor
+	value={schema}
+	onChange={setSchema}
+	hideRootElement
+/>
+```
 
 The component exposes a ref handle:
 

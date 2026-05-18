@@ -29,6 +29,7 @@ export interface SchemaEditorProps {
 	value?: JsonSchema;
 	defaultValue?: JsonSchema;
 	onChange?: (next: JsonSchema) => void;
+	hideRootElement?: boolean;
 	components?: Partial<SchemaEditorComponents>;
 	labels?: Partial<SchemaEditorLabels>;
 }
@@ -257,6 +258,7 @@ function SchemaNodeEditor({
 	onRequiredChange,
 	onRemove,
 	root = false,
+	hideSelf = false,
 	arrayItem = false,
 	focusNameOnMount = false
 }: {
@@ -268,6 +270,7 @@ function SchemaNodeEditor({
 	onRequiredChange?: (next: boolean) => void;
 	onRemove?: () => void;
 	root?: boolean;
+	hideSelf?: boolean;
 	arrayItem?: boolean;
 	focusNameOnMount?: boolean;
 }) {
@@ -396,8 +399,8 @@ function SchemaNodeEditor({
 	const slotNames = new Set(propertySlots.map(slot => slot.name).filter((slotName): slotName is string => !!slotName));
 	const properties = schema.properties ?? {};
 
-	const nestedSection = type === 'object' ? (
-		<C.Section>
+	const nestedContent = type === 'object' ? (
+		<>
 			{Object.entries(properties).filter(([propertyName]) => !slotNames.has(propertyName)).map(([propertyName, propertySchema]) => (
 				<SchemaNodeEditor
 					key={propertyName}
@@ -441,16 +444,17 @@ function SchemaNodeEditor({
 					placeholder={labels.addProperty}
 				/>
 			))}
-		</C.Section>
+		</>
 	) : type === 'array' ? (
-		<C.Section>
+		<>
 			<SchemaNodeEditor
 				arrayItem
 				schema={asSchema(schema.items as SchemaProperty | undefined)}
 				onChange={updateArrayItems}
 			/>
-		</C.Section>
+		</>
 	) : null;
+	const nestedSection = nestedContent ? <C.Section>{nestedContent}</C.Section> : null;
 
 	const section = settingsOpen || nestedSection ? (
 		<>
@@ -473,6 +477,9 @@ function SchemaNodeEditor({
 			{nestedSection}
 		</>
 	) : undefined;
+
+	if (hideSelf)
+		return <>{nestedContent}</>;
 
 	return (
 		<C.Row
@@ -500,6 +507,7 @@ function SchemaNodeEditor({
 }
 
 const SchemaEditor = forwardRef<SchemaEditorHandle, SchemaEditorProps>(function SchemaEditor(props, ref) {
+	const hideRootElement = props.hideRootElement ?? false;
 	const [schema, setSchema] = useState<JsonSchema>(() => props.value ?? props.defaultValue ?? { type: 'object' });
 	const schemaRef = useRef(schema);
 	schemaRef.current = schema;
@@ -536,7 +544,12 @@ const SchemaEditor = forwardRef<SchemaEditorHandle, SchemaEditorProps>(function 
 			<ComponentsContext.Provider value={mergedComponents}>
 				<div className="dm-schema-editor">
 					<C.Container>
-						<SchemaNodeEditor schema={schema} onChange={handleChange} root />
+						<SchemaNodeEditor
+							schema={schema}
+							onChange={handleChange}
+							root
+							hideSelf={hideRootElement}
+						/>
 					</C.Container>
 				</div>
 			</ComponentsContext.Provider>
