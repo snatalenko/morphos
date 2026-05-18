@@ -1,3 +1,15 @@
+# [1.8.0-alpha.2](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.1...v1.8.0-alpha.2) (2026-05-18)
+
+
+### Features
+
+* JsonSchema editor ([926cd6a](https://github.com/snatalenko/morphos/commit/926cd6a87da098ab10e6800264e8768ca35318f7))
+
+### Changes
+
+* Patch vulnerabilities in dev dependencies ([8970c9d](https://github.com/snatalenko/morphos/commit/8970c9d79c3d4c95093a6f466c639e81a62e51f9))
+
+
 # [1.8.0-alpha.1](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.0...v1.8.0-alpha.1) (2026-05-16)
 
 
