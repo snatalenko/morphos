@@ -48,6 +48,21 @@
       "import": "./dist/esm/react/bootstrap53/index.js",
       "types": "./dist/types/react/bootstrap53/index.d.ts"
     },
+    "./react-schema-editor": {
+      "require": "./dist/cjs/react-schema-editor/index.js",
+      "import": "./dist/esm/react-schema-editor/index.js",
+      "types": "./dist/types/react-schema-editor/index.d.ts"
+    },
+    "./react-schema-editor/bootstrap34": {
+      "require": "./dist/cjs/react-schema-editor/bootstrap34/index.js",
+      "import": "./dist/esm/react-schema-editor/bootstrap34/index.js",
+      "types": "./dist/types/react-schema-editor/bootstrap34/index.d.ts"
+    },
+    "./react-schema-editor/bootstrap53": {
+      "require": "./dist/cjs/react-schema-editor/bootstrap53/index.js",
+      "import": "./dist/esm/react-schema-editor/bootstrap53/index.js",
+      "types": "./dist/types/react-schema-editor/bootstrap53/index.d.ts"
+    },
     "./openai": {
       "require": "./dist/cjs/openai/index.js",
       "import": "./dist/esm/openai/index.js",

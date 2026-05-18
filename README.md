@@ -24,6 +24,7 @@ Try it in the [interactive playground](https://snatalenko.github.io/morphos/play
 - [Overview](#overview)
   - [Reasoning](#reasoning)
   - [Visual Mapping Editor](#visual-mapping-editor)
+  - [JSON Schema Editor](#json-schema-editor)
   - [AI Mapping Generation](#ai-mapping-generation)
   - [Quick Start Example](#quick-start-example)
 - [Compatibility](#compatibility)
@@ -79,6 +80,16 @@ import { MappingEditor } from 'morphos/react';
 ```
 
 See [`morphos/react`](src/react/README.md) for the editor API, schema-driven suggestions, change handling, and built-in default/Bootstrap themes.
+
+### JSON Schema Editor
+
+Need users to define the source and destination formats before building mappings? Use the React schema editor to create and maintain JSON Schemas in the same kind of web UI.
+
+```ts
+import { SchemaEditor } from 'morphos/react-schema-editor';
+```
+
+See [`morphos/react-schema-editor`](src/react-schema-editor/README.md) for installation, usage, and theme customization.
 
 ### AI Mapping Generation
 
