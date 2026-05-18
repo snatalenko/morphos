@@ -8,6 +8,12 @@ import {
 } from '../src/react/index.ts';
 import bootstrap34 from '../src/react/bootstrap34/index.tsx';
 import bootstrap53 from '../src/react/bootstrap53/index.tsx';
+import {
+	SchemaEditor,
+	type SchemaEditorComponents
+} from '../src/react-schema-editor/index.ts';
+import schemaBootstrap34 from '../src/react-schema-editor/bootstrap34/index.tsx';
+import schemaBootstrap53 from '../src/react-schema-editor/bootstrap53/index.tsx';
 import { generateMapping } from '../src/openai/index.ts';
 import sampleForSchema from '../src/sampleForSchema.ts';
 import createScript from '../src/createScript.ts';
@@ -25,7 +31,6 @@ import type { DocumentSchemaSample } from './shared/schemas/index.ts';
 import type { JSONSchema4 } from 'json-schema';
 
 type EditorType = 'default' | 'bs34' | 'bs53' | 'json';
-type WorkspaceMode = 'design' | 'test';
 type SourceTab = 'schema' | 'data';
 type DestinationTab = 'schema' | 'result';
 
@@ -42,6 +47,7 @@ const documentTypes: DocumentSchemaSample['documentType'][] = [
 	'Shipment Notice',
 	'GS1 EPCIS Event'
 ];
+const emptySchema: MappingSchema = { type: 'object', properties: {} };
 
 function useDynamicCss(href: string | null) {
 	useEffect(() => {
@@ -136,7 +142,6 @@ function tabStyle(active: boolean) {
 }
 
 function App() {
-	const [mode, setMode] = useState<WorkspaceMode>('design');
 	const [sourceTab, setSourceTab] = useState<SourceTab>('schema');
 	const [destinationTab, setDestinationTab] = useState<DestinationTab>('schema');
 	const [editorExpanded, setEditorExpanded] = useState(false);
@@ -219,6 +224,20 @@ function App() {
 		catch (e) {
 			setError((e as Error).message);
 		}
+	};
+
+	const updateSourceSchemaFromEditor = (next: MappingSchema) => {
+		setSourceSchemaSelection('');
+		setSourceSchema(next);
+		setSourceText(JSON.stringify(next, null, 2));
+		setSourceError(null);
+	};
+
+	const updateDestSchemaFromEditor = (next: MappingSchema) => {
+		setDestSchemaSelection('');
+		setDestSchema(next);
+		setDestText(JSON.stringify(next, null, 2));
+		setDestError(null);
 	};
 
 	const updateSourceDataText = (text: string) => {
@@ -359,18 +378,6 @@ function App() {
 		setEditorType(next);
 	};
 
-	const switchMode = (next: WorkspaceMode) => {
-		setMode(next);
-		if (next === 'design') {
-			setSourceTab('schema');
-			setDestinationTab('schema');
-		}
-		else {
-			setSourceTab('data');
-			setDestinationTab('result');
-		}
-	};
-
 	const updateMappingText = (text: string) => {
 		userModifiedRef.current = true;
 		setMappingText(text);
@@ -391,6 +398,8 @@ function App() {
 	const runMapping = () => {
 		setRunError(null);
 		setRunMs(null);
+		setSourceTab('data');
+		setDestinationTab('result');
 		try {
 			const currentMapping = editorType === 'json'
 				? JSON.parse(mappingText || '{}') as RootMapping
@@ -406,12 +415,10 @@ function App() {
 			const result = run(sourceData, createGlobalContext);
 			setRunMs(performance.now() - start);
 			setResultText(JSON.stringify(result, null, 2));
-			setDestinationTab('result');
 		}
 		catch (e) {
 			setRunError((e as Error).message);
 			setResultText('');
-			setDestinationTab('result');
 		}
 	};
 
@@ -452,6 +459,11 @@ function App() {
 			editorType === 'bs53' ? bootstrap53 :
 				undefined;
 
+	const schemaComponents: Partial<SchemaEditorComponents> | undefined =
+		editorType === 'bs34' ? schemaBootstrap34 :
+			editorType === 'bs53' ? schemaBootstrap53 :
+				undefined;
+
 	const schemaSampleOptions = (
 		<>
 			<option value="">Load…</option>
@@ -470,7 +482,7 @@ function App() {
 	);
 
 	return (
-		<div className="dm-playground" style={{
+		<div className={`dm-playground dm-playground-theme-${editorType}`} style={{
 			fontFamily: 'system-ui, -apple-system, sans-serif',
 			padding: '1rem 1.5rem',
 			color: '#222',
@@ -482,13 +494,28 @@ function App() {
 				<p style={{ margin: 0, color: '#666', fontSize: '0.85rem' }}>
 					Edit the schemas on the sides, the mapping in the middle, or generate one with OpenAI.
 				</p>
-				<div style={{ display: 'flex', gap: '0.25rem', marginTop: '0.75rem' }}>
-					<button type="button" style={tabStyle(mode === 'design')} onClick={() => switchMode('design')}>
-						Design
-					</button>
-					<button type="button" style={tabStyle(mode === 'test')} onClick={() => switchMode('test')}>
-						Test
-					</button>
+				<div style={{
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'space-between',
+					gap: '0.75rem',
+					flexWrap: 'wrap',
+					marginTop: '0.75rem'
+				}}>
+					<div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+						<button type="button" style={tabStyle(editorType === 'json')} onClick={() => switchEditor('json')}>
+							Raw Json
+						</button>
+						<button type="button" style={tabStyle(editorType === 'default')} onClick={() => switchEditor('default')}>
+							Plain HTML
+						</button>
+						<button type="button" style={tabStyle(editorType === 'bs34')} onClick={() => switchEditor('bs34')}>
+							Bootstrap 3.4
+						</button>
+						<button type="button" style={tabStyle(editorType === 'bs53')} onClick={() => switchEditor('bs53')}>
+							Bootstrap 5.3
+						</button>
+					</div>
 				</div>
 			</header>
 
@@ -513,28 +540,42 @@ function App() {
 					</div>
 					{sourceTab === 'schema' ? (
 						<>
-							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+							<div style={{
+								display: 'flex',
+								justifyContent: 'space-between',
+								alignItems: 'center',
+								gap: '0.5rem',
+								flexWrap: 'wrap'
+							}}>
 								<select
 									className="dm-playground-select"
 									value={sourceSchemaSelection}
 									onChange={e => handleSourceSchemaSelect(e.target.value)}
-									style={{ width: '100%', fontSize: '0.85rem' }}
+									style={{ flex: '1 1 220px', minWidth: 0, fontSize: '0.85rem' }}
 								>
 									{schemaSampleOptions}
 								</select>
 							</div>
-							<JsonTextarea
-								value={sourceText}
-								onChange={text => updateSchemaText(
-									text,
-									setSourceText,
-									setSourceSchema,
-									setSourceError,
-									() => setSourceSchemaSelection('')
-								)}
-								placeholder='{ "type": "object", "properties": { ... } }'
-								sizeKey={`${editorType}-${sourceTab}`}
-							/>
+							{editorType === 'json' ? (
+								<JsonTextarea
+									value={sourceText}
+									onChange={text => updateSchemaText(
+										text,
+										setSourceText,
+										setSourceSchema,
+										setSourceError,
+										() => setSourceSchemaSelection('')
+									)}
+									placeholder='{ "type": "object", "properties": { ... } }'
+									sizeKey={`${editorType}-${sourceTab}`}
+								/>
+							) : (
+								<SchemaEditor
+									value={sourceSchema ?? emptySchema}
+									onChange={updateSourceSchemaFromEditor}
+									components={schemaComponents}
+								/>
+							)}
 							{sourceError && <div style={errStyle}>{sourceError}</div>}
 						</>
 					) : (
@@ -580,20 +621,11 @@ function App() {
 					}}>
 						<h2 style={{ margin: '0.35rem 0 0', fontSize: '1rem' }}>Mapping</h2>
 						<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-							<div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
-								<button type="button" style={tabStyle(editorType === 'json')} onClick={() => switchEditor('json')}>
-									Raw Json
-								</button>
-								<button type="button" style={tabStyle(editorType === 'default')} onClick={() => switchEditor('default')}>
-									Plain HTML
-								</button>
-								<button type="button" style={tabStyle(editorType === 'bs34')} onClick={() => switchEditor('bs34')}>
-									Bootstrap 3.4
-								</button>
-								<button type="button" style={tabStyle(editorType === 'bs53')} onClick={() => switchEditor('bs53')}>
-									Bootstrap 5.3
-								</button>
-							</div>
+							{runMs !== null && !runError && (
+								<span style={{ fontSize: '0.75rem', color: '#666' }}>{runMs.toFixed(2)} ms</span>
+							)}
+							{runError && <span style={{ ...errStyle, marginTop: 0 }}>{runError}</span>}
+							<button type="button" onClick={runMapping} style={buttonStyle}>Run</button>
 							<button type="button" style={tabStyle(false)} onClick={() => setEditorExpanded(v => !v)}>
 								{editorExpanded ? 'Exit full screen' : 'Full screen'}
 							</button>
@@ -630,7 +662,7 @@ function App() {
 						{mappingError && <div style={errStyle}>{mappingError}</div>}
 					</div>
 
-					{!editorExpanded && (mode === 'design' ? (
+					{!editorExpanded && (
 						<div style={{
 							marginTop: '0.5rem',
 							padding: '0.75rem',
@@ -708,31 +740,7 @@ function App() {
 							</div>
 							{aiError && <div style={errStyle}>{aiError}</div>}
 						</div>
-					) : (
-						<div style={{
-							marginTop: '0.5rem',
-							padding: '0.75rem',
-							background: '#f5f7fa',
-							border: '1px solid #e3e7ec',
-							borderRadius: 4
-						}}>
-							<h3 style={{ margin: '0 0 0.5rem', fontSize: '0.9rem' }}>Run transformation</h3>
-							<div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-								<button type="button" onClick={runMapping} style={buttonStyle}>
-									Run
-								</button>
-								<span style={{ fontSize: '0.75rem', color: '#888' }}>
-									Uses Source Data and the current mapping.
-								</span>
-							</div>
-							{runMs !== null && !runError && (
-								<div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.35rem' }}>
-									Ran in {runMs.toFixed(2)} ms.
-								</div>
-							)}
-							{runError && <div style={errStyle}>{runError}</div>}
-						</div>
-					))}
+					)}
 				</section>
 
 				{/* Destination */}
@@ -758,33 +766,46 @@ function App() {
 					</div>
 					{destinationTab === 'schema' ? (
 						<>
-							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+							<div style={{
+								display: 'flex',
+								justifyContent: 'space-between',
+								alignItems: 'center',
+								gap: '0.5rem',
+								flexWrap: 'wrap'
+							}}>
 								<select
 									className="dm-playground-select"
 									value={destSchemaSelection}
 									onChange={e => handleDestSchemaSelect(e.target.value)}
-									style={{ width: '100%', fontSize: '0.85rem' }}
+									style={{ flex: '1 1 220px', minWidth: 0, fontSize: '0.85rem' }}
 								>
 									{schemaSampleOptions}
 								</select>
 							</div>
-							<JsonTextarea
-								value={destText}
-								onChange={text => updateSchemaText(
-									text,
-									setDestText,
-									setDestSchema,
-									setDestError,
-									() => setDestSchemaSelection('')
-								)}
-								placeholder='{ "type": "object", "properties": { ... } }'
-								sizeKey={`${editorType}-${destinationTab}`}
-							/>
+							{editorType === 'json' ? (
+								<JsonTextarea
+									value={destText}
+									onChange={text => updateSchemaText(
+										text,
+										setDestText,
+										setDestSchema,
+										setDestError,
+										() => setDestSchemaSelection('')
+									)}
+									placeholder='{ "type": "object", "properties": { ... } }'
+									sizeKey={`${editorType}-${destinationTab}`}
+								/>
+							) : (
+								<SchemaEditor
+									value={destSchema ?? emptySchema}
+									onChange={updateDestSchemaFromEditor}
+									components={schemaComponents}
+								/>
+							)}
 							{destError && <div style={errStyle}>{destError}</div>}
 						</>
 					) : (
 						<>
-							<label style={labelStyle}>Transformation output</label>
 							<JsonTextarea
 								value={resultText}
 								onChange={setResultText}

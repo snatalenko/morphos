@@ -78,12 +78,14 @@
 	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
 }
 
-.dm-mapping-editor .card {
+.dm-mapping-editor .card,
+.dm-schema-editor .card {
 	border-color: #d8e3f0;
 	box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.dm-mapping-editor .card-header {
+.dm-mapping-editor .card-header,
+.dm-schema-editor .card-header {
 	background: #eef6ff;
 	border-color: #d8e3f0;
 }
@@ -102,6 +104,7 @@
 	line-height: 1.25;
 	padding-top: 3px;
 	padding-bottom: 3px;
+	padding-left: 5px;
 	height: auto;
 }
 
@@ -110,6 +113,83 @@
 	padding-right: 5px;
 }
 
-.dm-mapping-editor .card-body {
+.dm-mapping-editor .card-body,
+.dm-schema-editor .card-body {
 	padding: 7px;
+}
+
+.dm-schema-editor .row > .col-4:first-child .form-control {
+	background-color: var(--dm-schema-key-bg);
+	border-color: var(--dm-schema-key-border);
+	color: #17324d;
+	font-weight: 600;
+}
+
+.dm-schema-editor .dm-schema-editor-template-row > .col-4:first-child .form-control {
+	background-color: var(--dm-custom-key-bg);
+	border-color: var(--dm-custom-key-border);
+	border-style: dashed;
+	color: #1f3b57;
+	font-weight: 500;
+}
+
+.dm-schema-editor .dm-schema-editor-template-row > .col-4:first-child .form-control::placeholder {
+	color: #7894b5;
+}
+
+.dm-schema-editor select.dm-schema-editor-type {
+	background-color: var(--dm-schema-type-bg);
+	border-color: var(--dm-schema-type-border);
+	color: #46307a;
+	font-weight: 600;
+}
+
+.dm-schema-editor select.dm-schema-editor-required {
+	font-weight: 600;
+}
+
+.dm-schema-editor select.dm-schema-editor-required-off {
+	background-color: var(--dm-schema-optional-bg);
+	border-color: var(--dm-schema-optional-border);
+	color: #475569;
+}
+
+.dm-schema-editor select.dm-schema-editor-required-on {
+	background-color: var(--dm-schema-required-bg);
+	border-color: var(--dm-schema-required-border);
+	color: #8a1f2d;
+}
+
+.dm-schema-editor .form-control:focus,
+.dm-schema-editor .form-select:focus {
+	border-color: #6aa0f6;
+	box-shadow: 0 0 0 3px var(--dm-schema-control-focus);
+	outline: 0;
+}
+
+.dm-schema-editor .form-control,
+.dm-schema-editor .form-select,
+.dm-schema-editor .form-check-label,
+.dm-schema-editor .col-form-label,
+.dm-schema-editor .btn {
+	font-size: 12px;
+	line-height: 1.25;
+	padding-top: 3px;
+	padding-bottom: 3px;
+	padding-left: 5px;
+	height: auto;
+}
+
+.dm-schema-editor .form-select {
+	background-position: right 0.35rem center;
+	padding-right: 1.6rem;
+}
+
+.dm-schema-editor .btn {
+	padding-left: 5px;
+	padding-right: 5px;
+}
+
+.dm-schema-editor .card-body .row:last-child {
+	margin-bottom: 0 !important;
 }
