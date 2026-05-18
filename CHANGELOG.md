@@ -1,3 +1,11 @@
+# [1.8.0-alpha.3](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.2...v1.8.0-alpha.3) (2026-05-18)
+
+
+### Features
+
+* Option to hide root element on json schema editor ([e0975c5](https://github.com/snatalenko/morphos/commit/e0975c59e4bcb173bd2b36f5ef2f556a353cef5a))
+
+
 # [1.8.0-alpha.2](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.1...v1.8.0-alpha.2) (2026-05-18)
 
 
