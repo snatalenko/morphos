@@ -103,7 +103,7 @@ export const InputResetButton: ComponentType<InputResetButtonProps> = ({ onClick
 				aria-label={labels.useSchemaFields}
 				title={labels.useSchemaFields}
 			>
-				<span className="glyphicon glyphicon-list" aria-hidden="true" />
+				…
 			</button>
 		</span>
 	);
@@ -229,7 +229,7 @@ export const RemoveButton: ComponentType<RemoveButtonProps> = ({ onClick }) => {
 			aria-label={labels.removeField}
 			style={{ paddingLeft: 5, paddingRight: 5 }}
 		>
-			<span className="glyphicon glyphicon-remove" aria-hidden="true" />
+			×
 		</button>
 	);
 };
@@ -255,7 +255,7 @@ export const TypeSelector: ComponentType<TypeSelectorProps> = ({ kind, onChange 
 export const Reorder: ComponentType<ReorderProps> = ({ canMoveUp, canMoveDown, onMoveUp, onMoveDown }) => {
 	const labels = useContext(LabelsContext);
 	return (
-		<div className="btn-group" role="group" aria-label={labels.reorder} style={{ minWidth: '47px' }}>
+		<div className="btn-group" role="group" aria-label={labels.reorder}>
 			<button
 				type="button"
 				className="btn btn-default"
@@ -263,7 +263,7 @@ export const Reorder: ComponentType<ReorderProps> = ({ canMoveUp, canMoveDown, o
 				disabled={!canMoveUp}
 				aria-label={labels.moveUp}
 			>
-				<span className="glyphicon glyphicon-chevron-up" aria-hidden="true" />
+				↑
 			</button>
 			<button
 				type="button"
@@ -272,7 +272,7 @@ export const Reorder: ComponentType<ReorderProps> = ({ canMoveUp, canMoveDown, o
 				disabled={!canMoveDown}
 				aria-label={labels.moveDown}
 			>
-				<span className="glyphicon glyphicon-chevron-down" aria-hidden="true" />
+				↓
 			</button>
 		</div>
 	);
