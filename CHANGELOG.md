@@ -1,3 +1,18 @@
+# [1.8.0-alpha.5](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.4...v1.8.0-alpha.5) (2026-05-19)
+
+
+### Features
+
+* Tuple array support in mapping editor ([6fd86b5](https://github.com/snatalenko/morphos/commit/6fd86b553ef60c3c496c4e1f68c5c0c019bee057))
+* `isDestinationSchemaFullyMapped` and `countMappedFields` utils ([ea28564](https://github.com/snatalenko/morphos/commit/ea285646a6eb712e305ebdf22ff772e6a2e19900))
+* `readOnly` setting for SchemaEditor ([218a3ca](https://github.com/snatalenko/morphos/commit/218a3ca91b07ffa33c5f35b9af909feae2760694))
+
+### Changes
+
+* Allow custom or auto-generated mapping placeholder to be passed ([2bd3858](https://github.com/snatalenko/morphos/commit/2bd38580e1f6f0e17779e9ac5323d6394d1730c1))
+* Generate missed required field placeholders optionally thru post-processing after AI output ([597352a](https://github.com/snatalenko/morphos/commit/597352a2b4186d668fea39c41e304aa9a013ebe4))
+
+
 # [1.8.0-alpha.4](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.3...v1.8.0-alpha.4) (2026-05-19)
 
 
