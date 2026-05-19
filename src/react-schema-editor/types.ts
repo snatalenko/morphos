@@ -11,6 +11,8 @@ export interface ContainerProps {
 
 export interface RowProps {
 	name: ReactNode;
+	title?: ReactNode;
+	description?: ReactNode;
 	typeSelector: ReactNode;
 	requiredToggle: ReactNode;
 	settings: ReactNode;
@@ -33,9 +35,17 @@ export interface FieldLabelProps {
 	label: string;
 }
 
+export interface TypeSelectorOption {
+	value: string;
+	label: string;
+	type: SchemaType;
+	format?: string;
+}
+
 export interface TypeSelectorProps {
-	value: SchemaType;
-	onChange: (next: SchemaType) => void;
+	value: string;
+	options: TypeSelectorOption[];
+	onChange: (next: TypeSelectorOption) => void;
 }
 
 export interface CheckboxProps {
@@ -57,6 +67,8 @@ export interface AddPropertyInputProps {
 	value: string;
 	onChange: (next: string) => void;
 	placeholder: string;
+	exposeTitle?: boolean;
+	exposeDescription?: boolean;
 }
 
 export interface SchemaTextSettingField {
@@ -76,7 +88,16 @@ export interface SchemaCheckboxSettingField {
 	onChange: (next: boolean) => void;
 }
 
-export type SchemaSettingField = SchemaTextSettingField | SchemaCheckboxSettingField;
+export interface SchemaTextareaSettingField {
+	key: string;
+	label: string;
+	type: 'textarea';
+	value: string;
+	placeholder?: string;
+	onChange: (next: string) => void;
+}
+
+export type SchemaSettingField = SchemaTextSettingField | SchemaCheckboxSettingField | SchemaTextareaSettingField;
 
 export interface SettingsGroupProps {
 	children: ReactNode;
@@ -90,10 +111,16 @@ export interface CheckboxFieldSettingProps {
 	field: SchemaCheckboxSettingField;
 }
 
+export interface TextareaFieldSettingProps {
+	field: SchemaTextareaSettingField;
+}
+
 export interface SchemaEditorLabels {
 	title: string;
 	propertyName: string;
 	description: string;
+	format: string;
+	examples: string;
 	required: string;
 	settings: string;
 	nullable: string;
@@ -128,6 +155,7 @@ export interface SchemaEditorComponents {
 	SettingsGroup: ComponentType<SettingsGroupProps>;
 	TextFieldSetting: ComponentType<TextFieldSettingProps>;
 	CheckboxFieldSetting: ComponentType<CheckboxFieldSettingProps>;
+	TextareaFieldSetting: ComponentType<TextareaFieldSettingProps>;
 	RemoveButton: ComponentType<RemoveButtonProps>;
 	AddPropertyInput: ComponentType<AddPropertyInputProps>;
 }

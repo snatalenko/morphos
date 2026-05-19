@@ -17,12 +17,15 @@ export type {
 	SchemaEditorLabels,
 	SchemaCheckboxSettingField,
 	SchemaSettingField,
+	SchemaTextareaSettingField,
 	SchemaTextSettingField,
 	SchemaType,
 	SectionProps,
 	SettingsButtonProps,
 	SettingsGroupProps,
+	TextareaFieldSettingProps,
 	TextFieldSettingProps,
+	TypeSelectorOption,
 	TextInputProps,
 	TypeSelectorProps
 } from './types.ts';

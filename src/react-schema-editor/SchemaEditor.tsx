@@ -17,9 +17,13 @@ import type {
 	SchemaEditorComponents,
 	SchemaEditorLabels,
 	SchemaProperty,
+	SchemaTextareaSettingField,
 	SchemaTextSettingField,
-	SchemaType
+	SchemaType,
+	TypeSelectorOption
 } from './types.ts';
+
+const schemaTypes: SchemaType[] = ['string', 'number', 'integer', 'boolean', 'object', 'array'];
 
 export interface SchemaEditorHandle {
 	readonly value: JsonSchema;
@@ -30,6 +34,8 @@ export interface SchemaEditorProps {
 	defaultValue?: JsonSchema;
 	onChange?: (next: JsonSchema) => void;
 	hideRootElement?: boolean;
+	exposeTitle?: boolean;
+	exposeDescription?: boolean;
 	components?: Partial<SchemaEditorComponents>;
 	labels?: Partial<SchemaEditorLabels>;
 }
@@ -37,6 +43,7 @@ export interface SchemaEditorProps {
 type SchemaSettingKey =
 	'title' |
 	'description' |
+	'format' |
 	'minimum' |
 	'maximum' |
 	'exclusiveMinimum' |
@@ -120,6 +127,8 @@ function withSchemaType(schema: JsonSchema, type: SchemaType): JsonSchema {
 		delete next.items;
 		delete next.required;
 	}
+	if (type !== 'string')
+		delete next.format;
 
 	return next;
 }
@@ -142,7 +151,7 @@ function setRequired(schema: JsonSchema, name: string, required: boolean): JsonS
 
 function settingsForType(type: SchemaType): SchemaSettingKey[] {
 	if (type === 'string')
-		return ['title', 'description', 'minLength', 'maxLength', 'pattern', 'enum'];
+		return ['title', 'description', 'format', 'minLength', 'maxLength', 'pattern', 'enum'];
 	if (type === 'number' || type === 'integer')
 		return ['title', 'description', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'enum'];
 	if (type === 'array')
@@ -181,6 +190,31 @@ function parseEnumValue(value: string): unknown[] | undefined {
 		});
 }
 
+function examplesValue(schema: JsonSchema): string {
+	return Array.isArray(schema.examples)
+		? schema.examples.map(example => typeof example === 'string' ? example : JSON.stringify(example) ?? String(example)).join('\n')
+		: '';
+}
+
+function parseExamplesValue(value: string): unknown[] | undefined {
+	const lines = value
+		.split('\n')
+		.map(line => line.trim())
+		.filter(Boolean);
+
+	if (!lines.length)
+		return undefined;
+
+	return lines.map(line => {
+		try {
+			return JSON.parse(line);
+		}
+		catch {
+			return line;
+		}
+	});
+}
+
 function updateSetting(schema: JsonSchema, key: SchemaSettingKey, value: string): JsonSchema {
 	const next = { ...schema };
 	const mutableNext = next as Record<SchemaSettingKey, unknown>;
@@ -206,6 +240,16 @@ function updateSetting(schema: JsonSchema, key: SchemaSettingKey, value: string)
 	}
 
 	mutableNext[key] = value;
+	return next;
+}
+
+function updateExamples(schema: JsonSchema, value: string): JsonSchema {
+	const next = { ...schema };
+	const examples = parseExamplesValue(value);
+	if (examples === undefined)
+		delete next.examples;
+	else
+		next.examples = examples;
 	return next;
 }
 
@@ -238,6 +282,50 @@ function settingsCheckboxFields(
 	}];
 }
 
+function settingsTextareaFields(
+	schema: JsonSchema,
+	labels: SchemaEditorLabels,
+	onChange: (next: JsonSchema) => void
+): SchemaTextareaSettingField[] {
+	return [{
+		key: 'examples',
+		label: labels.examples,
+		type: 'textarea',
+		value: examplesValue(schema),
+		placeholder: 'example 1\nexample 2',
+		onChange: value => onChange(updateExamples(schema, value))
+	}];
+}
+
+function labelForType(type: SchemaType): string {
+	return type[0].toUpperCase() + type.slice(1);
+}
+
+function labelForFormat(format: string): string {
+	return format[0].toUpperCase() + format.slice(1);
+}
+
+function typeSelectorOptions(format: string | undefined): TypeSelectorOption[] {
+	const options: TypeSelectorOption[] = schemaTypes.map(type => ({
+		value: type,
+		label: labelForType(type),
+		type
+	}));
+	if (format) {
+		options.push({
+			value: `format:${format}`,
+			label: labelForFormat(format),
+			type: 'string',
+			format
+		});
+	}
+	return options;
+}
+
+function typeSelectorValue(type: SchemaType, format: string | undefined): string {
+	return type === 'string' && format ? `format:${format}` : type;
+}
+
 interface PropertySlot {
 	id: number;
 	name?: string;
@@ -260,6 +348,8 @@ function SchemaNodeEditor({
 	root = false,
 	hideSelf = false,
 	arrayItem = false,
+	exposeTitle = false,
+	exposeDescription = false,
 	focusNameOnMount = false
 }: {
 	schema: JsonSchema;
@@ -272,6 +362,8 @@ function SchemaNodeEditor({
 	root?: boolean;
 	hideSelf?: boolean;
 	arrayItem?: boolean;
+	exposeTitle?: boolean;
+	exposeDescription?: boolean;
 	focusNameOnMount?: boolean;
 }) {
 	const C = useContext(ComponentsContext);
@@ -281,7 +373,14 @@ function SchemaNodeEditor({
 	const nextPropertySlotIdRef = useRef(1);
 	const type = schemaType(schema);
 
-	const updateType = (nextType: SchemaType) => onChange(withSchemaType(schema, nextType));
+	const updateType = (option: TypeSelectorOption) => {
+		const next = withSchemaType(schema, option.type);
+		if (option.type === 'string' && option.format)
+			next.format = option.format;
+		else
+			delete next.format;
+		onChange(next);
+	};
 
 	const createProperty = (slotId: number, value: string): boolean => {
 		const propertyName = value.trim();
@@ -385,7 +484,7 @@ function SchemaNodeEditor({
 		});
 	};
 
-	const nameControl = root || arrayItem ? (
+	const baseNameControl = root || arrayItem ? (
 		<C.FieldLabel label={root ? rootLabel(labels) : labels.arrayItem} />
 	) : (
 		<C.TextInput
@@ -395,6 +494,20 @@ function SchemaNodeEditor({
 			focusOnMount={focusNameOnMount}
 		/>
 	);
+	const titleControl = exposeTitle ? (
+		<C.TextInput
+			value={schema.title ?? ''}
+			onChange={value => onChange(updateSetting(schema, 'title', value))}
+			placeholder={labels.title}
+		/>
+	) : undefined;
+	const descriptionControl = exposeDescription ? (
+		<C.TextInput
+			value={schema.description ?? ''}
+			onChange={value => onChange(updateSetting(schema, 'description', value))}
+			placeholder={labels.description}
+		/>
+	) : undefined;
 
 	const slotNames = new Set(propertySlots.map(slot => slot.name).filter((slotName): slotName is string => !!slotName));
 	const properties = schema.properties ?? {};
@@ -411,6 +524,8 @@ function SchemaNodeEditor({
 					required={(schema.required ?? []).includes(propertyName)}
 					onRequiredChange={next => onChange(setRequired(schema, propertyName, next))}
 					onRemove={() => removeProperty(propertyName)}
+					exposeTitle={exposeTitle}
+					exposeDescription={exposeDescription}
 				/>
 			))}
 			{propertySlots.map(slot => slot.name ? (
@@ -424,6 +539,8 @@ function SchemaNodeEditor({
 						required={(schema.required ?? []).includes(slot.name)}
 						onRequiredChange={next => slot.name && onChange(setRequired(schema, slot.name, next))}
 						onRemove={() => slot.name && removeProperty(slot.name)}
+						exposeTitle={exposeTitle}
+						exposeDescription={exposeDescription}
 						focusNameOnMount={!!slot.focusNameOnMount}
 					/>
 				) : null
@@ -442,6 +559,8 @@ function SchemaNodeEditor({
 							return;
 					}}
 					placeholder={labels.addProperty}
+					exposeTitle={exposeTitle}
+					exposeDescription={exposeDescription}
 				/>
 			))}
 		</>
@@ -451,6 +570,8 @@ function SchemaNodeEditor({
 				arrayItem
 				schema={asSchema(schema.items as SchemaProperty | undefined)}
 				onChange={updateArrayItems}
+				exposeTitle={exposeTitle}
+				exposeDescription={exposeDescription}
 			/>
 		</>
 	) : null;
@@ -468,6 +589,7 @@ function SchemaNodeEditor({
 									{textFields.slice(0, 2).map(f => <C.TextFieldSetting key={f.key} field={f} />)}
 									{settingsCheckboxFields(schema, labels, onChange).map(f => <C.CheckboxFieldSetting key={f.key} field={f} />)}
 									{textFields.slice(2).map(f => <C.TextFieldSetting key={f.key} field={f} />)}
+									{settingsTextareaFields(schema, labels, onChange).map(f => <C.TextareaFieldSetting key={f.key} field={f} />)}
 								</>
 							);
 						})()}
@@ -483,8 +605,16 @@ function SchemaNodeEditor({
 
 	return (
 		<C.Row
-			name={nameControl}
-			typeSelector={<C.TypeSelector value={type} onChange={updateType} />}
+			name={baseNameControl}
+			title={titleControl}
+			description={descriptionControl}
+			typeSelector={(
+				<C.TypeSelector
+					value={typeSelectorValue(type, schema.format)}
+					options={typeSelectorOptions(schema.format)}
+					onChange={updateType}
+				/>
+			)}
 			requiredToggle={
 				root || arrayItem || !onRequiredChange ? null : (
 					<C.RequirementControl
@@ -549,6 +679,8 @@ const SchemaEditor = forwardRef<SchemaEditorHandle, SchemaEditorProps>(function 
 							onChange={handleChange}
 							root
 							hideSelf={hideRootElement}
+							exposeTitle={props.exposeTitle ?? false}
+							exposeDescription={props.exposeDescription ?? false}
 						/>
 					</C.Container>
 				</div>

@@ -6,6 +6,8 @@ export interface JsonSchema {
 	items?: JsonSchema | boolean | Array<JsonSchema | boolean>;
 	required?: string[];
 	enum?: unknown[];
+	format?: string;
+	examples?: unknown[];
 	title?: string;
 	description?: string;
 	minimum?: number;

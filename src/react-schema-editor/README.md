@@ -90,6 +90,8 @@ import { Row, TextFieldSetting } from 'morphos/react-schema-editor/bootstrap53';
 	value={schema}
 	onChange={setSchema}
 	hideRootElement
+	exposeTitle
+	exposeDescription
 	components={components}
 	labels={labels}
 />
@@ -101,6 +103,8 @@ import { Row, TextFieldSetting } from 'morphos/react-schema-editor/bootstrap53';
 | `defaultValue` | `JsonSchema`                          | Uncontrolled initial schema. Used once on mount.                         |
 | `onChange`     | `(next: JsonSchema) => void`           | Called after each edit with the complete current schema.                 |
 | `hideRootElement` | `boolean`                          | Hide the root row and render only the root object's properties or array item editor. |
+| `exposeTitle`  | `boolean`                             | Show each field's `title` in the main field row.                         |
+| `exposeDescription` | `boolean`                       | Show each field's `description` in the main field row.                   |
 | `components`   | `Partial<SchemaEditorComponents>`     | Override any built-in UI slot.                                           |
 | `labels`       | `Partial<SchemaEditorLabels>`         | Override any user-visible strings.                                       |
 
@@ -124,6 +128,9 @@ interface SchemaEditorHandle {
 ```
 
 The editor supports object properties, required flags, nullable fields, scalar types, nested objects, arrays, and array item schemas.
+String schemas can also define `format`; when present, the type dropdown adds the capitalized format as a separate option.
+Selecting the standard `String` option clears the field's format.
+Schema `examples` are edited as a multi-line value where each line becomes one example.
 
 Field settings are rendered through separate theme components:
 
@@ -132,5 +139,6 @@ Field settings are rendered through separate theme components:
 | `SettingsGroup` | Wraps the expanded settings area. |
 | `TextFieldSetting` | Renders text-based settings such as title, description, min/max, pattern, and enum. |
 | `CheckboxFieldSetting` | Renders boolean settings such as nullable. |
+| `TextareaFieldSetting` | Renders multi-line settings such as examples. |
 
 Override these components to replace the inline settings block with a custom panel, popover, or modal while keeping the editor state handling unchanged.

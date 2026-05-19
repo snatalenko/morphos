@@ -9,16 +9,14 @@ import type {
 	RemoveButtonProps,
 	RowProps,
 	SchemaEditorComponents,
-	SchemaType,
 	SectionProps,
 	SettingsButtonProps,
 	SettingsGroupProps,
+	TextareaFieldSettingProps,
 	TextFieldSettingProps,
 	TextInputProps,
 	TypeSelectorProps
 } from '../types.ts';
-
-const schemaTypes: SchemaType[] = ['string', 'number', 'integer', 'boolean', 'object', 'array'];
 
 export const Container: ComponentType<ContainerProps> = ({ children }) => (
 	<div className="dm-schema-editor-bs34 form-horizontal">{children}</div>
@@ -26,25 +24,37 @@ export const Container: ComponentType<ContainerProps> = ({ children }) => (
 
 export const Row: ComponentType<RowProps> = ({
 	name,
+	title,
+	description,
 	typeSelector,
 	requiredToggle,
 	settings,
 	remove,
 	section
-}) => (
-	<>
-		<div className="form-group">
-			<div className="col-sm-4">{name}</div>
-			<div className="col-sm-3">{typeSelector}</div>
-			<div className="col-sm-3">{requiredToggle}</div>
-			<div className="col-sm-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
-				{settings}
-				{remove}
+}) => {
+	const hasDetails = !!title || !!description;
+	const detailClass = title && description ? 'col-sm-2' : 'col-sm-3';
+	const nameClass = title && description ? 'col-sm-2' : hasDetails ? 'col-sm-3' : 'col-sm-4';
+	return (
+		<>
+			<div className="form-group">
+				<div className={nameClass}>{name}</div>
+				<div className={hasDetails ? 'col-sm-2' : 'col-sm-3'}>{typeSelector}</div>
+				<div className={hasDetails ? 'col-sm-2' : 'col-sm-3'}>{requiredToggle}</div>
+				{title ? <div className={detailClass}>{title}</div> : null}
+				{description ? <div className={detailClass}>{description}</div> : null}
+				<div
+					className="col-sm-2"
+					style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}
+				>
+					{settings}
+					{remove}
+				</div>
 			</div>
-		</div>
-		{section}
-	</>
-);
+			{section}
+		</>
+	);
+};
 
 export const Section: ComponentType<SectionProps> = ({ children }) => (
 	<div className="panel panel-default">
@@ -75,14 +85,18 @@ export const FieldLabel: ComponentType<FieldLabelProps> = ({ label }) => (
 	<label className="control-label" title={label}>{label}</label>
 );
 
-export const TypeSelector: ComponentType<TypeSelectorProps> = ({ value, onChange }) => (
+export const TypeSelector: ComponentType<TypeSelectorProps> = ({ value, options, onChange }) => (
 	<select
 		className="form-control dm-schema-editor-type"
 		value={value}
-		onChange={e => onChange(e.target.value as SchemaType)}
+		onChange={e => {
+			const option = options.find(current => current.value === e.target.value);
+			if (option)
+				onChange(option);
+		}}
 	>
-		{schemaTypes.map(type => (
-			<option key={type} value={type}>{type[0].toUpperCase() + type.slice(1)}</option>
+		{options.map(option => (
+			<option key={option.value} value={option.value}>{option.label}</option>
 		))}
 	</select>
 );
@@ -152,6 +166,21 @@ export const TextFieldSetting: ComponentType<TextFieldSettingProps> = ({ field }
 	</div>
 );
 
+export const TextareaFieldSetting: ComponentType<TextareaFieldSettingProps> = ({ field }) => (
+	<div className="form-group">
+		<label className="col-sm-5 control-label">{field.label}</label>
+		<div className="col-sm-7">
+			<textarea
+				className="form-control"
+				value={field.value}
+				onChange={e => field.onChange(e.target.value)}
+				placeholder={field.placeholder}
+				rows={3}
+			/>
+		</div>
+	</div>
+);
+
 export const RemoveButton: ComponentType<RemoveButtonProps> = ({ onClick }) => {
 	const labels = useContext(LabelsContext);
 	return (
@@ -161,19 +190,28 @@ export const RemoveButton: ComponentType<RemoveButtonProps> = ({ onClick }) => {
 	);
 };
 
-export const AddPropertyInput: ComponentType<AddPropertyInputProps> = ({ value, onChange, placeholder }) => (
-	<div className="form-group dm-schema-editor-template-row">
-		<div className="col-sm-4">
-			<input
-				type="text"
-				className="form-control"
-				value={value}
-				onChange={e => onChange(e.target.value)}
-				placeholder={placeholder}
-			/>
+export const AddPropertyInput: ComponentType<AddPropertyInputProps> = ({
+	value,
+	onChange,
+	placeholder,
+	exposeTitle,
+	exposeDescription
+}) => {
+	const nameClass = exposeTitle && exposeDescription ? 'col-sm-2' : exposeTitle || exposeDescription ? 'col-sm-3' : 'col-sm-4';
+	return (
+		<div className="form-group dm-schema-editor-template-row">
+			<div className={nameClass}>
+				<input
+					type="text"
+					className="form-control"
+					value={value}
+					onChange={e => onChange(e.target.value)}
+					placeholder={placeholder}
+				/>
+			</div>
 		</div>
-	</div>
-);
+	);
+};
 
 const components: Partial<SchemaEditorComponents> = {
 	Container,
@@ -187,6 +225,7 @@ const components: Partial<SchemaEditorComponents> = {
 	SettingsGroup,
 	TextFieldSetting,
 	CheckboxFieldSetting,
+	TextareaFieldSetting,
 	RemoveButton,
 	AddPropertyInput
 };

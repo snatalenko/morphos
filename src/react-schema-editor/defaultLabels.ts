@@ -4,6 +4,8 @@ export const defaultLabels: SchemaEditorLabels = {
 	title: 'Title',
 	propertyName: 'Field name',
 	description: 'Description',
+	format: 'Format',
+	examples: 'Examples',
 	required: 'Required',
 	settings: '…',
 	nullable: 'Nullable',

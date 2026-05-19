@@ -9,16 +9,14 @@ import type {
 	RemoveButtonProps,
 	RowProps,
 	SchemaEditorComponents,
-	SchemaType,
 	SectionProps,
 	SettingsButtonProps,
 	SettingsGroupProps,
+	TextareaFieldSettingProps,
 	TextFieldSettingProps,
 	TextInputProps,
 	TypeSelectorProps
 } from './types.ts';
-
-const schemaTypes: SchemaType[] = ['string', 'number', 'integer', 'boolean', 'object', 'array'];
 
 export const DefaultContainer: ComponentType<ContainerProps> = ({ children }) => (
 	<div className="dm-schema-editor-entries">{children}</div>
@@ -26,6 +24,8 @@ export const DefaultContainer: ComponentType<ContainerProps> = ({ children }) =>
 
 export const DefaultRow: ComponentType<RowProps> = ({
 	name,
+	title,
+	description,
 	typeSelector,
 	requiredToggle,
 	settings,
@@ -35,6 +35,8 @@ export const DefaultRow: ComponentType<RowProps> = ({
 	<>
 		<div className="dm-schema-editor-row">
 			{name}
+			{title}
+			{description}
 			{typeSelector}
 			<span className="dm-schema-editor-actions">
 				{requiredToggle}
@@ -84,14 +86,18 @@ export const DefaultFieldLabel: ComponentType<FieldLabelProps> = ({ label }) => 
 	<label className="dm-schema-editor-label">{label}</label>
 );
 
-export const DefaultTypeSelector: ComponentType<TypeSelectorProps> = ({ value, onChange }) => (
+export const DefaultTypeSelector: ComponentType<TypeSelectorProps> = ({ value, options, onChange }) => (
 	<select
 		className="dm-schema-editor-type"
 		value={value}
-		onChange={e => onChange(e.target.value as SchemaType)}
+		onChange={e => {
+			const option = options.find(current => current.value === e.target.value);
+			if (option)
+				onChange(option);
+		}}
 	>
-		{schemaTypes.map(type => (
-			<option key={type} value={type}>{type[0].toUpperCase() + type.slice(1)}</option>
+		{options.map(option => (
+			<option key={option.value} value={option.value}>{option.label}</option>
 		))}
 	</select>
 );
@@ -152,6 +158,19 @@ export const DefaultCheckboxFieldSetting: ComponentType<CheckboxFieldSettingProp
 	</label>
 );
 
+export const DefaultTextareaFieldSetting: ComponentType<TextareaFieldSettingProps> = ({ field }) => (
+	<label className="dm-schema-editor-setting">
+		<span>{field.label}</span>
+		<textarea
+			className="dm-schema-editor-input"
+			value={field.value}
+			onChange={e => field.onChange(e.target.value)}
+			placeholder={field.placeholder}
+			rows={3}
+		/>
+	</label>
+);
+
 export const DefaultRemoveButton: ComponentType<RemoveButtonProps> = ({ onClick }) => {
 	const labels = useContext(LabelsContext);
 	return (
@@ -189,6 +208,7 @@ export const defaultComponents: SchemaEditorComponents = {
 	SettingsGroup: DefaultSettingsGroup,
 	TextFieldSetting: DefaultTextFieldSetting,
 	CheckboxFieldSetting: DefaultCheckboxFieldSetting,
+	TextareaFieldSetting: DefaultTextareaFieldSetting,
 	RemoveButton: DefaultRemoveButton,
 	AddPropertyInput: DefaultAddPropertyInput
 };
