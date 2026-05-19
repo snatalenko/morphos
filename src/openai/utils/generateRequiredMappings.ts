@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import type { PropertiesMap, RootMapping, ValueMap } from '../../mappingTypes.ts';
 import type { JsonSchema } from '../../MappingSchema.ts';
 
@@ -17,7 +18,6 @@ function schemaObjectMap(schema: JsonSchema): PropertiesMap {
 	for (const requiredField of schema.required ?? []) {
 		const propertySchema = properties[requiredField];
 		if (isObject(propertySchema))
-			// eslint-disable-next-line no-use-before-define
 			result[requiredField] = requiredPlaceholderForSchema(propertySchema);
 		else
 			result[requiredField] = '';
@@ -27,12 +27,19 @@ function schemaObjectMap(schema: JsonSchema): PropertiesMap {
 }
 
 function schemaArrayMap(schema: JsonSchema): PropertiesMap {
-	const items = Array.isArray(schema.items) ? schema.items[0] : schema.items;
+	const items = schema.items;
 	if (isObject(items) && schemaType(items) === 'object')
 		return schemaObjectMap(items);
 
-	// eslint-disable-next-line no-use-before-define
 	return { '*': isObject(items) ? requiredPlaceholderForSchema(items) : '' };
+}
+
+function schemaTupleMap(items: Array<JsonSchema | boolean>): PropertiesMap {
+	const map: PropertiesMap = {};
+	items.forEach((item, index) => {
+		map[index] = isObject(item) ? requiredPlaceholderForSchema(item) : '';
+	});
+	return map;
 }
 
 function requiredPlaceholderForSchema(schema: JsonSchema): ValueMap {
@@ -43,6 +50,9 @@ function requiredPlaceholderForSchema(schema: JsonSchema): ValueMap {
 		};
 	}
 	if (type === 'array') {
+		if (Array.isArray(schema.items))
+			return schemaTupleMap(schema.items);
+
 		return {
 			forEach: '',
 			map: schemaArrayMap(schema)
@@ -72,7 +82,6 @@ function completeValueMap(value: ValueMap, schema: JsonSchema): ValueMap {
 
 		const map = mappingMap(value);
 		if (map)
-			// eslint-disable-next-line no-use-before-define
 			completePropertiesMap(map, schema);
 
 		return value;
@@ -81,10 +90,17 @@ function completeValueMap(value: ValueMap, schema: JsonSchema): ValueMap {
 		if (!isObject(value))
 			return requiredPlaceholderForSchema(schema);
 
+		if (Array.isArray(schema.items)) {
+			const map = mappingMap(value);
+			if (map)
+				completeTupleMap(map, schema.items);
+
+			return value;
+		}
+
 		const objectValue = value as Record<string, unknown>;
 		if (isObject(objectValue.map)) {
 			const itemSchema = Array.isArray(schema.items) ? {} : (schema.items as JsonSchema | undefined) ?? {};
-			// eslint-disable-next-line no-use-before-define
 			completePropertiesMap(objectValue.map as PropertiesMap, itemSchema);
 		}
 
@@ -92,6 +108,27 @@ function completeValueMap(value: ValueMap, schema: JsonSchema): ValueMap {
 	}
 
 	return value;
+}
+
+function completeTupleMap(map: PropertiesMap, items: Array<JsonSchema | boolean>): void {
+	if (Array.isArray(map))
+		return;
+
+	items.forEach((item, index) => {
+		if (!isObject(item)) {
+			if (!(index in map))
+				map[index] = '';
+
+			return;
+		}
+
+		if (!(index in map)) {
+			map[index] = requiredPlaceholderForSchema(item);
+			return;
+		}
+
+		map[index] = completeValueMap(map[index], item);
+	});
 }
 
 function completePropertiesMap(map: PropertiesMap, schema: JsonSchema): void {

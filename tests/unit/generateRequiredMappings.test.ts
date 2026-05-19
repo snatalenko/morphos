@@ -98,4 +98,153 @@ describe('generateRequiredMappings', () => {
 			}
 		});
 	});
+
+	it('uses positional object placeholders for tuple arrays', () => {
+		const destinationSchema: JsonSchema = {
+			type: 'object',
+			required: ['tuple'],
+			properties: {
+				tuple: {
+					type: 'array',
+					items: [
+						{ type: 'string' },
+						{
+							type: 'object',
+							required: ['id'],
+							properties: {
+								id: { type: 'string' },
+								optional: { type: 'string' }
+							}
+						}
+					]
+				}
+			}
+		};
+
+		expect(generateRequiredMappings({}, destinationSchema)).to.deep.equal({
+			tuple: {
+				0: '',
+				1: {
+					map: {
+						id: ''
+					}
+				}
+			}
+		});
+	});
+
+	it('fills missing tuple array positions in existing mappings', () => {
+		const destinationSchema: JsonSchema = {
+			type: 'object',
+			required: ['tuple'],
+			properties: {
+				tuple: {
+					type: 'array',
+					items: [
+						{ type: 'string' },
+						{
+							type: 'object',
+							required: ['id'],
+							properties: {
+								id: { type: 'string' }
+							}
+						}
+					]
+				}
+			}
+		};
+
+		expect(generateRequiredMappings({
+			tuple: {
+				0: 'sourceValue'
+			}
+		}, destinationSchema)).to.deep.equal({
+			tuple: {
+				0: 'sourceValue',
+				1: {
+					map: {
+						id: ''
+					}
+				}
+			}
+		});
+	});
+
+	it('replaces blank tuple array placeholders with positional object mappings', () => {
+		const destinationSchema: JsonSchema = {
+			type: 'object',
+			required: ['tuple'],
+			properties: {
+				tuple: {
+					type: 'array',
+					items: [
+						{ type: 'string' },
+						{
+							type: 'object',
+							required: ['id'],
+							properties: {
+								id: { type: 'string' }
+							}
+						}
+					]
+				}
+			}
+		};
+
+		expect(generateRequiredMappings({
+			tuple: ''
+		}, destinationSchema)).to.deep.equal({
+			tuple: {
+				0: '',
+				1: {
+					map: {
+						id: ''
+					}
+				}
+			}
+		});
+	});
+
+	it('fills required fields inside existing tuple object item mappings', () => {
+		const destinationSchema: JsonSchema = {
+			type: 'object',
+			required: ['tuple'],
+			properties: {
+				tuple: {
+					type: 'array',
+					items: [
+						{ type: 'string' },
+						{
+							type: 'object',
+							required: ['id', 'type'],
+							properties: {
+								id: { type: 'string' },
+								type: { type: 'string' }
+							}
+						}
+					]
+				}
+			}
+		};
+
+		expect(generateRequiredMappings({
+			tuple: {
+				1: {
+					map: {
+						id: 'sourceId'
+					}
+				}
+			}
+		}, destinationSchema)).to.deep.equal({
+			tuple: {
+				0: '',
+				1: {
+					map: {
+						id: 'sourceId',
+						type: ''
+					}
+				}
+			}
+		});
+	});
 });

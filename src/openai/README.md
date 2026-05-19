@@ -90,7 +90,7 @@ the main package, or used as the initial `value` of the `MappingEditor`.
 | `options.dangerouslyAllowBrowser` | `boolean` | Passed to the OpenAI client for browser usage. Defaults to `false`.               |
 | `options.generateRequiredFields` | `boolean` | Add placeholders for unmapped required destination fields after generation. Defaults to `true`. |
 
-When `generateRequiredFields` is enabled, unmapped required scalar fields are set to `""`, required objects are expanded as `{ "map": { ... } }`, and required arrays are expanded as `{ "forEach": "", "map": { ... } }`. The generated `map` contains only required child fields.
+When `generateRequiredFields` is enabled, unmapped required scalar fields are set to `""`, required objects are expanded as `{ "map": { ... } }`, homogeneous arrays are expanded as `{ "forEach": "", "map": { ... } }`, and tuple arrays are expanded as positional object mappings such as `{ "0": "", "1": { "map": { ... } } }`. Generated nested maps contain only required child fields.
 
 ## How it works
 
