@@ -1,11 +1,26 @@
 import OpenAI from 'openai';
 import type { RootMapping } from '../mappingTypes.ts';
-import type { MappingSchema } from '../MappingSchema.ts';
+import type { JsonSchema } from '../MappingSchema.ts';
 import { SYSTEM_PROMPT } from './SYSTEM_PROMPT.ts';
+import { generateRequiredMappings } from './utils/generateRequiredMappings.ts';
+
+export interface GenerateMappingOptions {
+	generateRequiredFields?: boolean;
+	instructions?: string;
+	model?: string;
+	dangerouslyAllowBrowser?: boolean;
+}
+
+export interface GenerateMappingParams {
+	sourceSchema: JsonSchema;
+	destinationSchema: JsonSchema;
+	apiKey: string;
+	options?: GenerateMappingOptions;
+}
 
 export function buildUserMessage(
-	sourceSchema: MappingSchema,
-	destinationSchema: MappingSchema,
+	sourceSchema: JsonSchema,
+	destinationSchema: JsonSchema,
 	instructions?: string
 ): string {
 	const parts = [
@@ -26,23 +41,14 @@ export async function generateMapping({
 	sourceSchema,
 	destinationSchema,
 	apiKey,
-	instructions,
-	model = 'gpt-5.5',
-	dangerouslyAllowBrowser
-}: {
-	sourceSchema: MappingSchema;
-	destinationSchema: MappingSchema;
-	apiKey: string;
-	instructions?: string;
-	model?: string;
-	dangerouslyAllowBrowser?: boolean;
-}): Promise<RootMapping> {
+	options
+}: GenerateMappingParams): Promise<RootMapping> {
 
-	const client = new OpenAI({ apiKey, dangerouslyAllowBrowser });
-	const userMessage = buildUserMessage(sourceSchema, destinationSchema, instructions);
+	const client = new OpenAI({ apiKey, dangerouslyAllowBrowser: options?.dangerouslyAllowBrowser });
+	const userMessage = buildUserMessage(sourceSchema, destinationSchema, options?.instructions);
 
 	const response = await client.chat.completions.create({
-		model,
+		model: options?.model ?? 'gpt-5.5',
 		messages: [
 			{ role: 'system', content: SYSTEM_PROMPT },
 			{ role: 'user', content: userMessage }
@@ -57,10 +63,12 @@ export async function generateMapping({
 		throw new Error('OpenAI returned an empty response');
 
 	try {
-		return JSON.parse(content) as RootMapping;
+		const mapping = JSON.parse(content) as RootMapping;
+		return options?.generateRequiredFields === false
+			? mapping
+			: generateRequiredMappings(mapping, destinationSchema);
 	}
 	catch (e) {
 		throw new Error(`OpenAI returned invalid JSON: ${(e as Error).message}`);
 	}
 }
-

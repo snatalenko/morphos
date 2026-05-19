@@ -7,7 +7,7 @@ Goal:
 - Map fields by business meaning first, then by compatible type and name similarity.
 - Use schema property names plus title and description text when present.
 - Do not map fields just because names look vaguely similar. If two fields represent different business entities, do not connect them. Example: invoiceNumber must not come from UPC, SKU, productCode, quantity, price, or another line-item identifier.
-- If a destination field has no credible source, omit it when it is optional. If it is required, include it with an empty expression "" instead of inventing a weak mapping.
+- If a destination field has no credible source, omit it. Do not invent weak mappings and do not include empty placeholders just because a field is required.
 - Reference only source fields that are present in the source schema, plus runtime variables described below.
 
 Mapping syntax:
@@ -66,6 +66,7 @@ Business matching rules:
 
 Completeness:
 - Cover destination properties that can be mapped confidently.
+- Leave unmapped destination properties out of the mapping, including required properties. Required-field placeholders are handled after generation.
 - Match destination types. If source and destination types differ, convert explicitly.
 - For arrays of objects, map the object fields inside forEach rather than returning raw source records or expression-built object literals.
 - Prefer the simplest valid mapping that satisfies the destination schema and user instructions.`;

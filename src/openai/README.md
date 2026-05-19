@@ -58,9 +58,12 @@ const destinationSchema: MappingSchema = {
 const mapping = await generateMapping({
     sourceSchema,
     destinationSchema,
-    token: process.env.OPENAI_API_KEY!,
-    instructions: 'Truncate UPC to 5 characters for the destination code field.',
-    model: 'gpt-4o-mini'
+    apiKey: process.env.OPENAI_API_KEY!,
+    options: {
+        instructions: 'Truncate UPC to 5 characters for the destination code field.',
+        model: 'gpt-5.5',
+        generateRequiredFields: true
+    }
 });
 
 console.log(mapping);
@@ -81,13 +84,17 @@ the main package, or used as the initial `value` of the `MappingEditor`.
 |---------------------|-----------------|--------------------------------------------------------------------------------------------|
 | `sourceSchema`      | `MappingSchema` | JSON-schema-like description of input data. Required.                                       |
 | `destinationSchema` | `MappingSchema` | JSON-schema-like description of desired output. Required.                                   |
-| `token`             | `string`        | OpenAI API key. Required.                                                                   |
-| `instructions`      | `string`        | Optional free-form text appended to the user prompt (e.g. naming conventions, edge cases). |
-| `model`             | `string`        | Optional OpenAI model identifier. Defaults to `gpt-4o-mini`.                               |
+| `apiKey`            | `string`        | OpenAI API key. Required.                                                                   |
+| `options.instructions` | `string`     | Optional free-form text appended to the user prompt (e.g. naming conventions, edge cases). |
+| `options.model`     | `string`        | Optional OpenAI model identifier. Defaults to `gpt-5.5`.                                   |
+| `options.dangerouslyAllowBrowser` | `boolean` | Passed to the OpenAI client for browser usage. Defaults to `false`.               |
+| `options.generateRequiredFields` | `boolean` | Add placeholders for unmapped required destination fields after generation. Defaults to `true`. |
+
+When `generateRequiredFields` is enabled, unmapped required scalar fields are set to `""`, required objects are expanded as `{ "map": { ... } }`, and required arrays are expanded as `{ "forEach": "", "map": { ... } }`. The generated `map` contains only required child fields.
 
 ## How it works
 
-The function instantiates an `OpenAI` client with the supplied token and calls
+The function instantiates an `OpenAI` client with the supplied API key and calls
 `chat.completions.create` with:
 
 * A system prompt describing the `morphos` mapping format (expression strings,

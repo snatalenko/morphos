@@ -438,9 +438,11 @@ function App() {
 				sourceSchema,
 				destinationSchema: destSchema,
 				apiKey,
-				model: aiModel,
-				instructions: aiInstructions || undefined,
-				dangerouslyAllowBrowser: true
+				options: {
+					model: aiModel,
+					instructions: aiInstructions || undefined,
+					dangerouslyAllowBrowser: true
+				}
 			});
 			setMapping(result);
 			setMappingText(JSON.stringify(result, null, 2));
