@@ -56,7 +56,7 @@ describe('generateRequiredMappings', () => {
 		});
 	});
 
-	it('replaces blank required object and array placeholders with schema-aware mappings', () => {
+	it('keeps blank required object and array placeholders by default', () => {
 		const destinationSchema: JsonSchema = {
 			type: 'object',
 			required: ['items', 'metadata'],
@@ -85,6 +85,42 @@ describe('generateRequiredMappings', () => {
 			items: '',
 			metadata: ''
 		}, destinationSchema)).to.deep.equal({
+			items: '',
+			metadata: ''
+		});
+	});
+
+	it('replaces blank required object and array placeholders when enabled', () => {
+		const destinationSchema: JsonSchema = {
+			type: 'object',
+			required: ['items', 'metadata'],
+			properties: {
+				items: {
+					type: 'array',
+					items: {
+						type: 'object',
+						required: ['sku'],
+						properties: {
+							sku: { type: 'string' }
+						}
+					}
+				},
+				metadata: {
+					type: 'object',
+					required: ['id'],
+					properties: {
+						id: { type: 'string' }
+					}
+				}
+			}
+		};
+
+		expect(generateRequiredMappings({
+			items: '',
+			metadata: ''
+		}, destinationSchema, {
+			replaceEmptyMappings: true
+		})).to.deep.equal({
 			items: {
 				forEach: '',
 				map: {
@@ -170,7 +206,7 @@ describe('generateRequiredMappings', () => {
 		});
 	});
 
-	it('replaces blank tuple array placeholders with positional object mappings', () => {
+	it('keeps blank tuple array placeholders by default', () => {
 		const destinationSchema: JsonSchema = {
 			type: 'object',
 			required: ['tuple'],
@@ -194,6 +230,36 @@ describe('generateRequiredMappings', () => {
 		expect(generateRequiredMappings({
 			tuple: ''
 		}, destinationSchema)).to.deep.equal({
+			tuple: ''
+		});
+	});
+
+	it('replaces blank tuple array placeholders when enabled', () => {
+		const destinationSchema: JsonSchema = {
+			type: 'object',
+			required: ['tuple'],
+			properties: {
+				tuple: {
+					type: 'array',
+					items: [
+						{ type: 'string' },
+						{
+							type: 'object',
+							required: ['id'],
+							properties: {
+								id: { type: 'string' }
+							}
+						}
+					]
+				}
+			}
+		};
+
+		expect(generateRequiredMappings({
+			tuple: ''
+		}, destinationSchema, {
+			replaceEmptyMappings: true
+		})).to.deep.equal({
 			tuple: {
 				0: '',
 				1: {

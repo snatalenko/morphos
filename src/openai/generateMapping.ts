@@ -66,7 +66,7 @@ export async function generateMapping({
 		const mapping = JSON.parse(content) as RootMapping;
 		return options?.generateRequiredFields === false
 			? mapping
-			: generateRequiredMappings(mapping, destinationSchema);
+			: generateRequiredMappings(mapping, destinationSchema, { replaceEmptyMappings: true });
 	}
 	catch (e) {
 		throw new Error(`OpenAI returned invalid JSON: ${(e as Error).message}`);

@@ -2,6 +2,10 @@
 import type { PropertiesMap, RootMapping, ValueMap } from '../../mappingTypes.ts';
 import type { JsonSchema } from '../../MappingSchema.ts';
 
+export interface GenerateRequiredMappingsOptions {
+	replaceEmptyMappings?: boolean;
+}
+
 function isObject(value: unknown): value is Record<string, unknown> {
 	return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
@@ -74,26 +78,37 @@ function mappingMap(value: ValueMap): PropertiesMap | undefined {
 	return value as PropertiesMap;
 }
 
-function completeValueMap(value: ValueMap, schema: JsonSchema): ValueMap {
+function shouldReplaceValue(value: ValueMap, options: GenerateRequiredMappingsOptions): boolean {
+	if (value === '')
+		return options.replaceEmptyMappings === true;
+
+	return !isObject(value);
+}
+
+function completeValueMap(
+	value: ValueMap,
+	schema: JsonSchema,
+	options: GenerateRequiredMappingsOptions
+): ValueMap {
 	const type = schemaType(schema);
 	if (type === 'object' || schema.properties) {
-		if (!isObject(value))
+		if (shouldReplaceValue(value, options))
 			return requiredPlaceholderForSchema(schema);
 
 		const map = mappingMap(value);
 		if (map)
-			completePropertiesMap(map, schema);
+			completePropertiesMap(map, schema, options);
 
 		return value;
 	}
 	if (type === 'array') {
-		if (!isObject(value))
+		if (shouldReplaceValue(value, options))
 			return requiredPlaceholderForSchema(schema);
 
 		if (Array.isArray(schema.items)) {
 			const map = mappingMap(value);
 			if (map)
-				completeTupleMap(map, schema.items);
+				completeTupleMap(map, schema.items, options);
 
 			return value;
 		}
@@ -101,7 +116,7 @@ function completeValueMap(value: ValueMap, schema: JsonSchema): ValueMap {
 		const objectValue = value as Record<string, unknown>;
 		if (isObject(objectValue.map)) {
 			const itemSchema = Array.isArray(schema.items) ? {} : (schema.items as JsonSchema | undefined) ?? {};
-			completePropertiesMap(objectValue.map as PropertiesMap, itemSchema);
+			completePropertiesMap(objectValue.map as PropertiesMap, itemSchema, options);
 		}
 
 		return value;
@@ -110,7 +125,11 @@ function completeValueMap(value: ValueMap, schema: JsonSchema): ValueMap {
 	return value;
 }
 
-function completeTupleMap(map: PropertiesMap, items: Array<JsonSchema | boolean>): void {
+function completeTupleMap(
+	map: PropertiesMap,
+	items: Array<JsonSchema | boolean>,
+	options: GenerateRequiredMappingsOptions
+): void {
 	if (Array.isArray(map))
 		return;
 
@@ -127,11 +146,15 @@ function completeTupleMap(map: PropertiesMap, items: Array<JsonSchema | boolean>
 			return;
 		}
 
-		map[index] = completeValueMap(map[index], item);
+		map[index] = completeValueMap(map[index], item, options);
 	});
 }
 
-function completePropertiesMap(map: PropertiesMap, schema: JsonSchema): void {
+function completePropertiesMap(
+	map: PropertiesMap,
+	schema: JsonSchema,
+	options: GenerateRequiredMappingsOptions
+): void {
 	if (Array.isArray(map))
 		return;
 
@@ -149,22 +172,26 @@ function completePropertiesMap(map: PropertiesMap, schema: JsonSchema): void {
 			continue;
 		}
 
-		map[requiredField] = completeValueMap(map[requiredField], propertySchema);
+		map[requiredField] = completeValueMap(map[requiredField], propertySchema, options);
 	}
 }
 
-export function generateRequiredMappings(mapping: RootMapping, destinationSchema: JsonSchema): RootMapping {
+export function generateRequiredMappings(
+	mapping: RootMapping,
+	destinationSchema: JsonSchema,
+	options: GenerateRequiredMappingsOptions = {}
+): RootMapping {
 	const type = schemaType(destinationSchema);
 	if (type === 'object' || destinationSchema.properties) {
-		if (!isObject(mapping))
+		if (shouldReplaceValue(mapping as ValueMap, options))
 			return requiredPlaceholderForSchema(destinationSchema) as RootMapping;
 
 		const map = mappingMap(mapping as ValueMap);
 		if (map)
-			completePropertiesMap(map, destinationSchema);
+			completePropertiesMap(map, destinationSchema, options);
 
 		return mapping;
 	}
 
-	return completeValueMap(mapping as ValueMap, destinationSchema) as RootMapping;
+	return completeValueMap(mapping as ValueMap, destinationSchema, options) as RootMapping;
 }
