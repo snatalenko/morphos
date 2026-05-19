@@ -92,6 +92,7 @@ import { Row, TextFieldSetting } from 'morphos/react-schema-editor/bootstrap53';
 	hideRootElement
 	exposeTitle
 	exposeDescription
+	readOnly
 	components={components}
 	labels={labels}
 />
@@ -105,6 +106,7 @@ import { Row, TextFieldSetting } from 'morphos/react-schema-editor/bootstrap53';
 | `hideRootElement` | `boolean`                          | Hide the root row and render only the root object's properties or array item editor. |
 | `exposeTitle`  | `boolean`                             | Show each field's `title` in the main field row.                         |
 | `exposeDescription` | `boolean`                       | Show each field's `description` in the main field row.                   |
+| `readOnly`     | `boolean`                             | Render the schema without allowing edits or calling `onChange`.          |
 | `components`   | `Partial<SchemaEditorComponents>`     | Override any built-in UI slot.                                           |
 | `labels`       | `Partial<SchemaEditorLabels>`         | Override any user-visible strings.                                       |
 

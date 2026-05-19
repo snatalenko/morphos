@@ -36,6 +36,7 @@ export interface SchemaEditorProps {
 	hideRootElement?: boolean;
 	exposeTitle?: boolean;
 	exposeDescription?: boolean;
+	readOnly?: boolean;
 	components?: Partial<SchemaEditorComponents>;
 	labels?: Partial<SchemaEditorLabels>;
 }
@@ -257,13 +258,15 @@ function settingsTextFields(
 	schema: JsonSchema,
 	type: SchemaType,
 	labels: SchemaEditorLabels,
-	onChange: (next: JsonSchema) => void
+	onChange: (next: JsonSchema) => void,
+	readOnly: boolean
 ): SchemaTextSettingField[] {
 	return settingsForType(type).map(key => ({
 		key,
 		label: labels[key],
 		value: settingValue(schema, key),
 		placeholder: key === 'enum' ? 'value1, value2' : undefined,
+		readOnly,
 		onChange: value => onChange(updateSetting(schema, key, value))
 	}));
 }
@@ -271,13 +274,15 @@ function settingsTextFields(
 function settingsCheckboxFields(
 	schema: JsonSchema,
 	labels: SchemaEditorLabels,
-	onChange: (next: JsonSchema) => void
+	onChange: (next: JsonSchema) => void,
+	readOnly: boolean
 ): SchemaCheckboxSettingField[] {
 	return [{
 		key: 'nullable',
 		label: labels.nullable,
 		type: 'checkbox',
 		checked: isNullable(schema),
+		readOnly,
 		onChange: checked => onChange(withNullable(schema, checked))
 	}];
 }
@@ -285,7 +290,8 @@ function settingsCheckboxFields(
 function settingsTextareaFields(
 	schema: JsonSchema,
 	labels: SchemaEditorLabels,
-	onChange: (next: JsonSchema) => void
+	onChange: (next: JsonSchema) => void,
+	readOnly: boolean
 ): SchemaTextareaSettingField[] {
 	return [{
 		key: 'examples',
@@ -293,6 +299,7 @@ function settingsTextareaFields(
 		type: 'textarea',
 		value: examplesValue(schema),
 		placeholder: 'example 1\nexample 2',
+		readOnly,
 		onChange: value => onChange(updateExamples(schema, value))
 	}];
 }
@@ -350,6 +357,7 @@ function SchemaNodeEditor({
 	arrayItem = false,
 	exposeTitle = false,
 	exposeDescription = false,
+	readOnly = false,
 	focusNameOnMount = false
 }: {
 	schema: JsonSchema;
@@ -364,6 +372,7 @@ function SchemaNodeEditor({
 	arrayItem?: boolean;
 	exposeTitle?: boolean;
 	exposeDescription?: boolean;
+	readOnly?: boolean;
 	focusNameOnMount?: boolean;
 }) {
 	const C = useContext(ComponentsContext);
@@ -492,6 +501,7 @@ function SchemaNodeEditor({
 			onChange={onNameChange ?? (() => {})}
 			placeholder={labels.propertyName}
 			focusOnMount={focusNameOnMount}
+			readOnly={readOnly}
 		/>
 	);
 	const titleControl = exposeTitle ? (
@@ -499,6 +509,7 @@ function SchemaNodeEditor({
 			value={schema.title ?? ''}
 			onChange={value => onChange(updateSetting(schema, 'title', value))}
 			placeholder={labels.title}
+			readOnly={readOnly}
 		/>
 	) : undefined;
 	const descriptionControl = exposeDescription ? (
@@ -506,6 +517,7 @@ function SchemaNodeEditor({
 			value={schema.description ?? ''}
 			onChange={value => onChange(updateSetting(schema, 'description', value))}
 			placeholder={labels.description}
+			readOnly={readOnly}
 		/>
 	) : undefined;
 
@@ -526,6 +538,7 @@ function SchemaNodeEditor({
 					onRemove={() => removeProperty(propertyName)}
 					exposeTitle={exposeTitle}
 					exposeDescription={exposeDescription}
+					readOnly={readOnly}
 				/>
 			))}
 			{propertySlots.map(slot => slot.name ? (
@@ -541,10 +554,11 @@ function SchemaNodeEditor({
 						onRemove={() => slot.name && removeProperty(slot.name)}
 						exposeTitle={exposeTitle}
 						exposeDescription={exposeDescription}
+						readOnly={readOnly}
 						focusNameOnMount={!!slot.focusNameOnMount}
 					/>
 				) : null
-			) : (
+			) : readOnly ? null : (
 				<C.AddPropertyInput
 					key={slot.id}
 					value={slot.value}
@@ -572,6 +586,7 @@ function SchemaNodeEditor({
 				onChange={updateArrayItems}
 				exposeTitle={exposeTitle}
 				exposeDescription={exposeDescription}
+				readOnly={readOnly}
 			/>
 		</>
 	) : null;
@@ -583,13 +598,13 @@ function SchemaNodeEditor({
 				<C.Section>
 					<C.SettingsGroup>
 						{(() => {
-							const textFields = settingsTextFields(schema, type, labels, onChange);
+							const textFields = settingsTextFields(schema, type, labels, onChange, readOnly);
 							return (
 								<>
 									{textFields.slice(0, 2).map(f => <C.TextFieldSetting key={f.key} field={f} />)}
-									{settingsCheckboxFields(schema, labels, onChange).map(f => <C.CheckboxFieldSetting key={f.key} field={f} />)}
+									{settingsCheckboxFields(schema, labels, onChange, readOnly).map(f => <C.CheckboxFieldSetting key={f.key} field={f} />)}
 									{textFields.slice(2).map(f => <C.TextFieldSetting key={f.key} field={f} />)}
-									{settingsTextareaFields(schema, labels, onChange).map(f => <C.TextareaFieldSetting key={f.key} field={f} />)}
+									{settingsTextareaFields(schema, labels, onChange, readOnly).map(f => <C.TextareaFieldSetting key={f.key} field={f} />)}
 								</>
 							);
 						})()}
@@ -613,6 +628,7 @@ function SchemaNodeEditor({
 					value={typeSelectorValue(type, schema.format)}
 					options={typeSelectorOptions(schema.format)}
 					onChange={updateType}
+					readOnly={readOnly}
 				/>
 			)}
 			requiredToggle={
@@ -621,6 +637,7 @@ function SchemaNodeEditor({
 						checked={required ?? false}
 						onChange={onRequiredChange}
 						label={labels.required}
+						readOnly={readOnly}
 					/>
 				)
 			}
@@ -630,7 +647,7 @@ function SchemaNodeEditor({
 					onClick={() => setSettingsOpen(open => !open)}
 				/>
 			)}
-			remove={root || arrayItem || !onRemove ? null : <C.RemoveButton onClick={onRemove} />}
+			remove={root || arrayItem || !onRemove || readOnly ? null : <C.RemoveButton onClick={onRemove} />}
 			section={section}
 		/>
 	);
@@ -640,15 +657,22 @@ const SchemaEditor = forwardRef<SchemaEditorHandle, SchemaEditorProps>(function 
 	const hideRootElement = props.hideRootElement ?? false;
 	const [schema, setSchema] = useState<JsonSchema>(() => props.value ?? props.defaultValue ?? { type: 'object' });
 	const schemaRef = useRef(schema);
+	const readOnlyRef = useRef(props.readOnly ?? false);
+	const readOnlyValueRef = useRef(schema);
 	schemaRef.current = schema;
+	readOnlyRef.current = props.readOnly ?? false;
 
 	useEffect(() => {
-		if (props.value !== undefined)
+		if (props.value !== undefined) {
+			readOnlyValueRef.current = props.value;
 			setSchema(props.value);
+		}
 	}, [props.value]);
 
 	useImperativeHandle(ref, () => ({
 		get value(): JsonSchema {
+			if (readOnlyRef.current)
+				return readOnlyValueRef.current;
 			return schemaRef.current;
 		}
 	}), []);
@@ -664,6 +688,8 @@ const SchemaEditor = forwardRef<SchemaEditorHandle, SchemaEditorProps>(function 
 	const C = mergedComponents;
 
 	const handleChange = (next: JsonSchema) => {
+		if (props.readOnly)
+			return;
 		setSchema(next);
 		if (props.onChange)
 			props.onChange(next);
@@ -681,6 +707,7 @@ const SchemaEditor = forwardRef<SchemaEditorHandle, SchemaEditorProps>(function 
 							hideSelf={hideRootElement}
 							exposeTitle={props.exposeTitle ?? false}
 							exposeDescription={props.exposeDescription ?? false}
+							readOnly={props.readOnly ?? false}
 						/>
 					</C.Container>
 				</div>

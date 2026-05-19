@@ -64,7 +64,7 @@ export const DefaultSection: ComponentType<SectionProps> = ({ children }) => (
 	</div>
 );
 
-export const DefaultTextInput: ComponentType<TextInputProps> = ({ value, onChange, placeholder, focusOnMount }) => {
+export const DefaultTextInput: ComponentType<TextInputProps> = ({ value, onChange, placeholder, focusOnMount, readOnly }) => {
 	const ref = useRef<HTMLInputElement>(null);
 	useEffect(() => {
 		if (focusOnMount)
@@ -78,6 +78,7 @@ export const DefaultTextInput: ComponentType<TextInputProps> = ({ value, onChang
 			value={value}
 			onChange={e => onChange(e.target.value)}
 			placeholder={placeholder}
+			readOnly={readOnly}
 		/>
 	);
 };
@@ -86,7 +87,7 @@ export const DefaultFieldLabel: ComponentType<FieldLabelProps> = ({ label }) => 
 	<label className="dm-schema-editor-label">{label}</label>
 );
 
-export const DefaultTypeSelector: ComponentType<TypeSelectorProps> = ({ value, options, onChange }) => (
+export const DefaultTypeSelector: ComponentType<TypeSelectorProps> = ({ value, options, onChange, readOnly }) => (
 	<select
 		className="dm-schema-editor-type"
 		value={value}
@@ -95,6 +96,7 @@ export const DefaultTypeSelector: ComponentType<TypeSelectorProps> = ({ value, o
 			if (option)
 				onChange(option);
 		}}
+		disabled={readOnly}
 	>
 		{options.map(option => (
 			<option key={option.value} value={option.value}>{option.label}</option>
@@ -102,13 +104,14 @@ export const DefaultTypeSelector: ComponentType<TypeSelectorProps> = ({ value, o
 	</select>
 );
 
-export const DefaultCheckbox: ComponentType<CheckboxProps> = ({ checked, onChange, label }) => (
+export const DefaultCheckbox: ComponentType<CheckboxProps> = ({ checked, onChange, label, readOnly }) => (
 	<select
 		className={`dm-schema-editor-required ${checked ? 'dm-schema-editor-required-on' : 'dm-schema-editor-required-off'}`}
 		value={checked ? 'required' : 'optional'}
 		onChange={e => onChange(e.target.value === 'required')}
 		aria-label={label}
 		title={label}
+		disabled={readOnly}
 	>
 		<option value="optional">Optional</option>
 		<option value="required">Required</option>
@@ -143,6 +146,7 @@ export const DefaultTextFieldSetting: ComponentType<TextFieldSettingProps> = ({ 
 			value={field.value}
 			onChange={e => field.onChange(e.target.value)}
 			placeholder={field.placeholder}
+			readOnly={field.readOnly}
 		/>
 	</label>
 );
@@ -153,6 +157,7 @@ export const DefaultCheckboxFieldSetting: ComponentType<CheckboxFieldSettingProp
 			type="checkbox"
 			checked={field.checked}
 			onChange={e => field.onChange(e.target.checked)}
+			disabled={field.readOnly}
 		/>
 		<span>{field.label}</span>
 	</label>
@@ -166,6 +171,7 @@ export const DefaultTextareaFieldSetting: ComponentType<TextareaFieldSettingProp
 			value={field.value}
 			onChange={e => field.onChange(e.target.value)}
 			placeholder={field.placeholder}
+			readOnly={field.readOnly}
 			rows={3}
 		/>
 	</label>

@@ -29,6 +29,7 @@ export interface TextInputProps {
 	onChange: (next: string) => void;
 	placeholder?: string;
 	focusOnMount?: boolean;
+	readOnly?: boolean;
 }
 
 export interface FieldLabelProps {
@@ -46,12 +47,14 @@ export interface TypeSelectorProps {
 	value: string;
 	options: TypeSelectorOption[];
 	onChange: (next: TypeSelectorOption) => void;
+	readOnly?: boolean;
 }
 
 export interface CheckboxProps {
 	checked: boolean;
 	onChange: (next: boolean) => void;
 	label: string;
+	readOnly?: boolean;
 }
 
 export interface RemoveButtonProps {
@@ -77,6 +80,7 @@ export interface SchemaTextSettingField {
 	type?: 'text';
 	value: string;
 	placeholder?: string;
+	readOnly?: boolean;
 	onChange: (next: string) => void;
 }
 
@@ -85,6 +89,7 @@ export interface SchemaCheckboxSettingField {
 	label: string;
 	type: 'checkbox';
 	checked: boolean;
+	readOnly?: boolean;
 	onChange: (next: boolean) => void;
 }
 
@@ -94,6 +99,7 @@ export interface SchemaTextareaSettingField {
 	type: 'textarea';
 	value: string;
 	placeholder?: string;
+	readOnly?: boolean;
 	onChange: (next: string) => void;
 }
 
