@@ -91,7 +91,7 @@ the main package, or used as the initial `value` of the `MappingEditor`.
 | `options.generateMappingTemplate` | `boolean` | Generate a mapping template from the destination schema before calling OpenAI. Defaults to `false`. |
 | `options.model`     | `string`        | Optional OpenAI model identifier. Defaults to `gpt-5.5`.                                   |
 | `options.dangerouslyAllowBrowser` | `boolean` | Passed to the OpenAI client for browser usage. Defaults to `false`.               |
-| `options.generateRequiredFields` | `boolean` | Add placeholders for unmapped required destination fields after generation. Defaults to `true`. |
+| `options.generateRequiredFields` | `boolean` | Add placeholders for unmapped required destination fields after generation. Defaults to `false`. |
 
 When `mappingTemplate` is provided, it is sent with the schemas as the preferred
 output shape. When `generateMappingTemplate` is enabled and `mappingTemplate` is

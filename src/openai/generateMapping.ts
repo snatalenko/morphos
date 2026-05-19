@@ -8,15 +8,25 @@ export type GenerateMappingOptions = {
 
 	/**
 	 * Add schema-aware placeholders for unmapped required destination fields after AI generation.
-	 * Defaults to true.
+	 *
+	 * Defaults to `false`.
 	 */
 	generateRequiredFields?: boolean;
 
 	/**
 	 * Generate a mapping template from the destination schema and include it in the prompt.
-	 * Ignored when mappingTemplate is provided. Defaults to false.
+	 * Ignored when mappingTemplate is provided.
+	 *
+	 * Defaults to `false`.
 	 */
 	generateMappingTemplate?: boolean;
+
+	/**
+	 * General mapping instructions explaining all aspects of the mapping.
+	 *
+	 * Defaults to {@link SYSTEM_PROMPT}
+	 */
+	systemInstructions?: string;
 
 	/**
 	 * Additional natural-language instructions appended to the prompt.
@@ -29,7 +39,9 @@ export type GenerateMappingOptions = {
 	mappingTemplate?: RootMapping;
 
 	/**
-	 * OpenAI model id used for generation. Defaults to gpt-5.5.
+	 * OpenAI model id used for generation.
+	 *
+	 * Defaults to `'gpt-5.5'`.
 	 */
 	model?: string;
 
@@ -62,36 +74,30 @@ export function buildUserMessage(
 	return parts.join('\n');
 }
 
-export function resolveMappingTemplate(
-	destinationSchema: JsonSchema,
-	options?: GenerateMappingOptions
-): RootMapping | undefined {
-	if (options?.mappingTemplate !== undefined)
-		return options.mappingTemplate;
-
-	return options?.generateMappingTemplate === true
-		? generateInitialMapping(destinationSchema)
-		: undefined;
-}
-
 export async function generateMapping(
 	sourceSchema: JsonSchema,
 	destinationSchema: JsonSchema,
 	apiKey: string,
 	options?: GenerateMappingOptions
 ): Promise<RootMapping> {
-	const client = new OpenAI({ apiKey, dangerouslyAllowBrowser: options?.dangerouslyAllowBrowser });
-	const userMessage = buildUserMessage(
-		sourceSchema,
-		destinationSchema,
-		options?.instructions,
-		resolveMappingTemplate(destinationSchema, options)
-	);
+	const {
+		model = 'gpt-5.5',
+		systemInstructions = SYSTEM_PROMPT,
+		instructions,
+		generateMappingTemplate = false,
+		generateRequiredFields = false,
+		mappingTemplate = generateMappingTemplate ?
+			generateInitialMapping(destinationSchema) :
+			undefined
+	} = options ?? {};
 
+	const client = new OpenAI({ apiKey, dangerouslyAllowBrowser: options?.dangerouslyAllowBrowser });
+
+	const userMessage = buildUserMessage(sourceSchema, destinationSchema, instructions, mappingTemplate);
 	const response = await client.chat.completions.create({
-		model: options?.model ?? 'gpt-5.5',
+		model,
 		messages: [
-			{ role: 'system', content: SYSTEM_PROMPT },
+			{ role: 'system', content: systemInstructions },
 			{ role: 'user', content: userMessage }
 		],
 		response_format: {
@@ -104,10 +110,11 @@ export async function generateMapping(
 		throw new Error('OpenAI returned an empty response');
 
 	try {
-		const mapping = JSON.parse(content) as RootMapping;
-		return options?.generateRequiredFields === false
-			? mapping
-			: appendRequiredMappings(mapping, destinationSchema, { replaceEmptyMappings: true });
+		let mapping = JSON.parse(content) as RootMapping;
+		if (generateRequiredFields)
+			mapping = appendRequiredMappings(mapping, destinationSchema, { replaceEmptyMappings: true });
+
+		return mapping;
 	}
 	catch (e) {
 		throw new Error(`OpenAI returned invalid JSON: ${(e as Error).message}`);

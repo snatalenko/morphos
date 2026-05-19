@@ -180,6 +180,9 @@ function App() {
 	const [apiKey, setApiKey] = useState('');
 	const [aiModel, setAiModel] = useState('gpt-4.1');
 	const [aiInstructions, setAiInstructions] = useState('');
+	const [aiSendCurrentMappingTemplate, setAiSendCurrentMappingTemplate] = useState(true);
+	const [aiGenerateMappingTemplate, setAiGenerateMappingTemplate] = useState(false);
+	const [aiGenerateRequiredFields, setAiGenerateRequiredFields] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [aiError, setAiError] = useState<string | null>(null);
 
@@ -447,7 +450,9 @@ function App() {
 			const result = await generateMapping(sourceSchema, destSchema, apiKey, {
 				model: aiModel,
 				instructions: aiInstructions || undefined,
-				mappingTemplate: isEmptyMapping(mapping) ? undefined : mapping,
+				mappingTemplate: aiSendCurrentMappingTemplate && !isEmptyMapping(mapping) ? mapping : undefined,
+				generateMappingTemplate: aiGenerateMappingTemplate,
+				generateRequiredFields: aiGenerateRequiredFields,
 				dangerouslyAllowBrowser: true
 			});
 			setMapping(result);
@@ -712,6 +717,62 @@ function App() {
 									<option value="gpt-5.5">gpt-5.5</option>
 								</select>
 							</div>
+							<div style={{
+								display: 'flex',
+								flexDirection: 'column',
+								gap: '0.35rem',
+								marginTop: '0.5rem',
+								fontSize: '0.8rem',
+								color: '#334155'
+							}}>
+								<label
+									title="mappingTemplate"
+									style={{
+										display: 'inline-flex',
+										alignItems: 'center',
+										gap: '0.35rem',
+										margin: 0,
+										color: aiGenerateMappingTemplate ? '#94a3b8' : '#334155'
+									}}
+								>
+									<input
+										type="checkbox"
+										checked={aiSendCurrentMappingTemplate}
+										disabled={aiGenerateMappingTemplate}
+										onChange={e => setAiSendCurrentMappingTemplate(e.target.checked)}
+									/>
+									Send current mapping as a template
+								</label>
+								<label
+									title="generateMappingTemplate"
+									style={{
+										display: 'inline-flex',
+										alignItems: 'center',
+										gap: '0.35rem',
+										margin: 0,
+										color: aiSendCurrentMappingTemplate ? '#94a3b8' : '#334155'
+									}}
+								>
+									<input
+										type="checkbox"
+										checked={aiGenerateMappingTemplate}
+										disabled={aiSendCurrentMappingTemplate}
+										onChange={e => setAiGenerateMappingTemplate(e.target.checked)}
+									/>
+									Send generated schema template with the request
+								</label>
+								<label
+									title="generateRequiredFields"
+									style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', margin: 0 }}
+								>
+									<input
+										type="checkbox"
+										checked={aiGenerateRequiredFields}
+										onChange={e => setAiGenerateRequiredFields(e.target.checked)}
+									/>
+									Add missing required placeholders after the response
+								</label>
+							</div>
 							<label style={{ ...labelStyle, marginTop: '0.5rem' }}>Instructions (optional)</label>
 							<textarea
 								value={aiInstructions}
@@ -743,7 +804,7 @@ function App() {
 									{loading ? 'Generating…' : 'Generate mapping'}
 								</button>
 								<span style={{ fontSize: '0.75rem', color: '#888' }}>
-									Uses both schemas and the current mapping as a template.
+									Choose one template source, or uncheck both to send only schemas.
 								</span>
 							</div>
 							{aiError && <div style={errStyle}>{aiError}</div>}
