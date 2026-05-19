@@ -13,7 +13,7 @@ import {
 import type {
 	AddKind,
 	FieldOption,
-	MappingSchema,
+	JsonSchema,
 	SourceFieldMatch
 } from './types.ts';
 import { ValueView } from './ValueView.tsx';
@@ -27,8 +27,8 @@ export function EntriesEditor({
 }: {
 	entries: Entry[];
 	onChange: (next: Entry[]) => void;
-	schema?: MappingSchema;
-	sourceSchema?: MappingSchema;
+	schema?: JsonSchema;
+	sourceSchema?: JsonSchema;
 	sourceSuggestions?: SourceFieldMatch[];
 }) {
 	const C = useContext(ComponentsContext);

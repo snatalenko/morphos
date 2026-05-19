@@ -2,7 +2,6 @@ export * from './entryTypes.ts';
 export * from './entries.ts';
 export * from './schemaProps.ts';
 export * from './sourceFields.ts';
-export * from './schemaToInitialMapping.ts';
 export * from './createEntryValue.ts';
 export * from './createEntryValueForSchema.ts';
 export * from './sourceSuggestions.ts';

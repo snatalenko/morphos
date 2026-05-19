@@ -1,7 +1,7 @@
 import type { ComponentType, ReactNode } from 'react';
-import type { JsonSchema } from '../MappingSchema.ts';
+import type { JsonSchema } from '../JsonSchema.ts';
 
-export type { JsonSchema, MappingSchema } from '../MappingSchema.ts';
+export type { JsonSchema } from '../JsonSchema.ts';
 
 export type SchemaType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array';
 

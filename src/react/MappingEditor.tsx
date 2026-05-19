@@ -11,9 +11,10 @@ import { ComponentsContext } from './ComponentsContext.ts';
 import { LabelsContext } from './LabelsContext.ts';
 import { defaultComponents } from './defaultComponents.tsx';
 import { defaultLabels } from './defaultLabels.ts';
-import { rootToEntries, entriesToProps, schemaToInitialMapping, type Entry } from './utils/index.ts';
+import { generateInitialMapping } from '../shared/generateInitialMapping.ts';
+import { rootToEntries, entriesToProps, type Entry } from './utils/index.ts';
 import { EntriesEditor } from './EntriesEditor.tsx';
-import type { MappingEditorComponents, MappingEditorLabels, MappingSchema } from './types.ts';
+import type { MappingEditorComponents, MappingEditorLabels, JsonSchema } from './types.ts';
 
 export interface MappingEditorHandle {
 	readonly value: RootMapping;
@@ -25,8 +26,8 @@ export interface MappingEditorProps {
 	onChange?: (next: RootMapping) => void;
 	components?: Partial<MappingEditorComponents>;
 	labels?: Partial<MappingEditorLabels>;
-	schema?: MappingSchema;
-	sourceSchema?: MappingSchema;
+	schema?: JsonSchema;
+	sourceSchema?: JsonSchema;
 }
 
 const MappingEditor = forwardRef<MappingEditorHandle, MappingEditorProps>(function MappingEditor(props, ref) {
@@ -35,7 +36,7 @@ const MappingEditor = forwardRef<MappingEditorHandle, MappingEditorProps>(functi
 		if (root !== undefined)
 			return rootToEntries(root);
 		if (props.schema)
-			return rootToEntries(schemaToInitialMapping(props.schema));
+			return rootToEntries(generateInitialMapping(props.schema));
 		return [];
 	});
 

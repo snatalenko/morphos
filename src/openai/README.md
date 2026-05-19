@@ -55,16 +55,17 @@ const destinationSchema: MappingSchema = {
     }
 };
 
-const mapping = await generateMapping({
+const mapping = await generateMapping(
     sourceSchema,
     destinationSchema,
-    apiKey: process.env.OPENAI_API_KEY!,
-    options: {
+    process.env.OPENAI_API_KEY!,
+    {
         instructions: 'Truncate UPC to 5 characters for the destination code field.',
         model: 'gpt-5.5',
+        generateMappingTemplate: true,
         generateRequiredFields: true
     }
-});
+);
 
 console.log(mapping);
 // {
@@ -86,9 +87,19 @@ the main package, or used as the initial `value` of the `MappingEditor`.
 | `destinationSchema` | `MappingSchema` | JSON-schema-like description of desired output. Required.                                   |
 | `apiKey`            | `string`        | OpenAI API key. Required.                                                                   |
 | `options.instructions` | `string`     | Optional free-form text appended to the user prompt (e.g. naming conventions, edge cases). |
+| `options.mappingTemplate` | `RootMapping` | Optional mapping shape for the model to preserve and fill when confident.              |
+| `options.generateMappingTemplate` | `boolean` | Generate a mapping template from the destination schema before calling OpenAI. Defaults to `false`. |
 | `options.model`     | `string`        | Optional OpenAI model identifier. Defaults to `gpt-5.5`.                                   |
 | `options.dangerouslyAllowBrowser` | `boolean` | Passed to the OpenAI client for browser usage. Defaults to `false`.               |
 | `options.generateRequiredFields` | `boolean` | Add placeholders for unmapped required destination fields after generation. Defaults to `true`. |
+
+When `mappingTemplate` is provided, it is sent with the schemas as the preferred
+output shape. When `generateMappingTemplate` is enabled and `mappingTemplate` is
+not provided, a template is generated from the destination schema first. Blank
+values are treated as fields the model may fill when it finds a confident source
+mapping, literal, or JavaScript expression. This is useful when you already have
+an editor-generated mapping skeleton or want the model to preserve object, array,
+conditional, or concatenation structure.
 
 When `generateRequiredFields` is enabled, unmapped required scalar fields are set to `""`, required objects are expanded as `{ "map": { ... } }`, homogeneous arrays are expanded as `{ "forEach": "", "map": { ... } }`, and tuple arrays are expanded as positional object mappings such as `{ "0": "", "1": { "map": { ... } } }`. Generated nested maps contain only required child fields.
 
@@ -99,8 +110,8 @@ The function instantiates an `OpenAI` client with the supplied API key and calls
 
 * A system prompt describing the `morphos` mapping format (expression strings,
   `forEach`/`from` wrappers, plain nested objects, type-conversion conventions).
-* A user message that includes both schemas as pretty-printed JSON and your `instructions`
-  if provided.
+* A user message that includes both schemas, your `mappingTemplate`, and your
+  `instructions` if provided.
 * `response_format: { type: 'json_schema', json_schema: { schema, strict: false } }`
   where `schema` is the project's own [`schemas/mapping.json`](../../schemas/mapping.json)
   — the canonical grammar for any valid mapping (expression string, `forEach` iterator,

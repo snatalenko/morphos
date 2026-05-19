@@ -1,6 +1,6 @@
-import type { MappingSchema } from '../types.ts';
+import type { JsonSchema } from '../types.ts';
 
-export function schemaType(schema: MappingSchema | undefined): string | undefined {
+export function schemaType(schema: JsonSchema | undefined): string | undefined {
 	if (!schema || schema.type === undefined)
 		return undefined;
 	if (Array.isArray(schema.type))
@@ -9,7 +9,7 @@ export function schemaType(schema: MappingSchema | undefined): string | undefine
 	return schema.type;
 }
 
-export function getPropertySchema(parent: MappingSchema | undefined, name: string): MappingSchema | undefined {
+export function getPropertySchema(parent: JsonSchema | undefined, name: string): JsonSchema | undefined {
 	if (!parent || !parent.properties)
 		return undefined;
 
@@ -20,7 +20,7 @@ export function getPropertySchema(parent: MappingSchema | undefined, name: strin
 	return sub;
 }
 
-export function getItemsSchema(parent: MappingSchema | undefined): MappingSchema | undefined {
+export function getItemsSchema(parent: JsonSchema | undefined): JsonSchema | undefined {
 	if (!parent || parent.items === undefined)
 		return undefined;
 	if (Array.isArray(parent.items) || typeof parent.items === 'boolean')

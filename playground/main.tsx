@@ -2,10 +2,10 @@ import { StrictMode, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
 	MappingEditor,
-	schemaToInitialMapping,
 	type MappingEditorHandle,
 	type MappingEditorComponents
 } from '../src/react/index.ts';
+import { generateInitialMapping } from '../src/shared/index.ts';
 import bootstrap34 from '../src/react/bootstrap34/index.tsx';
 import bootstrap53 from '../src/react/bootstrap53/index.tsx';
 import {
@@ -120,7 +120,7 @@ function JsonTextarea({
 const labelStyle = { fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem', display: 'block' } as const;
 const errStyle = { color: '#c00', fontSize: '0.8rem', marginTop: '0.25rem' } as const;
 const sectionStyle = { display: 'flex', flexDirection: 'column' as const, gap: '0.5rem', minWidth: 0 };
-const buttonStyle = {
+const primaryButtonStyle = {
 	padding: '0.4rem 0.8rem',
 	background: '#1a73e8',
 	color: '#fff',
@@ -128,16 +128,26 @@ const buttonStyle = {
 	borderRadius: 4,
 	cursor: 'pointer'
 } as const;
+const secondaryButtonStyle = {
+	padding: '0.35rem 0.7rem',
+	border: '1px solid #c8d1dc',
+	borderRadius: 4,
+	background: '#fff',
+	color: '#334155',
+	cursor: 'pointer',
+	fontSize: '0.8rem'
+} as const;
 
 function tabStyle(active: boolean) {
 	return {
 		padding: '0.35rem 0.7rem',
-		border: '1px solid #ccd3dd',
+		border: `1px solid ${active ? '#9db2ce' : '#ccd3dd'}`,
 		borderRadius: 4,
-		background: active ? '#1a73e8' : '#fff',
-		color: active ? '#fff' : '#333',
+		background: active ? '#e8eef7' : '#fff',
+		color: active ? '#1f3a5f' : '#333',
 		cursor: 'pointer',
-		fontSize: '0.8rem'
+		fontSize: '0.8rem',
+		fontWeight: active ? 600 : 400
 	} as const;
 }
 
@@ -365,7 +375,7 @@ function App() {
 				: value === 'empty'
 					? undefined
 					: documentSchemaSamples.find(s => s.id === value)?.schema;
-			const autoMapping = schemaToInitialMapping(schema);
+			const autoMapping = generateInitialMapping(schema);
 			setMapping(autoMapping);
 			setMappingText(JSON.stringify(autoMapping, null, 2));
 			setMappingVersion(v => v + 1);
@@ -434,15 +444,11 @@ function App() {
 		setLoading(true);
 		setAiError(null);
 		try {
-			const result = await generateMapping({
-				sourceSchema,
-				destinationSchema: destSchema,
-				apiKey,
-				options: {
-					model: aiModel,
-					instructions: aiInstructions || undefined,
-					dangerouslyAllowBrowser: true
-				}
+			const result = await generateMapping(sourceSchema, destSchema, apiKey, {
+				model: aiModel,
+				instructions: aiInstructions || undefined,
+				mappingTemplate: isEmptyMapping(mapping) ? undefined : mapping,
+				dangerouslyAllowBrowser: true
 			});
 			setMapping(result);
 			setMappingText(JSON.stringify(result, null, 2));
@@ -585,10 +591,10 @@ function App() {
 							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
 								<label style={{ ...labelStyle, marginBottom: 0 }}>JSON document to transform</label>
 								<div style={{ display: 'flex', gap: '0.35rem' }}>
-									<button type="button" style={tabStyle(false)} onClick={() => generateSourceDataSample()}>
+									<button type="button" style={secondaryButtonStyle} onClick={() => generateSourceDataSample()}>
 										Generate sample
 									</button>
-									<button type="button" style={tabStyle(false)} onClick={formatSourceData}>
+									<button type="button" style={secondaryButtonStyle} onClick={formatSourceData}>
 										Format
 									</button>
 								</div>
@@ -627,8 +633,8 @@ function App() {
 								<span style={{ fontSize: '0.75rem', color: '#666' }}>{runMs.toFixed(2)} ms</span>
 							)}
 							{runError && <span style={{ ...errStyle, marginTop: 0 }}>{runError}</span>}
-							<button type="button" onClick={runMapping} style={buttonStyle}>Run</button>
-							<button type="button" style={tabStyle(false)} onClick={() => setEditorExpanded(v => !v)}>
+							<button type="button" onClick={runMapping} style={primaryButtonStyle}>Run</button>
+							<button type="button" style={secondaryButtonStyle} onClick={() => setEditorExpanded(v => !v)}>
 								{editorExpanded ? 'Exit full screen' : 'Full screen'}
 							</button>
 						</div>
@@ -729,15 +735,15 @@ function App() {
 									onClick={generateFromAi}
 									disabled={loading || !apiKey.trim() || !sourceSchema || !destSchema}
 									style={{
-										...buttonStyle,
-										background: loading ? '#999' : buttonStyle.background,
-										cursor: loading ? 'wait' : buttonStyle.cursor
+										...primaryButtonStyle,
+										background: loading ? '#999' : primaryButtonStyle.background,
+										cursor: loading ? 'wait' : primaryButtonStyle.cursor
 									}}
 								>
 									{loading ? 'Generating…' : 'Generate mapping'}
 								</button>
 								<span style={{ fontSize: '0.75rem', color: '#888' }}>
-									Uses both schemas above. Output replaces the mapping.
+									Uses both schemas and the current mapping as a template.
 								</span>
 							</div>
 							{aiError && <div style={errStyle}>{aiError}</div>}

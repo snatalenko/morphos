@@ -20,7 +20,7 @@ import {
 import type {
 	FieldOption,
 	MappingEditorComponents,
-	MappingSchema,
+	JsonSchema,
 	SourceFieldMatch
 } from './types.ts';
 import { EntriesEditor } from './EntriesEditor.tsx';
@@ -71,8 +71,8 @@ function ConditionalBranch({
 	value: EntryValue;
 	onChange: (next: EntryValue) => void;
 	onRemove?: () => void;
-	schema?: MappingSchema;
-	sourceSchema?: MappingSchema;
+	schema?: JsonSchema;
+	sourceSchema?: JsonSchema;
 	sourceSuggestions?: SourceFieldMatch[];
 }) {
 	const C = useContext(ComponentsContext);
@@ -162,8 +162,8 @@ function ConcatItemView({
 	canMoveDown: boolean;
 	onMoveUp: () => void;
 	onMoveDown: () => void;
-	schema?: MappingSchema;
-	sourceSchema?: MappingSchema;
+	schema?: JsonSchema;
+	sourceSchema?: JsonSchema;
 	sourceSuggestions?: SourceFieldMatch[];
 }) {
 	const C = useContext(ComponentsContext);
@@ -242,9 +242,9 @@ function ConcatItemView({
 }
 
 function schemaForConcatItem(
-	schema: MappingSchema | undefined,
+	schema: JsonSchema | undefined,
 	value: EntryValue
-): MappingSchema | undefined {
+): JsonSchema | undefined {
 	if (schemaType(schema) !== 'array')
 		return schema;
 
@@ -275,8 +275,8 @@ export function ValueView({
 	name: string;
 	value: EntryValue;
 	onChange: (next: EntryValue) => void;
-	schema?: MappingSchema;
-	sourceSchema?: MappingSchema;
+	schema?: JsonSchema;
+	sourceSchema?: JsonSchema;
 	sourceSuggestions?: SourceFieldMatch[];
 	part?: 'full' | 'control' | 'body';
 }) {

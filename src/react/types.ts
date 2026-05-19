@@ -3,13 +3,13 @@ import type { ComponentType, ReactNode } from 'react';
 export type AddKind = 'expr' | 'array' | 'object' | 'conditional' | 'concat';
 export type EntryKind = AddKind;
 
-export type { MappingSchema } from '../MappingSchema.ts';
-import type { MappingSchema } from '../MappingSchema.ts';
+export type { JsonSchema } from '../JsonSchema.ts';
+import type { JsonSchema } from '../JsonSchema.ts';
 
 export interface SchemaFieldOption {
 	name: string;
 	label?: string;
-	schema: MappingSchema;
+	schema: JsonSchema;
 	required: boolean;
 }
 
@@ -21,7 +21,7 @@ export interface FieldOption {
 export interface SourceFieldMatch {
 	path: string;
 	label?: string;
-	schema: MappingSchema;
+	schema: JsonSchema;
 }
 
 export interface ContainerProps {
@@ -58,7 +58,7 @@ export interface KeyInputProps {
 
 export interface KeyLabelProps {
 	name: string;
-	schema: MappingSchema;
+	schema: JsonSchema;
 	required: boolean;
 }
 

@@ -1,4 +1,4 @@
-import type { FieldOption, MappingSchema } from '../types.ts';
+import type { FieldOption, JsonSchema } from '../types.ts';
 
 const ENUM_MAX = 50;
 
@@ -11,7 +11,7 @@ function enumValueToExpr(v: unknown): string {
 	return String(v);
 }
 
-export function enumOptionsForSchema(schema: MappingSchema | undefined): FieldOption[] {
+export function enumOptionsForSchema(schema: JsonSchema | undefined): FieldOption[] {
 	if (!schema?.enum || schema.enum.length > ENUM_MAX)
 		return [];
 

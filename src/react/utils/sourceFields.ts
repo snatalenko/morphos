@@ -1,4 +1,4 @@
-import type { MappingSchema, SourceFieldMatch } from '../types.ts';
+import type { JsonSchema, SourceFieldMatch } from '../types.ts';
 import { schemaType } from './schemaProps.ts';
 
 function normalizeName(name: string): string {
@@ -15,7 +15,7 @@ function joinPath(parent: string, name: string): string {
 }
 
 function* walkSchema(
-	node: MappingSchema,
+	node: JsonSchema,
 	path: string,
 	leafName: string | undefined,
 	target: string | undefined,
@@ -40,7 +40,7 @@ function* walkSchema(
 }
 
 export function* findSourceFields(
-	sourceSchema: MappingSchema | undefined,
+	sourceSchema: JsonSchema | undefined,
 	filter: { name?: string; type?: string }
 ): Generator<SourceFieldMatch> {
 	if (!sourceSchema)
@@ -51,10 +51,10 @@ export function* findSourceFields(
 }
 
 export function extendSourceSchema(
-	inner: MappingSchema | undefined,
-	outer: MappingSchema | undefined,
+	inner: JsonSchema | undefined,
+	outer: JsonSchema | undefined,
 	consumedPath?: string
-): MappingSchema | undefined {
+): JsonSchema | undefined {
 	if (!inner)
 		return outer;
 	if (!outer || !outer.properties || schemaType(outer) !== 'object')
@@ -63,7 +63,7 @@ export function extendSourceSchema(
 		return inner;
 
 	const consumedKey = consumedPath ? consumedPath.split('.')[0] : undefined;
-	const merged: { [name: string]: MappingSchema | boolean } = { ...inner.properties };
+	const merged: { [name: string]: JsonSchema | boolean } = { ...inner.properties };
 	for (const [k, v] of Object.entries(outer.properties)) {
 		if (k in merged)
 			continue;
@@ -77,16 +77,16 @@ export function extendSourceSchema(
 }
 
 export function resolveSourcePath(
-	sourceSchema: MappingSchema | undefined,
+	sourceSchema: JsonSchema | undefined,
 	path: string
-): MappingSchema | undefined {
+): JsonSchema | undefined {
 	if (!sourceSchema || !path)
 		return undefined;
 	if (!/^[a-zA-Z_$][a-zA-Z0-9_$.]*$/.test(path))
 		return undefined;
 
 	const parts = path.split('.');
-	let current: MappingSchema | undefined = sourceSchema;
+	let current: JsonSchema | undefined = sourceSchema;
 	for (const part of parts) {
 		if (!current || !current.properties)
 			return undefined;

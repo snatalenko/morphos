@@ -15,13 +15,21 @@ Mapping syntax:
 - Expression strings run in the current source context. Source properties in that context are available as variables.
 - String constants must be quoted inside the expression string: { "status": "'OPEN'" }.
 - Numeric, boolean, null, arithmetic, template literals, optional chaining, array methods, and standard JavaScript built-ins are allowed in expression strings.
-- Use plain JavaScript conversions when needed: String(x), Number(x), parseInt(x, 10), parseFloat(x), Boolean(x), x?.toString().
+- Use plain JavaScript conversions only when the source and destination schema types differ or the user asks for a conversion: String(x), Number(x), parseInt(x, 10), parseFloat(x), Boolean(x), x?.toString().
+- If the source schema says a field is "number" or "integer", use it directly in numeric mappings and calculations.
 
 Runtime context:
 - $input is the entire source document and is available everywhere.
 - In a forEach map, $record is the current array element, $index is its index, and $collection is the source array.
 - In forEach and from maps, fields of the selected object are also available directly.
 - Use $input when an expression inside an array or nested context needs a root-level source field.
+
+Mapping template:
+- If a mapping template is provided, use it as the preferred destination shape and mapping structure.
+- Preserve template destination keys and nested wrappers such as "from", "forEach", "map", "when", and "concat" when they match the destination schema.
+- Replace blank template values only when there is a confident source mapping, literal, or JavaScript expression.
+- Do not fill blank template values with guesses. Omit optional fields that cannot be mapped confidently.
+- For required fields left blank in the template, leave them blank or omit them; required placeholders are handled after generation.
 
 Object mappings:
 - For a nested destination object using the current source context, use a plain nested object:
@@ -52,9 +60,11 @@ Aggregates and calculations:
 - For destination totals, counts, flags, or summaries computed from arrays, prefer a single expression on the destination field.
 - Use JavaScript array methods such as reduce, map, filter, find, some, and every.
 - Example root invoice total from line items:
-  { "totalAmount": "LINE_ITEMS.reduce((sum, i) => sum + (Number(i.QTY) * Number(i.PRICE)), 0)" }
+  { "totalAmount": "LINE_ITEMS.reduce((sum, i) => sum + (i.QTY * i.PRICE), 0)" }
 - Use optional fallback only when useful for missing arrays:
-  { "totalAmount": "(LINE_ITEMS ?? []).reduce((sum, i) => sum + (Number(i.QTY) * Number(i.PRICE)), 0)" }
+  { "totalAmount": "LINE_ITEMS.reduce((sum, i) => sum + (i.QTY * i.PRICE), 0)" }
+- If numeric source fields are declared as strings, convert them at the point of arithmetic:
+  { "totalAmount": "LINE_ITEMS.reduce((sum, i) => sum + (Number(i.QTY) * Number(i.PRICE)), 0)" }
 
 Business matching rules:
 - Preserve entity boundaries. Header invoice fields should come from invoice/header/order fields, not from product, UPC, item, allowance, or packaging fields.

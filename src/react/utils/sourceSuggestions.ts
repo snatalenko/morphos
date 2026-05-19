@@ -1,4 +1,4 @@
-import type { MappingSchema, SourceFieldMatch } from '../types.ts';
+import type { JsonSchema, SourceFieldMatch } from '../types.ts';
 import { findSourceFields } from './sourceFields.ts';
 
 export function typesCompatible(destType: string | undefined, sourceType: string | undefined): boolean {
@@ -17,7 +17,7 @@ export function typesCompatible(destType: string | undefined, sourceType: string
 
 export function preferNameMatches(
 	fields: SourceFieldMatch[],
-	sourceSchema: MappingSchema | undefined,
+	sourceSchema: JsonSchema | undefined,
 	name: string,
 	type?: string
 ): SourceFieldMatch[] {
@@ -37,8 +37,8 @@ export function preferNameMatches(
 }
 
 export function arrayContextSuggestions(
-	recordSchema: MappingSchema | undefined,
-	collectionSchema: MappingSchema | undefined
+	recordSchema: JsonSchema | undefined,
+	collectionSchema: JsonSchema | undefined
 ): SourceFieldMatch[] {
 	return [
 		{

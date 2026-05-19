@@ -10,7 +10,6 @@ export type {
 	ContainerProps,
 	FieldLabelProps,
 	JsonSchema,
-	MappingSchema,
 	RemoveButtonProps,
 	RowProps,
 	SchemaEditorComponents,

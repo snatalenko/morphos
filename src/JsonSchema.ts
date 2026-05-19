@@ -23,5 +23,3 @@ export interface JsonSchema {
 	minProperties?: number;
 	maxProperties?: number;
 }
-
-export type MappingSchema = JsonSchema;
