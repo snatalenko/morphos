@@ -387,6 +387,13 @@ function App() {
 	};
 
 	const switchEditor = (next: EditorType) => {
+		if (next === 'json' && editorType !== 'json') {
+			const current = editorRef.current?.value;
+			if (current) {
+				setMapping(current);
+				setMappingText(JSON.stringify(current, null, 2));
+			}
+		}
 		setMappingError(null);
 		setEditorType(next);
 	};

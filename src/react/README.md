@@ -215,6 +215,7 @@ const labels = {
     object: 'Objekt',
     conditional: 'Wenn / sonst',
     concat: 'Verketten',
+    tuple: 'Feste Liste',
     addItem: 'Element hinzufügen',
     newField: 'Neues Feld',
     selectPlaceholder: '— auswählen —',
@@ -248,6 +249,7 @@ const labels = {
 | `object`                  | `Object`             | Type-selector option for `object` kind.          |
 | `conditional`             | `Conditional`        | Type-selector option for conditional kind.       |
 | `concat`                  | `Concat`             | Type-selector option for concat kind.            |
+| `tuple`                   | `Fixed List`         | Type-selector option for tuple array kind.       |
 | `addItem`                 | `Add Item`           | Add button in Concat mappings.                   |
 | `addSchemaField`          | `+ Add field…`       | Legacy `SchemaAddBar` placeholder.               |
 | `newField`                | `New Field`          | Blank custom-field input placeholder.            |
@@ -308,6 +310,6 @@ const MyAddItemButton = ({ onClick }: AddItemButtonProps) => {
 
 ## Limitations
 
-* Tuple-form `PropertiesMap` (`ValueMap[]`) inputs are currently ignored on load.
+* Root-level tuple-form `PropertiesMap` (`ValueMap[]`) inputs are currently ignored on load.
 * Schema features beyond `type`, `properties`, `items`, `required`, `title`, `description`
   are not interpreted (no `$ref`, `oneOf`, `additionalProperties`, etc.).

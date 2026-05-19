@@ -3,7 +3,7 @@ import { ComponentsContext } from './ComponentsContext.ts';
 import { LabelsContext } from './LabelsContext.ts';
 import {
 	genId,
-	convertEntryValue,
+	convertEntryValueForSchema,
 	getPropertySchema,
 	createEntryValueForSchema,
 	createEntryValue,
@@ -207,7 +207,9 @@ export function EntriesEditor({
 				const typeSelector = (
 					<C.TypeSelector
 						kind={entry.value.kind}
-						onChange={to => updateEntry(entry.id, { value: convertEntryValue(entry.value, to) })}
+						onChange={to => updateEntry(entry.id, {
+							value: convertEntryValueForSchema(entry.value, to, subSchema)
+						})}
 					/>
 				);
 

@@ -28,3 +28,14 @@ export function getItemsSchema(parent: JsonSchema | undefined): JsonSchema | und
 
 	return parent.items;
 }
+
+export function getTupleItemSchema(parent: JsonSchema | undefined, index: number): JsonSchema | undefined {
+	if (!parent)
+		return undefined;
+
+	if (!Array.isArray(parent.items))
+		return getItemsSchema(parent);
+
+	const item = parent.items[index];
+	return item === undefined || typeof item === 'boolean' ? undefined : item;
+}

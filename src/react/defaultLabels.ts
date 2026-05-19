@@ -6,6 +6,7 @@ export const defaultLabels: MappingEditorLabels = {
 	object: 'Object',
 	conditional: 'Conditional',
 	concat: 'Compose List',
+	tuple: 'Fixed List',
 	addItem: 'Add Item',
 	addSchemaField: '+ Add field…',
 	newField: 'New Field',

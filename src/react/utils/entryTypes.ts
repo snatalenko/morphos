@@ -8,12 +8,14 @@ export type ConditionalEntryValue = {
 	else?: EntryValue;
 };
 export type ConcatEntryValue = { kind: 'concat'; items: EntryValue[] };
+export type TupleEntryValue = { kind: 'tuple'; items: EntryValue[] };
 export type EntryValue =
 	ExprEntryValue |
 	ArrayEntryValue |
 	ObjectEntryValue |
 	ConditionalEntryValue |
-	ConcatEntryValue;
+	ConcatEntryValue |
+	TupleEntryValue;
 
 export type Entry = {
 	id: string;

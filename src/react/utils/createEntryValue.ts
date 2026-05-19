@@ -10,6 +10,8 @@ export function createEntryValue(kind: AddKind): EntryValue {
 		return { kind: 'conditional', when: '', then: { kind: 'expr', expr: '' } };
 	if (kind === 'concat')
 		return { kind: 'concat', items: [] };
+	if (kind === 'tuple')
+		return { kind: 'tuple', items: [] };
 
 	return { kind: 'expr', expr: '' };
 }

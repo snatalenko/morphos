@@ -355,6 +355,7 @@ export const DefaultTypeSelector: ComponentType<TypeSelectorProps> = ({ kind, on
 			<option value="object">{labels.object}</option>
 			<option value="conditional">{labels.conditional}</option>
 			<option value="concat">{labels.concat}</option>
+			<option value="tuple">{labels.tuple}</option>
 		</select>
 	);
 };

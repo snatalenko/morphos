@@ -3,9 +3,10 @@ import { ComponentsContext } from './ComponentsContext.ts';
 import { LabelsContext } from './LabelsContext.ts';
 import {
 	WILDCARD_KEY,
-	convertEntryValue,
+	convertEntryValueForSchema,
 	schemaType,
 	getItemsSchema,
+	getTupleItemSchema,
 	findSourceFields,
 	resolveSourcePath,
 	extendSourceSchema,
@@ -82,7 +83,7 @@ function ConditionalBranch({
 	const typeSelector = (
 		<C.TypeSelector
 			kind={value.kind}
-			onChange={to => onChange(convertEntryValue(value, to))}
+			onChange={to => onChange(convertEntryValueForSchema(value, to, schema))}
 		/>
 	);
 	const remove = onRemove ? <C.RemoveButton onClick={onRemove} /> : null;
@@ -174,7 +175,7 @@ function ConcatItemView({
 	const typeSelector = (
 		<C.TypeSelector
 			kind={value.kind}
-			onChange={to => onChange(convertEntryValue(value, to))}
+			onChange={to => onChange(convertEntryValueForSchema(value, to, schema))}
 		/>
 	);
 	const reorder = (
@@ -249,13 +250,15 @@ function schemaForConcatItem(
 		return schema;
 
 	const itemSchema = getItemsSchema(schema) ?? schema;
-	if (value.kind === 'array' || value.kind === 'concat')
+	if (value.kind === 'array' || value.kind === 'concat' || value.kind === 'tuple')
 		return schema;
 	if (value.kind === 'conditional') {
 		const branchReturnsArray = value.then.kind === 'array'
 			|| value.then.kind === 'concat'
+			|| value.then.kind === 'tuple'
 			|| value.else?.kind === 'array'
-			|| value.else?.kind === 'concat';
+			|| value.else?.kind === 'concat'
+			|| value.else?.kind === 'tuple';
 
 		return branchReturnsArray ? schema : itemSchema;
 	}
@@ -488,7 +491,7 @@ export function ValueView({
 		);
 	}
 
-	if (value.kind === 'concat') {
+	if (value.kind === 'concat' || value.kind === 'tuple') {
 		const updateItem = (index: number, nextValue: EntryValue) => {
 			const next = value.items.slice();
 			next[index] = nextValue;
@@ -523,7 +526,11 @@ export function ValueView({
 						canMoveDown={index < value.items.length - 1}
 						onMoveUp={() => moveItem(index, -1)}
 						onMoveDown={() => moveItem(index, 1)}
-						schema={schemaForConcatItem(schema, item)}
+						schema={
+							value.kind === 'tuple'
+								? getTupleItemSchema(schema, index)
+								: schemaForConcatItem(schema, item)
+						}
 						sourceSchema={sourceSchema}
 						sourceSuggestions={sourceSuggestions}
 					/>

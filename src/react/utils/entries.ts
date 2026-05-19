@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 import type {
 	RootMapping,
 	ValueMap,
@@ -8,12 +9,14 @@ import type {
 	ConditionalMapping,
 	ConcatMapping
 } from '../../mappingTypes.ts';
+import type { AddKind, JsonSchema } from '../types.ts';
 export type {
 	ExprEntryValue,
 	ArrayEntryValue,
 	ObjectEntryValue,
 	ConditionalEntryValue,
 	ConcatEntryValue,
+	TupleEntryValue,
 	EntryValue,
 	Entry
 } from './entryTypes.ts';
@@ -21,15 +24,26 @@ import type {
 	EntryValue,
 	Entry
 } from './entryTypes.ts';
+import {
+	getItemsSchema,
+	schemaType
+} from './schemaProps.ts';
+import {
+	createRequiredEntriesForObjectSchema,
+	createRequiredEntryValueForSchema
+} from './createEntryValueForSchema.ts';
+import { genId } from './ids.ts';
 
+export { genId };
 export const WILDCARD_KEY = '*';
-
-let idCounter = 0;
-export const genId = () => `dm-${++idCounter}`;
-
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
 	return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+function isTupleArrayMapping(v: Record<string, unknown>): boolean {
+	const keys = Object.keys(v);
+	return keys.length > 0 && keys.every(k => /^\d+$/.test(k));
 }
 
 function assertNever(value: never): never {
@@ -47,9 +61,48 @@ function propsToEntries(map: PropertiesMap | undefined): Entry[] {
 	}));
 }
 
+function mergeRequiredEntries(entries: Entry[], schema: JsonSchema): Entry[] {
+	const existing = new Set(entries.map(entry => entry.key));
+	const required = createRequiredEntriesForObjectSchema(schema).filter(entry => !existing.has(entry.key));
+	return required.length === 0 ? entries : [...entries, ...required];
+}
+
+function arrayItemObjectSchema(schema: JsonSchema | undefined): JsonSchema | undefined {
+	if (schemaType(schema) !== 'array')
+		return undefined;
+
+	const itemSchema = schema ? getItemsSchema(schema) : undefined;
+	return itemSchema && (schemaType(itemSchema) === 'object' || itemSchema.properties) ? itemSchema : undefined;
+}
+
+function ensureArrayObjectEntryValue(value: EntryValue, itemSchema: JsonSchema): EntryValue {
+	if (value.kind === 'array')
+		return { ...value, entries: mergeRequiredEntries(value.entries, itemSchema) };
+	if (value.kind === 'object')
+		return { ...value, entries: mergeRequiredEntries(value.entries, itemSchema) };
+	if (value.kind === 'conditional') {
+		return {
+			...value,
+			then: ensureArrayObjectEntryValue(value.then, itemSchema),
+			else: value.else === undefined ? undefined : ensureArrayObjectEntryValue(value.else, itemSchema)
+		};
+	}
+	if (value.kind === 'concat' || value.kind === 'tuple') {
+		if (value.items.length === 0)
+			return { ...value, items: [createRequiredEntryValueForSchema(itemSchema)] };
+
+		return { ...value, items: value.items.map(item => ensureArrayObjectEntryValue(item, itemSchema)) };
+	}
+
+	return createRequiredEntryValueForSchema(itemSchema);
+}
+
 function valueToEntryValue(v: ValueMap): EntryValue {
 	if (typeof v === 'string')
 		return { kind: 'expr', expr: v };
+
+	if (Array.isArray(v))
+		return { kind: 'tuple', items: v.map(item => valueToEntryValue(item)) };
 
 	if (isPlainObject(v)) {
 		if ('when' in v && 'then' in v) {
@@ -76,6 +129,15 @@ function valueToEntryValue(v: ValueMap): EntryValue {
 		if ('map' in v && Object.keys(v).length === 1) {
 			const om = v as ObjectMapping;
 			return { kind: 'object', from: '', entries: propsToEntries(om.map) };
+		}
+		if (isTupleArrayMapping(v)) {
+			const entries = Object.entries(v);
+			const maxIndex = Math.max(...entries.map(([key]) => Number(key)));
+			const items = Array.from({ length: maxIndex + 1 }, (_, index) => {
+				const item = v[String(index)] as ValueMap | undefined;
+				return item === undefined ? { kind: 'expr' as const, expr: '' } : valueToEntryValue(item);
+			});
+			return { kind: 'tuple', items };
 		}
 		return { kind: 'object', from: '', entries: propsToEntries(v as PropertiesMap) };
 	}
@@ -111,11 +173,11 @@ export function entriesToProps(entries: Entry[]): PropertiesMap {
 	return out;
 }
 
-export function convertEntryValue(prev: EntryValue, to: 'expr' | 'array' | 'object' | 'conditional' | 'concat'): EntryValue {
+export function convertEntryValue(prev: EntryValue, to: AddKind): EntryValue {
 	if (to === 'expr') {
 		if (prev.kind === 'expr')
 			return prev;
-		if (prev.kind === 'concat')
+		if (prev.kind === 'concat' || prev.kind === 'tuple')
 			return prev.items[0] ? convertEntryValue(prev.items[0], to) : { kind: 'expr', expr: '' };
 		if (prev.kind === 'array')
 			return { kind: 'expr', expr: prev.forEach };
@@ -132,7 +194,7 @@ export function convertEntryValue(prev: EntryValue, to: 'expr' | 'array' | 'obje
 	if (to === 'array') {
 		if (prev.kind === 'array')
 			return prev;
-		if (prev.kind === 'concat')
+		if (prev.kind === 'concat' || prev.kind === 'tuple')
 			return prev.items[0] ? convertEntryValue(prev.items[0], to) : { kind: 'array', forEach: '', entries: [] };
 		if (prev.kind === 'object')
 			return { kind: 'array', forEach: prev.from, entries: prev.entries };
@@ -156,13 +218,24 @@ export function convertEntryValue(prev: EntryValue, to: 'expr' | 'array' | 'obje
 	if (to === 'concat') {
 		if (prev.kind === 'concat')
 			return prev;
+		if (prev.kind === 'tuple')
+			return { kind: 'concat', items: prev.items };
 
 		return { kind: 'concat', items: [prev] };
 	}
 
+	if (to === 'tuple') {
+		if (prev.kind === 'tuple')
+			return prev;
+		if (prev.kind === 'concat')
+			return { kind: 'tuple', items: prev.items };
+
+		return { kind: 'tuple', items: [prev] };
+	}
+
 	if (prev.kind === 'object')
 		return prev;
-	if (prev.kind === 'concat')
+	if (prev.kind === 'concat' || prev.kind === 'tuple')
 		return prev.items[0] ? convertEntryValue(prev.items[0], to) : { kind: 'object', from: '', entries: [] };
 	if (prev.kind === 'array')
 		return { kind: 'object', from: prev.forEach, entries: prev.entries };
@@ -174,6 +247,15 @@ export function convertEntryValue(prev: EntryValue, to: 'expr' | 'array' | 'obje
 	}
 
 	return { kind: 'object', from: prev.expr, entries: [] };
+}
+
+export function convertEntryValueForSchema(prev: EntryValue, to: AddKind, schema: JsonSchema | undefined): EntryValue {
+	const next = convertEntryValue(prev, to);
+	const itemSchema = arrayItemObjectSchema(schema);
+	if (!itemSchema || (to !== 'array' && to !== 'concat' && to !== 'tuple'))
+		return next;
+
+	return ensureArrayObjectEntryValue(next, itemSchema);
 }
 
 function entryValueToValue(ev: EntryValue): ValueMap {
@@ -203,6 +285,14 @@ function entryValueToValue(ev: EntryValue): ValueMap {
 
 	if (ev.kind === 'concat')
 		return { concat: ev.items.map(item => entryValueToValue(item)) };
+
+	if (ev.kind === 'tuple') {
+		const result: Record<string, ValueMap> = {};
+		ev.items.forEach((item, index) => {
+			result[index] = entryValueToValue(item);
+		});
+		return result;
+	}
 
 	return assertNever(ev);
 }

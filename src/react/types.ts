@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from 'react';
 
-export type AddKind = 'expr' | 'array' | 'object' | 'conditional' | 'concat';
+export type AddKind = 'expr' | 'array' | 'object' | 'conditional' | 'concat' | 'tuple';
 export type EntryKind = AddKind;
 
 export type { JsonSchema } from '../JsonSchema.ts';
@@ -134,6 +134,7 @@ export interface MappingEditorLabels {
 	object: string;
 	conditional: string;
 	concat: string;
+	tuple: string;
 	addItem: string;
 	addSchemaField: string;
 	newField: string;
