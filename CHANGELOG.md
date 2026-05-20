@@ -1,3 +1,13 @@
+# [1.8.0-alpha.6](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.5...v1.8.0-alpha.6) (2026-05-20)
+
+
+### Changes
+
+* Add "morphos/utils" lightweight export for browser environment ([af004d2](https://github.com/snatalenko/morphos/commit/af004d298720915fc4d90e4c3cc2382ed60c98cb))
+* Replace obsolete mappingForSchema util with generateInitialMapping ([295cc07](https://github.com/snatalenko/morphos/commit/295cc07f689834992be166bbcf03732a58b28c8a))
+* Make mapped field utility functions to count only leaf nodes and ignore empty mappings ([9279c02](https://github.com/snatalenko/morphos/commit/9279c02976e279d32bade213a0bb79e55e05f233))
+
+
 # [1.8.0-alpha.5](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.4...v1.8.0-alpha.5) (2026-05-19)
 
 
