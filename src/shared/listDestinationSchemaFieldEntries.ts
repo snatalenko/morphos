@@ -63,7 +63,8 @@ export function* listDestinationSchemaFieldEntries(
 	const mappingPaths = mappedFieldPaths(mapping);
 	for (const entry of collectSchemaFieldEntries(destinationSchema, '')) {
 		yield {
-			...entry,
+			path: entry.path,
+			schema: entry.schema,
 			mapped: mappingPaths.has(entry.path)
 		};
 	}

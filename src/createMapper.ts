@@ -45,12 +45,11 @@ export default function createMapper<TSource extends object, TResult>(map: RootM
 
 	const extensionNames = options && options.extensions ? Object.keys(options.extensions) : undefined;
 
-	const sandbox: TMappingScriptEnvironment<TSource, TResult> = {
+	const sandbox: TMappingScriptEnvironment<TSource, TResult> = Object.assign({
 		$input: undefined,
 		$result: undefined,
-		$createGlobalContext: (input: object) => createGlobalContext(input, extensionNames),
-		...options?.extensions
-	};
+		$createGlobalContext: (input: object) => createGlobalContext(input, extensionNames)
+	}, options?.extensions);
 
 	const ctx = vm.createContext(sandbox);
 
