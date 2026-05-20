@@ -1,7 +1,7 @@
 import OpenAI from 'openai';
 import type { RootMapping } from '../mappingTypes.ts';
 import type { JsonSchema } from '../JsonSchema.ts';
-import { appendRequiredMappings, generateInitialMapping } from '../shared/index.ts';
+import { appendRequiredMappings, generateInitialMapping } from '../utils/index.ts';
 import { SYSTEM_PROMPT } from './SYSTEM_PROMPT.ts';
 
 export type GenerateMappingOptions = {

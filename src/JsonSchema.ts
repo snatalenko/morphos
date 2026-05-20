@@ -1,4 +1,4 @@
-export interface JsonSchema {
+export type JsonSchema = {
 	type?: string | string[];
 	properties?: {
 		[name: string]: JsonSchema | boolean

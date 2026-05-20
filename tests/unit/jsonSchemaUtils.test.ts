@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { schemaItems, schemaType } from '../../src/shared/jsonSchemaUtils.ts';
+import { schemaItems, schemaType } from '../../src/utils/jsonSchemaUtils.ts';
 
 describe('jsonSchemaUtils', () => {
 	it('resolves missing and nullable schema types', () => {

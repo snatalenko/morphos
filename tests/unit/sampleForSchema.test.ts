@@ -1,4 +1,5 @@
 import { sampleForSchema } from '../../src';
+import { sampleForSchema as sampleForSchemaFromUtils } from '../../src/utils/index.ts';
 import type { JSONSchema4 } from 'json-schema';
 import * as sampleSchema from './data/sampleSchema.json';
 import { expect } from 'chai';
@@ -88,5 +89,9 @@ describe('sampleForSchema', () => {
 		} as JSONSchema4);
 
 		expect(sample).to.eql(10);
+	});
+
+	it('is exported from utils', () => {
+		expect(sampleForSchemaFromUtils({ type: 'string' } as JSONSchema4)).to.equal('text');
 	});
 });

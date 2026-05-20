@@ -33,6 +33,11 @@
       "import": "./dist/esm/index.js",
       "types": "./dist/types/index.d.ts"
     },
+    "./utils": {
+      "require": "./dist/cjs/utils/index.js",
+      "import": "./dist/esm/utils/index.js",
+      "types": "./dist/types/utils/index.d.ts"
+    },
     "./react": {
       "require": "./dist/cjs/react/index.js",
       "import": "./dist/esm/react/index.js",
@@ -72,6 +77,7 @@
   "files": [
     "dist/**",
     "!dist/.tsbuildinfo*",
+    "utils/**",
     "README.md",
     "LICENSE",
     "NOTICE",

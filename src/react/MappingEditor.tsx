@@ -11,7 +11,7 @@ import { ComponentsContext } from './ComponentsContext.ts';
 import { LabelsContext } from './LabelsContext.ts';
 import { defaultComponents } from './defaultComponents.tsx';
 import { defaultLabels } from './defaultLabels.ts';
-import { generateInitialMapping } from '../shared/generateInitialMapping.ts';
+import { generateInitialMapping } from '../utils/generateInitialMapping.ts';
 import { rootToEntries, entriesToProps, type Entry } from './utils/index.ts';
 import { EntriesEditor } from './EntriesEditor.tsx';
 import type { MappingEditorComponents, MappingEditorLabels, JsonSchema } from './types.ts';

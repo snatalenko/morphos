@@ -5,7 +5,7 @@ import {
 	type MappingEditorHandle,
 	type MappingEditorComponents
 } from '../src/react/index.ts';
-import { generateInitialMapping } from '../src/shared/index.ts';
+import { generateInitialMapping, sampleForSchema } from '../src/utils/index.ts';
 import bootstrap34 from '../src/react/bootstrap34/index.tsx';
 import bootstrap53 from '../src/react/bootstrap53/index.tsx';
 import {
@@ -15,11 +15,10 @@ import {
 import schemaBootstrap34 from '../src/react-schema-editor/bootstrap34/index.tsx';
 import schemaBootstrap53 from '../src/react-schema-editor/bootstrap53/index.tsx';
 import { generateMapping } from '../src/openai/index.ts';
-import sampleForSchema from '../src/sampleForSchema.ts';
 import createScript from '../src/createScript.ts';
 import { createGlobalContext } from '../src/runtime/index.ts';
 import type { RootMapping } from '../src/mappingTypes.ts';
-import type { MappingSchema } from '../src/MappingSchema.ts';
+import type { JsonSchema } from '../src/JsonSchema.ts';
 import {
 	initial,
 	sourceData as sampleSourceData,
@@ -47,7 +46,7 @@ const documentTypes: DocumentSchemaSample['documentType'][] = [
 	'Shipment Notice',
 	'GS1 EPCIS Event'
 ];
-const emptySchema: MappingSchema = { type: 'object', properties: {} };
+const emptySchema: JsonSchema = { type: 'object', properties: {} };
 
 function useDynamicCss(href: string | null) {
 	useEffect(() => {
@@ -157,14 +156,14 @@ function App() {
 	const [editorExpanded, setEditorExpanded] = useState(false);
 
 	const [sourceText, setSourceText] = useState(JSON.stringify(sampleSource, null, 2));
-	const [sourceSchema, setSourceSchema] = useState<MappingSchema | undefined>(sampleSource);
+	const [sourceSchema, setSourceSchema] = useState<JsonSchema | undefined>(sampleSource);
 	const [sourceError, setSourceError] = useState<string | null>(null);
 	const [sourceSchemaSelection, setSourceSchemaSelection] = useState('sample');
 	const [sourceDataText, setSourceDataText] = useState(JSON.stringify(sampleSourceData, null, 2));
 	const [sourceDataError, setSourceDataError] = useState<string | null>(null);
 
 	const [destText, setDestText] = useState(JSON.stringify(sampleDest, null, 2));
-	const [destSchema, setDestSchema] = useState<MappingSchema | undefined>(sampleDest);
+	const [destSchema, setDestSchema] = useState<JsonSchema | undefined>(sampleDest);
 	const [destError, setDestError] = useState<string | null>(null);
 	const [destSchemaSelection, setDestSchemaSelection] = useState('sample');
 	const [resultText, setResultText] = useState('');
@@ -219,7 +218,7 @@ function App() {
 	const updateSchemaText = (
 		text: string,
 		setText: (s: string) => void,
-		setSchema: (s: MappingSchema | undefined) => void,
+		setSchema: (s: JsonSchema | undefined) => void,
 		setError: (s: string | null) => void,
 		onUserEdit: () => void
 	) => {
@@ -231,7 +230,7 @@ function App() {
 			return;
 		}
 		try {
-			setSchema(JSON.parse(text) as MappingSchema);
+			setSchema(JSON.parse(text) as JsonSchema);
 			setError(null);
 		}
 		catch (e) {
@@ -239,14 +238,14 @@ function App() {
 		}
 	};
 
-	const updateSourceSchemaFromEditor = (next: MappingSchema) => {
+	const updateSourceSchemaFromEditor = (next: JsonSchema) => {
 		setSourceSchemaSelection('');
 		setSourceSchema(next);
 		setSourceText(JSON.stringify(next, null, 2));
 		setSourceError(null);
 	};
 
-	const updateDestSchemaFromEditor = (next: MappingSchema) => {
+	const updateDestSchemaFromEditor = (next: JsonSchema) => {
 		setDestSchemaSelection('');
 		setDestSchema(next);
 		setDestText(JSON.stringify(next, null, 2));
@@ -297,9 +296,9 @@ function App() {
 	};
 
 	const loadSample = (
-		sample: MappingSchema | null,
+		sample: JsonSchema | null,
 		setText: (s: string) => void,
-		setSchema: (s: MappingSchema | undefined) => void,
+		setSchema: (s: JsonSchema | undefined) => void,
 		setError: (s: string | null) => void
 	) => {
 		if (sample === null) {
@@ -315,9 +314,9 @@ function App() {
 
 	const loadSchemaSelection = (
 		value: string,
-		defaultSample: MappingSchema,
+		defaultSample: JsonSchema,
 		setText: (s: string) => void,
-		setSchema: (s: MappingSchema | undefined) => void,
+		setSchema: (s: JsonSchema | undefined) => void,
 		setError: (s: string | null) => void
 	) => {
 		if (value === 'sample') {
