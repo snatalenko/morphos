@@ -93,17 +93,20 @@ See [`morphos/react-schema-editor`](src/react-schema-editor/README.md) for insta
 
 ### AI Mapping Generation
 
-When both incoming and outgoing formats are known, OpenAI can generate a first-pass mapping from two JSON Schemas.
+When both incoming and outgoing formats are known, OpenAI or Anthropic Claude can generate a first-pass mapping from two JSON Schemas.
 
 This is useful for document-to-document transformations, API payload conversions, imports, exports, and other structured JSON workflows: as long as the source and destination formats are known, the model can infer likely field matches, calculations, object mappings, list mappings, and conditional rules. The generated output is still just a JSON mapping spec, so it can be reviewed in the editor, adjusted, stored, and executed by the same runtime.
 
-The OpenAI helper is also an optional subpath import:
+The AI helpers are also optional subpath imports:
 
 ```ts
 import { generateMapping } from 'morphos/openai';
+// or
+import { generateMapping } from 'morphos/anthropic';
 ```
 
 See [`morphos/openai`](src/openai/README.md) for schema-based mapping generation and natural-language instructions.
+See [`morphos/anthropic`](src/anthropic/README.md) for the same workflow using Anthropic Claude.
 
 ### Quick Start Example
 

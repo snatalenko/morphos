@@ -72,6 +72,11 @@
       "require": "./dist/cjs/openai/index.js",
       "import": "./dist/esm/openai/index.js",
       "types": "./dist/types/openai/index.d.ts"
+    },
+    "./anthropic": {
+      "require": "./dist/cjs/anthropic/index.js",
+      "import": "./dist/esm/anthropic/index.js",
+      "types": "./dist/types/anthropic/index.d.ts"
     }
   },
   "files": [
@@ -84,14 +89,18 @@
     "CHANGELOG.md"
   ],
   "peerDependencies": {
-    "react": ">=18",
-    "openai": ">=4"
+    "@anthropic-ai/sdk": "^0.95.2",
+    "openai": ">=4",
+    "react": ">=18"
   },
   "peerDependenciesMeta": {
     "react": {
       "optional": true
     },
     "openai": {
+      "optional": true
+    },
+    "@anthropic-ai/sdk": {
       "optional": true
     }
   },
@@ -123,6 +132,7 @@
   },
   "homepage": "https://github.com/snatalenko/morphos#readme",
   "devDependencies": {
+    "@anthropic-ai/sdk": "^0.95.2",
     "@types/chai": "^4.3.20",
     "@types/jest": "^29.5.14",
     "@types/json-schema": "^7.0.15",

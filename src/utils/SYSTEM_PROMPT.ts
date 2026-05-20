@@ -17,6 +17,7 @@ Mapping syntax:
 - Expression strings run in the current source context. Source properties in that context are available as variables.
 - For source property names that are not valid JavaScript identifiers, use bracket access such as $input["item-code"], $record["1stQty"], or $context["ship.to"].
 - String constants must be quoted inside the expression string: { "status": "'OPEN'" }.
+- Prefer single quotes inside JavaScript expression strings: "'OPEN'", "\`ORD-\${id}\`", "name === 'Acme'".
 - Numeric, boolean, null, arithmetic, template literals, optional chaining, array methods, and standard JavaScript built-ins are allowed in expression strings.
 - Use plain JavaScript conversions only when the source and destination schema types differ or the user asks for a conversion: String(x), Number(x), parseInt(x, 10), parseFloat(x), Boolean(x), x?.toString().
 - If the source schema says a field is "number" or "integer", use it directly in numeric mappings and calculations.

@@ -14,11 +14,21 @@ import {
 } from '../src/react-schema-editor/index.ts';
 import schemaBootstrap34 from '../src/react-schema-editor/bootstrap34/index.tsx';
 import schemaBootstrap53 from '../src/react-schema-editor/bootstrap53/index.tsx';
-import { generateMapping } from '../src/openai/index.ts';
+import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
+import {
+	generateMapping as generateOpenAiMapping,
+	type ReasoningEffort as OpenAiReasoningEffort
+} from '../src/openai/index.ts';
+import {
+	generateMapping as generateAnthropicMapping,
+	type ReasoningEffort as AnthropicReasoningEffort
+} from '../src/anthropic/index.ts';
 import createScript from '../src/createScript.ts';
 import { createGlobalContext } from '../src/runtime/index.ts';
 import type { RootMapping } from '../src/mappingTypes.ts';
 import type { JsonSchema } from '../src/JsonSchema.ts';
+import type { MappingGenerationUsage } from '../src/utils/MappingGenerationUsage.ts';
 import {
 	initial,
 	sourceData as sampleSourceData,
@@ -32,6 +42,8 @@ import type { JSONSchema4 } from 'json-schema';
 type EditorType = 'default' | 'bs34' | 'bs53' | 'json';
 type SourceTab = 'schema' | 'data';
 type DestinationTab = 'schema' | 'result';
+type AiProvider = 'openai' | 'anthropic';
+type AiReasoningEffort = '' | 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 
 function isEmptyMapping(m: RootMapping): boolean {
 	return typeof m === 'object' && m !== null && !Array.isArray(m) && Object.keys(m).length === 0;
@@ -47,6 +59,111 @@ const documentTypes: DocumentSchemaSample['documentType'][] = [
 	'GS1 EPCIS Event'
 ];
 const emptySchema: JsonSchema = { type: 'object', properties: {} };
+const aiModelCachePrefix = 'morphos.playground.aiModels';
+const aiProviderLabels: Record<AiProvider, string> = {
+	openai: 'OpenAI',
+	anthropic: 'Anthropic Claude'
+};
+const defaultFetchedAiModel: Partial<Record<AiProvider, string>> = {
+	openai: 'gpt-5-mini'
+};
+const defaultFetchedReasoningEffort: Partial<Record<AiProvider, AiReasoningEffort>> = {
+	openai: 'low'
+};
+const aiReasoningEffortOptions: Record<AiProvider, { value: AiReasoningEffort; label: string }[]> = {
+	openai: [
+		{ value: '', label: 'Provider default' },
+		{ value: 'none', label: 'None' },
+		{ value: 'minimal', label: 'Minimal' },
+		{ value: 'low', label: 'Low' },
+		{ value: 'medium', label: 'Medium' },
+		{ value: 'high', label: 'High' },
+		{ value: 'xhigh', label: 'Extra high' }
+	],
+	anthropic: [
+		{ value: '', label: 'Provider default' },
+		{ value: 'low', label: 'Low' },
+		{ value: 'medium', label: 'Medium' },
+		{ value: 'high', label: 'High' },
+		{ value: 'xhigh', label: 'Extra high' },
+		{ value: 'max', label: 'Max' }
+	]
+};
+
+function getModelCacheKey(provider: AiProvider): string {
+	return `${aiModelCachePrefix}.${provider}`;
+}
+
+function loadCachedModels(provider: AiProvider): string[] | undefined {
+	try {
+		const raw = localStorage.getItem(getModelCacheKey(provider));
+		if (!raw)
+			return undefined;
+
+		const parsed = JSON.parse(raw) as unknown;
+		if (!Array.isArray(parsed))
+			return undefined;
+
+		const models = parsed.filter((model): model is string => typeof model === 'string' && model.trim() !== '');
+		return models.length ? sortModels(models) : undefined;
+	}
+	catch {
+		return undefined;
+	}
+}
+
+function cacheModels(provider: AiProvider, models: string[]): void {
+	try {
+		localStorage.setItem(getModelCacheKey(provider), JSON.stringify(sortModels(models)));
+	}
+	catch {
+		// localStorage can be unavailable in private or restricted browser modes.
+	}
+}
+
+function getReasoningEffortOptions(provider: AiProvider) {
+	return aiReasoningEffortOptions[provider];
+}
+
+function isReasoningEffortSupported(provider: AiProvider, effort: AiReasoningEffort): boolean {
+	return getReasoningEffortOptions(provider).some(option => option.value === effort);
+}
+
+function getDefaultFetchedModel(provider: AiProvider, models: string[]): string {
+	const defaultModel = defaultFetchedAiModel[provider];
+	return defaultModel && models.includes(defaultModel) ? defaultModel : '';
+}
+
+function getDefaultFetchedReasoningEffort(provider: AiProvider, model: string): AiReasoningEffort {
+	const defaultReasoningEffort = defaultFetchedReasoningEffort[provider];
+	return model && defaultReasoningEffort && isReasoningEffortSupported(provider, defaultReasoningEffort) ?
+		defaultReasoningEffort :
+		'';
+}
+
+function sortModels(models: string[]): string[] {
+	return [...models].sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+}
+
+function formatTokenCount(value?: number | null): string {
+	return typeof value === 'number' ? value.toLocaleString() : 'n/a';
+}
+
+async function fetchOpenAiModels(apiKey: string): Promise<string[]> {
+	const client = new OpenAI({ apiKey, dangerouslyAllowBrowser: true });
+	const models: string[] = [];
+	for await (const model of client.models.list())
+		models.push(model.id);
+	return models;
+}
+
+async function fetchAnthropicModels(apiKey: string): Promise<string[]> {
+	const client = new Anthropic({ apiKey, dangerouslyAllowBrowser: true });
+	const models: string[] = [];
+	for await (const model of client.models.list())
+		models.push(model.id);
+	return models;
+}
 
 function useDynamicCss(href: string | null) {
 	useEffect(() => {
@@ -136,6 +253,13 @@ const secondaryButtonStyle = {
 	cursor: 'pointer',
 	fontSize: '0.8rem'
 } as const;
+const aiControlLabelStyle = { ...labelStyle, marginBottom: 0, minWidth: '5rem' } as const;
+const aiControlRowStyle = {
+	display: 'flex',
+	gap: '0.5rem',
+	alignItems: 'center',
+	marginTop: '0.25rem'
+} as const;
 
 function tabStyle(active: boolean) {
 	return {
@@ -154,6 +278,7 @@ function App() {
 	const [sourceTab, setSourceTab] = useState<SourceTab>('schema');
 	const [destinationTab, setDestinationTab] = useState<DestinationTab>('schema');
 	const [editorExpanded, setEditorExpanded] = useState(false);
+	const [aiPanelVisible, setAiPanelVisible] = useState(false);
 
 	const [sourceText, setSourceText] = useState(JSON.stringify(sampleSource, null, 2));
 	const [sourceSchema, setSourceSchema] = useState<JsonSchema | undefined>(sampleSource);
@@ -176,17 +301,36 @@ function App() {
 	const [mappingError, setMappingError] = useState<string | null>(null);
 	const [mappingVersion, setMappingVersion] = useState(0);
 
+	const [cachedAiModels, setCachedAiModels] = useState<Partial<Record<AiProvider, string[]>>>(() => ({
+		openai: loadCachedModels('openai'),
+		anthropic: loadCachedModels('anthropic')
+	}));
+	const [aiProvider, setAiProvider] = useState<AiProvider>('openai');
 	const [apiKey, setApiKey] = useState('');
-	const [aiModel, setAiModel] = useState('gpt-4.1');
+	const [aiModel, setAiModel] = useState(() => getDefaultFetchedModel(
+		'openai',
+		loadCachedModels('openai') ?? []
+	));
+	const [aiReasoningEffort, setAiReasoningEffort] = useState<AiReasoningEffort>(() => {
+		const cachedOpenAiModels = loadCachedModels('openai') ?? [];
+		const model = getDefaultFetchedModel('openai', cachedOpenAiModels);
+		return getDefaultFetchedReasoningEffort('openai', model);
+	});
 	const [aiInstructions, setAiInstructions] = useState('');
 	const [aiSendCurrentMappingTemplate, setAiSendCurrentMappingTemplate] = useState(true);
 	const [aiGenerateMappingTemplate, setAiGenerateMappingTemplate] = useState(false);
 	const [aiGenerateRequiredFields, setAiGenerateRequiredFields] = useState(false);
 	const [loading, setLoading] = useState(false);
+	const [loadingModels, setLoadingModels] = useState(false);
+	const [aiModelMessage, setAiModelMessage] = useState<string | null>(null);
+	const [aiUsage, setAiUsage] = useState<MappingGenerationUsage | null>(null);
 	const [aiError, setAiError] = useState<string | null>(null);
 
 	const editorRef = useRef<MappingEditorHandle>(null);
 	const userModifiedRef = useRef(false);
+	const apiKeyProviderLabel = aiProvider === 'openai' ? 'OpenAI' : 'Anthropic';
+	const apiKeyPlaceholder = aiProvider === 'openai' ? 'sk-...' : 'sk-ant-api...';
+	const aiModels = cachedAiModels[aiProvider] ?? [];
 
 	const handleEditorChange = (next: RootMapping) => {
 		userModifiedRef.current = true;
@@ -414,6 +558,54 @@ function App() {
 		}
 	};
 
+	const handleAiProviderChange = (provider: AiProvider) => {
+		const model = getDefaultFetchedModel(provider, cachedAiModels[provider] ?? []);
+		setAiProvider(provider);
+		setAiModel(model);
+		setAiReasoningEffort(
+			getDefaultFetchedReasoningEffort(provider, model) ||
+				(isReasoningEffortSupported(provider, aiReasoningEffort) ? aiReasoningEffort : '')
+		);
+		setApiKey('');
+		setAiModelMessage(null);
+		setAiUsage(null);
+		setAiError(null);
+	};
+
+	const fetchAiModels = async () => {
+		if (!apiKey.trim()) {
+			setAiError(`Provide an ${apiKeyProviderLabel} API key`);
+			return;
+		}
+
+		setLoadingModels(true);
+		setAiModelMessage(null);
+		setAiError(null);
+		try {
+			const models = aiProvider === 'openai'
+				? await fetchOpenAiModels(apiKey)
+				: await fetchAnthropicModels(apiKey);
+
+			if (!models.length)
+				throw new Error(`${aiProviderLabels[aiProvider]} returned no models`);
+
+			const sortedModels = sortModels(models);
+			const model = getDefaultFetchedModel(aiProvider, sortedModels);
+
+			cacheModels(aiProvider, sortedModels);
+			setCachedAiModels(current => ({ ...current, [aiProvider]: sortedModels }));
+			setAiModel(model);
+			setAiReasoningEffort(getDefaultFetchedReasoningEffort(aiProvider, model));
+			setAiModelMessage(`Loaded ${models.length} models`);
+		}
+		catch (e) {
+			setAiError((e as Error).message);
+		}
+		finally {
+			setLoadingModels(false);
+		}
+	};
+
 	const runMapping = () => {
 		setRunError(null);
 		setRunMs(null);
@@ -443,24 +635,43 @@ function App() {
 
 	const generateFromAi = async () => {
 		if (!apiKey.trim()) {
-			setAiError('Provide an OpenAI API key');
+			setAiError(`Provide an ${apiKeyProviderLabel} API key`);
 			return;
 		}
 		if (!sourceSchema || !destSchema) {
 			setAiError('Both source and destination schemas are required');
 			return;
 		}
+		if (!aiModel) {
+			setAiError('Select a model');
+			return;
+		}
 		setLoading(true);
 		setAiError(null);
+		setAiUsage(null);
 		try {
-			const result = await generateMapping(sourceSchema, destSchema, apiKey, {
+			const commonOptions = {
 				model: aiModel,
 				instructions: aiInstructions || undefined,
 				mappingTemplate: aiSendCurrentMappingTemplate && !isEmptyMapping(mapping) ? mapping : undefined,
 				generateMappingTemplate: aiGenerateMappingTemplate,
 				generateRequiredFields: aiGenerateRequiredFields,
+				onUsage: setAiUsage,
 				dangerouslyAllowBrowser: true
-			});
+			};
+			const result = aiProvider === 'openai'
+				? await generateOpenAiMapping(sourceSchema, destSchema, apiKey, {
+					...commonOptions,
+					reasoningEffort: aiReasoningEffort ?
+						aiReasoningEffort as OpenAiReasoningEffort :
+						undefined
+				})
+				: await generateAnthropicMapping(sourceSchema, destSchema, apiKey, {
+					...commonOptions,
+					reasoningEffort: aiReasoningEffort ?
+						aiReasoningEffort as AnthropicReasoningEffort :
+						undefined
+				});
 			setMapping(result);
 			setMappingText(JSON.stringify(result, null, 2));
 			setMappingVersion(v => v + 1);
@@ -511,7 +722,7 @@ function App() {
 			<header style={{ marginBottom: '1.5rem' }}>
 				<h1 style={{ marginBottom: '0.25rem', fontSize: '1.5rem' }}>Morphos Playground</h1>
 				<p style={{ margin: 0, color: '#666', fontSize: '0.85rem' }}>
-					Edit the schemas on the sides, the mapping in the middle, or generate one with OpenAI.
+					Edit the schemas on the sides, the mapping in the middle, or generate one with AI.
 				</p>
 				<div style={{
 					display: 'flex',
@@ -644,7 +855,14 @@ function App() {
 								<span style={{ fontSize: '0.75rem', color: '#666' }}>{runMs.toFixed(2)} ms</span>
 							)}
 							{runError && <span style={{ ...errStyle, marginTop: 0 }}>{runError}</span>}
-							<button type="button" onClick={runMapping} style={primaryButtonStyle}>Run</button>
+							<button
+								type="button"
+								style={tabStyle(aiPanelVisible)}
+								onClick={() => setAiPanelVisible(v => !v)}
+							>
+								Generate with AI
+							</button>
+							<button type="button" onClick={runMapping} style={secondaryButtonStyle}>Run</button>
 							<button type="button" style={secondaryButtonStyle} onClick={() => setEditorExpanded(v => !v)}>
 								{editorExpanded ? 'Exit full screen' : 'Full screen'}
 							</button>
@@ -652,6 +870,7 @@ function App() {
 					</div>
 
 					<div style={{
+						order: 2,
 						border: '1px solid #e3e7ec',
 						borderRadius: 4,
 						padding: '0.75rem',
@@ -681,126 +900,215 @@ function App() {
 						{mappingError && <div style={errStyle}>{mappingError}</div>}
 					</div>
 
-					{!editorExpanded && (
+					{!editorExpanded && aiPanelVisible && (
 						<div style={{
+							order: 1,
 							marginTop: '0.5rem',
 							padding: '0.75rem',
 							background: '#f5f7fa',
 							border: '1px solid #e3e7ec',
 							borderRadius: 4
 						}}>
-							<h3 style={{ margin: '0 0 0.5rem', fontSize: '0.9rem' }}>Generate with OpenAI</h3>
-							<label style={labelStyle}>API key (not stored — memory only)</label>
-							<input
-								type="password"
-								value={apiKey}
-								onChange={e => setApiKey(e.target.value)}
-								placeholder="sk-..."
-								style={{
-									width: '100%',
-									fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
-									fontSize: '0.85rem',
-									padding: '0.4rem 0.5rem',
-									boxSizing: 'border-box',
-									border: '1px solid #ccc',
-									borderRadius: 4
-								}}
-							/>
-							<div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.25rem' }}>
-								<label style={{ ...labelStyle, marginBottom: 0 }}>Model</label>
+							<h3 style={{ margin: '0 0 1rem', fontSize: '0.9rem' }}>Generate with AI</h3>
+							<div style={{ ...aiControlRowStyle, marginTop: 0, marginBottom: '0.5rem' }}>
+								<label style={aiControlLabelStyle}>Provider</label>
 								<select
 									className="dm-playground-select"
-									value={aiModel}
-									onChange={e => setAiModel(e.target.value)}
-									style={{ fontSize: '0.85rem', padding: '0.4rem 0.5rem', border: '1px solid #ccc', borderRadius: 4 }}
+									value={aiProvider}
+									onChange={e => handleAiProviderChange(e.target.value as AiProvider)}
+									style={{
+										flex: '1 1 auto',
+										fontSize: '0.85rem',
+										padding: '0.4rem 0.5rem',
+										border: '1px solid #ccc',
+										borderRadius: 4
+									}}
 								>
-									<option value="gpt-4.1">gpt-4.1</option>
-									<option value="gpt-4.1-mini">gpt-4.1-mini</option>
-									<option value="gpt-4o">gpt-4o</option>
-									<option value="gpt-4o-mini">gpt-4o-mini</option>
-									<option value="o4-mini">o4-mini</option>
-									<option value="o3">o3</option>
-									<option value="gpt-5.5">gpt-5.5</option>
+									{Object.entries(aiProviderLabels).map(([provider, label]) => (
+										<option key={provider} value={provider}>{label}</option>
+									))}
 								</select>
 							</div>
-							<div style={{
-								display: 'flex',
-								flexDirection: 'column',
-								gap: '0.35rem',
-								marginTop: '0.5rem',
-								fontSize: '0.8rem',
-								color: '#334155'
-							}}>
-								<label
-									title="mappingTemplate"
+							<div style={aiControlRowStyle}>
+								<label style={aiControlLabelStyle}>API key</label>
+								<input
+									type="password"
+									value={apiKey}
+									onChange={e => setApiKey(e.target.value)}
+									placeholder={apiKeyPlaceholder}
 									style={{
-										display: 'inline-flex',
-										alignItems: 'center',
-										gap: '0.35rem',
-										margin: 0,
-										color: aiGenerateMappingTemplate ? '#94a3b8' : '#334155'
+										flex: '1 1 auto',
+										width: '100%',
+										fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+										fontSize: '0.85rem',
+										padding: '0.4rem 0.5rem',
+										boxSizing: 'border-box',
+										border: '1px solid #ccc',
+										borderRadius: 4
 									}}
-								>
-									<input
-										type="checkbox"
-										checked={aiSendCurrentMappingTemplate}
-										disabled={aiGenerateMappingTemplate}
-										onChange={e => setAiSendCurrentMappingTemplate(e.target.checked)}
-									/>
-									Send current mapping as a template
-								</label>
-								<label
-									title="generateMappingTemplate"
-									style={{
-										display: 'inline-flex',
-										alignItems: 'center',
-										gap: '0.35rem',
-										margin: 0,
-										color: aiSendCurrentMappingTemplate ? '#94a3b8' : '#334155'
-									}}
-								>
-									<input
-										type="checkbox"
-										checked={aiGenerateMappingTemplate}
-										disabled={aiSendCurrentMappingTemplate}
-										onChange={e => setAiGenerateMappingTemplate(e.target.checked)}
-									/>
-									Send generated schema template with the request
-								</label>
-								<label
-									title="generateRequiredFields"
-									style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', margin: 0 }}
-								>
-									<input
-										type="checkbox"
-										checked={aiGenerateRequiredFields}
-										onChange={e => setAiGenerateRequiredFields(e.target.checked)}
-									/>
-									Add missing required placeholders after the response
-								</label>
+								/>
 							</div>
-							<label style={{ ...labelStyle, marginTop: '0.5rem' }}>Instructions (optional)</label>
-							<textarea
-								value={aiInstructions}
-								onChange={e => setAiInstructions(e.target.value)}
-								rows={2}
-								placeholder="e.g. use snake_case for all field names, map dates to ISO 8601 strings…"
-								style={{
-									width: '100%',
-									fontFamily: 'system-ui, -apple-system, sans-serif',
-									fontSize: '0.85rem',
-									padding: '0.4rem 0.5rem',
-									boxSizing: 'border-box',
-									border: '1px solid #ccc',
-									borderRadius: 4,
-									resize: 'vertical'
-								}}
-							/>
-							<div style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+							<div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem', marginLeft: '5.5rem' }}>
+								Never stored, removed on page refresh
+							</div>
+							{aiModels.length ? (
+								<div style={aiControlRowStyle}>
+									<label style={aiControlLabelStyle}>Model</label>
+									<select
+										className="dm-playground-select"
+										value={aiModel}
+										onChange={e => setAiModel(e.target.value)}
+										style={{
+											flex: '1 1 auto',
+											fontSize: '0.85rem',
+											padding: '0.4rem 0.5rem',
+											border: '1px solid #ccc',
+											borderRadius: 4,
+											minWidth: 0
+										}}
+									>
+										<option value="">Select model…</option>
+										{aiModels.map(model => (
+											<option key={model} value={model}>{model}</option>
+										))}
+									</select>
+									<button
+										type="button"
+										style={{
+											...secondaryButtonStyle,
+											padding: '0.4rem 0.7rem',
+											cursor: loadingModels ? 'wait' : secondaryButtonStyle.cursor,
+											whiteSpace: 'nowrap'
+										}}
+										disabled={loadingModels || !apiKey.trim()}
+										onClick={fetchAiModels}
+									>
+										{loadingModels ? 'Refreshing…' : 'Refresh Models'}
+									</button>
+								</div>
+							) : (
+								<div style={aiControlRowStyle}>
+									<label style={aiControlLabelStyle}>Model</label>
+									<button
+										type="button"
+										style={{
+											...secondaryButtonStyle,
+											padding: '0.4rem 0.7rem',
+											cursor: loadingModels ? 'wait' : secondaryButtonStyle.cursor,
+											whiteSpace: 'nowrap'
+										}}
+										disabled={loadingModels || !apiKey.trim()}
+										onClick={fetchAiModels}
+									>
+										{loadingModels ? 'Fetching…' : 'Fetch Models'}
+									</button>
+								</div>
+							)}
+							<div style={aiControlRowStyle}>
+								<label style={aiControlLabelStyle}>Reasoning</label>
+								<select
+									className="dm-playground-select"
+									value={aiReasoningEffort}
+									onChange={e => setAiReasoningEffort(e.target.value as AiReasoningEffort)}
+									style={{
+										flex: '1 1 auto',
+										fontSize: '0.85rem',
+										padding: '0.4rem 0.5rem',
+										border: '1px solid #ccc',
+										borderRadius: 4
+									}}
+								>
+									{getReasoningEffortOptions(aiProvider).map(option => (
+										<option key={option.value} value={option.value}>{option.label}</option>
+									))}
+								</select>
+							</div>
+							{aiModelMessage && <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.25rem' }}>
+								{aiModelMessage}
+							</div>}
+							<div style={{ ...aiControlRowStyle, alignItems: 'flex-start', marginTop: '0.5rem' }}>
+								<label style={aiControlLabelStyle}>Options</label>
+								<div style={{
+									display: 'flex',
+									flexDirection: 'column',
+									gap: '0.35rem',
+									fontSize: '0.8rem',
+									color: '#334155'
+								}}>
+									<label
+										title="mappingTemplate"
+										style={{
+											display: 'inline-flex',
+											alignItems: 'center',
+											gap: '0.35rem',
+											margin: 0,
+											color: aiGenerateMappingTemplate ? '#94a3b8' : '#334155'
+										}}
+									>
+										<input
+											type="checkbox"
+											checked={aiSendCurrentMappingTemplate}
+											disabled={aiGenerateMappingTemplate}
+											onChange={e => setAiSendCurrentMappingTemplate(e.target.checked)}
+										/>
+										Send current mapping as a template
+									</label>
+									<label
+										title="generateMappingTemplate"
+										style={{
+											display: 'inline-flex',
+											alignItems: 'center',
+											gap: '0.35rem',
+											margin: 0,
+											color: aiSendCurrentMappingTemplate ? '#94a3b8' : '#334155'
+										}}
+									>
+										<input
+											type="checkbox"
+											checked={aiGenerateMappingTemplate}
+											disabled={aiSendCurrentMappingTemplate}
+											onChange={e => setAiGenerateMappingTemplate(e.target.checked)}
+										/>
+										Send generated schema template with the request
+									</label>
+									<label
+										title="generateRequiredFields"
+										style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', margin: 0 }}
+									>
+										<input
+											type="checkbox"
+											checked={aiGenerateRequiredFields}
+											onChange={e => setAiGenerateRequiredFields(e.target.checked)}
+										/>
+										Add missing required placeholders after the response
+									</label>
+								</div>
+							</div>
+							<div style={{ ...aiControlRowStyle, alignItems: 'flex-start', marginTop: '0.5rem' }}>
+								<label style={aiControlLabelStyle}>Instructions</label>
+								<textarea
+									value={aiInstructions}
+									onChange={e => setAiInstructions(e.target.value)}
+									rows={2}
+									placeholder="e.g. use snake_case for all field names, map dates to ISO 8601 strings…"
+									style={{
+										flex: '1 1 auto',
+										width: '100%',
+										fontFamily: 'system-ui, -apple-system, sans-serif',
+										fontSize: '0.85rem',
+										padding: '0.4rem 0.5rem',
+										boxSizing: 'border-box',
+										border: '1px solid #ccc',
+										borderRadius: 4,
+										resize: 'vertical'
+									}}
+								/>
+							</div>
+							<div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
 								<button
 									type="button"
 									onClick={generateFromAi}
-									disabled={loading || !apiKey.trim() || !sourceSchema || !destSchema}
+									disabled={loading || !apiKey.trim() || !aiModel || !sourceSchema || !destSchema}
 									style={{
 										...primaryButtonStyle,
 										background: loading ? '#999' : primaryButtonStyle.background,
@@ -809,10 +1117,28 @@ function App() {
 								>
 									{loading ? 'Generating…' : 'Generate mapping'}
 								</button>
-								<span style={{ fontSize: '0.75rem', color: '#888' }}>
-									Choose one template source, or uncheck both to send only schemas.
-								</span>
 							</div>
+							{aiUsage && (
+								<div style={{
+									marginTop: '0.5rem',
+									fontSize: '0.75rem',
+									color: '#475569',
+									display: 'flex',
+									gap: '0.5rem',
+									flexWrap: 'wrap'
+								}}>
+									<span>Tokens:</span>
+									<span>input {formatTokenCount(aiUsage.inputTokens)}</span>
+									<span>output {formatTokenCount(aiUsage.outputTokens)}</span>
+									<span>total {formatTokenCount(aiUsage.totalTokens)}</span>
+									{typeof aiUsage.reasoningTokens === 'number' && (
+										<span>reasoning {formatTokenCount(aiUsage.reasoningTokens)}</span>
+									)}
+									{typeof aiUsage.cacheReadInputTokens === 'number' && aiUsage.cacheReadInputTokens > 0 && (
+										<span>cache read {formatTokenCount(aiUsage.cacheReadInputTokens)}</span>
+									)}
+								</div>
+							)}
 							{aiError && <div style={errStyle}>{aiError}</div>}
 						</div>
 					)}

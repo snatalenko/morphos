@@ -5,3 +5,5 @@ export * from './isSchemaFullyMapped.ts';
 export * from './listDestinationSchemaFieldEntries.ts';
 export * from './mappingForSchema.ts';
 export * from './sampleForSchema.ts';
+export * from './SYSTEM_PROMPT.ts';
+export * from './MappingGenerationUsage.ts';

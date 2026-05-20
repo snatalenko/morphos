@@ -1,21 +1,21 @@
-import type { MappingSchema } from '../../../src/MappingSchema.ts';
+import type { JsonSchema } from '../../../src/JsonSchema.ts';
 
-export const epcUri: MappingSchema = {
+export const epcUri: JsonSchema = {
 	type: 'string',
 	description: 'EPCIS URI identifier such as an EPC URN or GS1 Digital Link URI'
 };
 
-export const epcisTime: MappingSchema = {
+export const epcisTime: JsonSchema = {
 	type: 'string',
 	description: 'EPCIS date-time value'
 };
 
-export const epcisVocabularyValue: MappingSchema = {
+export const epcisVocabularyValue: JsonSchema = {
 	type: 'string',
 	description: 'EPCIS or CBV vocabulary value, expressed as a compact value or URI'
 };
 
-export const readPoint: MappingSchema = {
+export const readPoint: JsonSchema = {
 	type: 'object',
 	description: 'Location where the EPCIS event was captured',
 	required: ['id'],
@@ -27,7 +27,7 @@ export const readPoint: MappingSchema = {
 	}
 };
 
-export const bizLocation: MappingSchema = {
+export const bizLocation: JsonSchema = {
 	type: 'object',
 	description: 'Business location where the objects are considered to be after the event',
 	required: ['id'],
@@ -39,7 +39,7 @@ export const bizLocation: MappingSchema = {
 	}
 };
 
-export const quantityElement: MappingSchema = {
+export const quantityElement: JsonSchema = {
 	type: 'object',
 	description: 'EPCIS quantity element for class-level objects',
 	required: ['epcClass'],
@@ -59,7 +59,7 @@ export const quantityElement: MappingSchema = {
 	}
 };
 
-export const bizTransaction: MappingSchema = {
+export const bizTransaction: JsonSchema = {
 	type: 'object',
 	description: 'Business transaction referenced by the EPCIS event',
 	required: ['bizTransaction'],
@@ -76,7 +76,7 @@ export const bizTransaction: MappingSchema = {
 	}
 };
 
-export const source: MappingSchema = {
+export const source: JsonSchema = {
 	type: 'object',
 	description: 'Source owning, possessing, or location party for the event',
 	required: ['type', 'source'],
@@ -93,7 +93,7 @@ export const source: MappingSchema = {
 	}
 };
 
-export const destination: MappingSchema = {
+export const destination: JsonSchema = {
 	type: 'object',
 	description: 'Destination owning, possessing, or location party for the event',
 	required: ['type', 'destination'],
@@ -110,7 +110,7 @@ export const destination: MappingSchema = {
 	}
 };
 
-export const sensorElement: MappingSchema = {
+export const sensorElement: JsonSchema = {
 	type: 'object',
 	description: 'Sensor data associated with an EPCIS event',
 	required: ['sensorReport'],
@@ -184,7 +184,7 @@ export const sensorElement: MappingSchema = {
 	}
 };
 
-export const persistentDisposition: MappingSchema = {
+export const persistentDisposition: JsonSchema = {
 	type: 'object',
 	description: 'Persistent disposition values set or unset by this event',
 	properties: {
@@ -201,7 +201,7 @@ export const persistentDisposition: MappingSchema = {
 	}
 };
 
-export const errorDeclaration: MappingSchema = {
+export const errorDeclaration: JsonSchema = {
 	type: 'object',
 	description: 'Declaration that this EPCIS event is erroneous or corrected',
 	required: ['declarationTime'],
@@ -223,12 +223,12 @@ export const errorDeclaration: MappingSchema = {
 	}
 };
 
-export const ilmd: MappingSchema = {
+export const ilmd: JsonSchema = {
 	type: 'object',
 	description: 'Instance or lot master data associated with this event'
 };
 
-export function epcList(description: string): MappingSchema {
+export function epcList(description: string): JsonSchema {
 	return {
 		type: 'array',
 		description,
@@ -236,7 +236,7 @@ export function epcList(description: string): MappingSchema {
 	};
 }
 
-export function quantityList(description: string): MappingSchema {
+export function quantityList(description: string): JsonSchema {
 	return {
 		type: 'array',
 		description,
@@ -244,7 +244,7 @@ export function quantityList(description: string): MappingSchema {
 	};
 }
 
-export function commonEventProperties(): NonNullable<MappingSchema['properties']> {
+export function commonEventProperties(): NonNullable<JsonSchema['properties']> {
 	return {
 		'@context': {
 			type: ['string', 'array', 'object'],
@@ -274,7 +274,7 @@ export function commonEventProperties(): NonNullable<MappingSchema['properties']
 	};
 }
 
-export function commonWhyWhereHowProperties(): NonNullable<MappingSchema['properties']> {
+export function commonWhyWhereHowProperties(): NonNullable<JsonSchema['properties']> {
 	return {
 		bizStep: {
 			type: 'string',

@@ -21,9 +21,9 @@ npm install openai
 
 ```ts
 import { generateMapping } from 'morphos/openai';
-import type { MappingSchema } from 'morphos';
+import type { JsonSchema } from 'morphos';
 
-const sourceSchema: MappingSchema = {
+const sourceSchema: JsonSchema = {
     type: 'object',
     properties: {
         UPC: { type: 'string' },
@@ -39,7 +39,7 @@ const sourceSchema: MappingSchema = {
     }
 };
 
-const destinationSchema: MappingSchema = {
+const destinationSchema: JsonSchema = {
     type: 'object',
     properties: {
         code: { type: 'string' },
@@ -62,6 +62,7 @@ const mapping = await generateMapping(
     {
         instructions: 'Truncate UPC to 5 characters for the destination code field.',
         model: 'gpt-5.5',
+        reasoningEffort: 'low',
         generateMappingTemplate: true,
         generateRequiredFields: true
     }
@@ -83,8 +84,8 @@ the main package, or used as the initial `value` of the `MappingEditor`.
 
 | Option              | Type            | Description                                                                                |
 |---------------------|-----------------|--------------------------------------------------------------------------------------------|
-| `sourceSchema`      | `MappingSchema` | JSON-schema-like description of input data. Required.                                       |
-| `destinationSchema` | `MappingSchema` | JSON-schema-like description of desired output. Required.                                   |
+| `sourceSchema`      | `JsonSchema` | JSON-schema-like description of input data. Required.                                       |
+| `destinationSchema` | `JsonSchema` | JSON-schema-like description of desired output. Required.                                   |
 | `apiKey`            | `string`        | OpenAI API key. Required.                                                                   |
 | `options.instructions` | `string`     | Optional free-form text appended to the user prompt (e.g. naming conventions, edge cases). |
 | `options.mappingTemplate` | `RootMapping` | Optional mapping shape for the model to preserve and fill when confident.              |

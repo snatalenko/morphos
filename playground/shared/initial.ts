@@ -1,5 +1,5 @@
 import type { RootMapping } from '../../src/mappingTypes.ts';
-import type { MappingSchema } from '../../src/react/index.ts';
+import type { JsonSchema } from '../../src/JsonSchema.ts';
 
 export const sourceData = {
 	PO_HDR: {
@@ -74,7 +74,7 @@ export const initial: RootMapping = {
 	totalAmount: 'LINES.reduce((sum, line) => sum + (line.QTY * line.UNIT_PRICE), FREIGHT_AMT || 0)'
 };
 
-export const sourceSchema: MappingSchema = {
+export const sourceSchema: JsonSchema = {
 	type: 'object',
 	title: 'Purchase Order',
 	description: 'Customer purchase order used as the invoice source document.',
@@ -123,7 +123,7 @@ export const sourceSchema: MappingSchema = {
 	}
 };
 
-export const destinationSchema: MappingSchema = {
+export const destinationSchema: JsonSchema = {
 	type: 'object',
 	title: 'Invoice',
 	description: 'Invoice document created from a customer purchase order.',

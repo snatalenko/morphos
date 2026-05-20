@@ -52,8 +52,8 @@ function Example() {
 | `value`        | `RootMapping`                         | Controlled value. Reading from `ref.current.value` reflects current internal state on demand.            |
 | `defaultValue` | `RootMapping`                         | Uncontrolled initial value. Used once on mount.                                                          |
 | `onChange`     | `(next: RootMapping) => void`          | Called after each edit with the complete current mapping object.                                         |
-| `schema`       | `MappingSchema`                       | Destination JSON Schema. Drives field labels, type-aware add bar, and required indicators.               |
-| `sourceSchema` | `MappingSchema`                       | Source JSON Schema. Drives dropdown suggestions for value expressions, `forEach`, and `from`.            |
+| `schema`       | `JsonSchema`                       | Destination JSON Schema. Drives field labels, type-aware add bar, and required indicators.               |
+| `sourceSchema` | `JsonSchema`                       | Source JSON Schema. Drives dropdown suggestions for value expressions, `forEach`, and `from`.            |
 | `components`   | `Partial<MappingEditorComponents>`    | Override any of the built-in UI parts (see [Theming](#theming)).                                          |
 | `labels`       | `Partial<MappingEditorLabels>`        | Override any of the built-in user-visible strings (see [Localization](#localization)).                  |
 
