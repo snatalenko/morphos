@@ -7,6 +7,7 @@ export type DestinationSchemaFieldEntry = {
 	path: string;
 	schema: JsonSchema | boolean;
 	mapped: boolean;
+	required: boolean;
 }
 
 type SchemaFieldEntry = Omit<DestinationSchemaFieldEntry, 'mapped'>;
@@ -15,19 +16,24 @@ function pathJoin(prefix: string, fieldName: string): string {
 	return prefix ? `${prefix}.${fieldName}` : fieldName;
 }
 
-function* collectSchemaFieldEntries(schema: JsonSchema, prefix: string): Generator<SchemaFieldEntry> {
+function* collectSchemaFieldEntries(
+	schema: JsonSchema,
+	prefix: string,
+	required: boolean
+): Generator<SchemaFieldEntry> {
 	const type = schemaType(schema);
 	if (type === 'object' || schema.properties) {
 		const properties = Object.entries(schema.properties ?? {});
 		if (properties.length === 0 && prefix)
-			yield { path: prefix, schema };
+			yield { path: prefix, schema, required };
 
 		for (const [fieldName, propertySchema] of properties) {
 			const path = pathJoin(prefix, fieldName);
+			const propertyRequired = required && (schema.required ?? []).includes(fieldName);
 			if (isJsonSchema(propertySchema))
-				yield* collectSchemaFieldEntries(propertySchema, path);
+				yield* collectSchemaFieldEntries(propertySchema, path, propertyRequired);
 			else
-				yield { path, schema: propertySchema };
+				yield { path, schema: propertySchema, required: propertyRequired };
 		}
 		return;
 	}
@@ -38,22 +44,22 @@ function* collectSchemaFieldEntries(schema: JsonSchema, prefix: string): Generat
 			for (const [index, item] of tupleItems.entries()) {
 				const path = pathJoin(prefix, String(index));
 				if (isJsonSchema(item))
-					yield* collectSchemaFieldEntries(item, path);
+					yield* collectSchemaFieldEntries(item, path, required);
 				else
-					yield { path, schema: item };
+					yield { path, schema: item, required };
 			}
 			return;
 		}
 
 		const itemSchema = schemaItems(schema);
 		if (itemSchema) {
-			yield* collectSchemaFieldEntries(itemSchema, prefix);
+			yield* collectSchemaFieldEntries(itemSchema, prefix, required);
 			return;
 		}
 	}
 
 	if (prefix)
-		yield { path: prefix, schema };
+		yield { path: prefix, schema, required };
 }
 
 export function* listDestinationSchemaFieldEntries(
@@ -61,11 +67,12 @@ export function* listDestinationSchemaFieldEntries(
 	mapping: RootMapping
 ): Generator<DestinationSchemaFieldEntry> {
 	const mappingPaths = mappedFieldPaths(mapping);
-	for (const entry of collectSchemaFieldEntries(destinationSchema, '')) {
+	for (const entry of collectSchemaFieldEntries(destinationSchema, '', true)) {
 		yield {
 			path: entry.path,
 			schema: entry.schema,
-			mapped: mappingPaths.has(entry.path)
+			mapped: mappingPaths.has(entry.path),
+			required: entry.required
 		};
 	}
 }

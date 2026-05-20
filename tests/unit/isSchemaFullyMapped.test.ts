@@ -1,9 +1,9 @@
 import { expect } from 'chai';
-import { isDestinationSchemaFullyMapped } from '../../src/index.ts';
+import { isSchemaFullyMapped } from '../../src/index.ts';
 import type { JsonSchema } from '../../src/JsonSchema.ts';
 import type { RootMapping } from '../../src/mappingTypes.ts';
 
-describe('isDestinationSchemaFullyMapped', () => {
+describe('isSchemaFullyMapped', () => {
 	it('returns true when every destination schema field is mapped', () => {
 		const schema: JsonSchema = {
 			type: 'object',
@@ -94,7 +94,7 @@ describe('isDestinationSchemaFullyMapped', () => {
 			unknown: 'UNKNOWN'
 		};
 
-		expect(isDestinationSchemaFullyMapped(schema, mapping)).to.equal(true);
+		expect(isSchemaFullyMapped(schema, mapping)).to.equal(true);
 	});
 
 	it('returns false when a nested destination schema field is missing', () => {
@@ -111,7 +111,7 @@ describe('isDestinationSchemaFullyMapped', () => {
 			}
 		};
 
-		expect(isDestinationSchemaFullyMapped(schema, {
+		expect(isSchemaFullyMapped(schema, {
 			buyer: {
 				name: 'NAME'
 			}
@@ -131,7 +131,7 @@ describe('isDestinationSchemaFullyMapped', () => {
 			}
 		};
 
-		expect(isDestinationSchemaFullyMapped(schema, {
+		expect(isSchemaFullyMapped(schema, {
 			buyer: 'BUYER'
 		})).to.equal(false);
 	});
@@ -153,7 +153,7 @@ describe('isDestinationSchemaFullyMapped', () => {
 			}
 		};
 
-		expect(isDestinationSchemaFullyMapped(schema, {
+		expect(isSchemaFullyMapped(schema, {
 			id: '',
 			lines: {
 				forEach: '',
@@ -162,5 +162,19 @@ describe('isDestinationSchemaFullyMapped', () => {
 				}
 			}
 		})).to.equal(false);
+	});
+
+	it('can check required fields only', () => {
+		const schema: JsonSchema = {
+			type: 'object',
+			required: ['id'],
+			properties: {
+				id: { type: 'string' },
+				description: { type: 'string' }
+			}
+		};
+
+		expect(isSchemaFullyMapped(schema, { id: 'ID' })).to.equal(false);
+		expect(isSchemaFullyMapped(schema, { id: 'ID' }, true)).to.equal(true);
 	});
 });

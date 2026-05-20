@@ -7,10 +7,12 @@ describe('listDestinationSchemaFieldEntries', () => {
 	it('lists destination schema leaf fields with mapped status', () => {
 		const schema: JsonSchema = {
 			type: 'object',
+			required: ['id', 'buyer', 'lines', 'tuple'],
 			properties: {
 				id: { type: 'string' },
 				buyer: {
 					type: 'object',
+					required: ['name'],
 					properties: {
 						name: { type: 'string' },
 						taxId: { type: 'string' }
@@ -20,6 +22,7 @@ describe('listDestinationSchemaFieldEntries', () => {
 					type: 'array',
 					items: {
 						type: 'object',
+						required: ['sku'],
 						properties: {
 							sku: { type: 'string' },
 							quantity: { type: 'number' }
@@ -32,6 +35,7 @@ describe('listDestinationSchemaFieldEntries', () => {
 						{ type: 'string' },
 						{
 							type: 'object',
+							required: ['code'],
 							properties: {
 								code: { type: 'string' }
 							}
@@ -66,18 +70,42 @@ describe('listDestinationSchemaFieldEntries', () => {
 
 		const fields = Array.from(
 			listDestinationSchemaFieldEntries(schema, mapping),
-			({ path, mapped }) => ({ path, mapped })
+			({ path, mapped, required }) => ({ path, mapped, required })
 		);
 
 		expect(fields).to.deep.equal([
-			{ path: 'id', mapped: true },
-			{ path: 'buyer.name', mapped: true },
-			{ path: 'buyer.taxId', mapped: false },
-			{ path: 'lines.sku', mapped: true },
-			{ path: 'lines.quantity', mapped: false },
-			{ path: 'tuple.0', mapped: false },
-			{ path: 'tuple.1.code', mapped: true },
-			{ path: 'unknown', mapped: false }
+			{ path: 'id', mapped: true, required: true },
+			{ path: 'buyer.name', mapped: true, required: true },
+			{ path: 'buyer.taxId', mapped: false, required: false },
+			{ path: 'lines.sku', mapped: true, required: true },
+			{ path: 'lines.quantity', mapped: false, required: false },
+			{ path: 'tuple.0', mapped: false, required: true },
+			{ path: 'tuple.1.code', mapped: true, required: true },
+			{ path: 'unknown', mapped: false, required: false }
+		]);
+	});
+
+	it('does not mark nested fields as required when the parent field is optional', () => {
+		const schema: JsonSchema = {
+			type: 'object',
+			properties: {
+				buyer: {
+					type: 'object',
+					required: ['name'],
+					properties: {
+						name: { type: 'string' }
+					}
+				}
+			}
+		};
+
+		const fields = Array.from(
+			listDestinationSchemaFieldEntries(schema, {}),
+			({ path, required }) => ({ path, required })
+		);
+
+		expect(fields).to.deep.equal([
+			{ path: 'buyer.name', required: false }
 		]);
 	});
 
@@ -123,12 +151,13 @@ describe('listDestinationSchemaFieldEntries', () => {
 		const fields = Array.from(listDestinationSchemaFieldEntries(schema, {}), entry => ({
 			path: entry.path,
 			schema: entry.schema,
-			mapped: entry.mapped
+			mapped: entry.mapped,
+			required: entry.required
 		}));
 
 		expect(fields).to.deep.equal([
-			{ path: '0', schema: true, mapped: false },
-			{ path: '1', schema: false, mapped: false }
+			{ path: '0', schema: true, mapped: false, required: true },
+			{ path: '1', schema: false, mapped: false, required: true }
 		]);
 	});
 });
