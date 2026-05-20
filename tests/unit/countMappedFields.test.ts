@@ -50,7 +50,7 @@ describe('countMappedFields', () => {
 			}
 		};
 
-		expect(countMappedFields(mapping)).to.equal(14);
+		expect(countMappedFields(mapping)).to.equal(9);
 	});
 
 	it('counts root wrapper mappings without counting instruction keys', () => {
@@ -61,7 +61,7 @@ describe('countMappedFields', () => {
 					name: 'NAME'
 				}
 			}
-		})).to.equal(3);
+		})).to.equal(2);
 	});
 
 	it('treats duplicate conditional branch fields as one destination field', () => {
@@ -76,6 +76,35 @@ describe('countMappedFields', () => {
 					name: 'BUYER.NAME'
 				}
 			}
-		})).to.equal(3);
+		})).to.equal(2);
+	});
+
+	it('does not count fields with empty source expressions', () => {
+		expect(countMappedFields({
+			id: '',
+			buyer: {
+				map: {
+					name: ''
+				}
+			},
+			lines: {
+				forEach: '',
+				map: {
+					sku: 'SKU'
+				}
+			},
+			status: {
+				when: '',
+				then: 'STATUS'
+			},
+			charges: {
+				concat: [
+					{
+						kind: '',
+						amount: 'AMOUNT'
+					}
+				]
+			}
+		})).to.equal(1);
 	});
 });

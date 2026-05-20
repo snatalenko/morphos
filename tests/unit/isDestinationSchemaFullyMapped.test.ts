@@ -135,4 +135,32 @@ describe('isDestinationSchemaFullyMapped', () => {
 			buyer: 'BUYER'
 		})).to.equal(false);
 	});
+
+	it('returns false when destination fields only have empty mapping values', () => {
+		const schema: JsonSchema = {
+			type: 'object',
+			properties: {
+				id: { type: 'string' },
+				lines: {
+					type: 'array',
+					items: {
+						type: 'object',
+						properties: {
+							sku: { type: 'string' }
+						}
+					}
+				}
+			}
+		};
+
+		expect(isDestinationSchemaFullyMapped(schema, {
+			id: '',
+			lines: {
+				forEach: '',
+				map: {
+					sku: 'SKU'
+				}
+			}
+		})).to.equal(false);
+	});
 });

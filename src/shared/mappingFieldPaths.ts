@@ -50,51 +50,77 @@ function isRootElementMapping(value: ValueMap): value is { '*': ValueMap } {
 	return isRecord(value) && hasOnlyKeys(value, ['*']);
 }
 
-function collectPropertiesMapPaths(map: PropertiesMap, prefix: string, result: Set<string>): void {
+function isNonEmptyExpression(value: string): boolean {
+	return value.trim() !== '';
+}
+
+function* collectPropertiesMapPaths(map: PropertiesMap, prefix: string): Generator<string> {
 	for (const [fieldName, value] of Object.entries(map)) {
 		if (fieldName === '*') {
-			collectValueMapPaths(value, prefix, result);
+			yield* collectValueMapPaths(value, prefix);
 			continue;
 		}
 
 		const path = pathJoin(prefix, fieldName);
-		result.add(path);
-		collectValueMapPaths(value, path, result);
+		yield* collectValueMapPaths(value, path);
 	}
 }
 
-function collectValueMapPaths(value: ValueMap, prefix: string, result: Set<string>): void {
-	if (typeof value === 'string')
+function* collectValueMapPaths(value: ValueMap, prefix: string): Generator<string> {
+	if (typeof value === 'string') {
+		if (prefix && isNonEmptyExpression(value))
+			yield prefix;
+
 		return;
+	}
 
 	if (isConditionalMapping(value)) {
-		collectValueMapPaths(value.then, prefix, result);
+		if (!isNonEmptyExpression(value.when))
+			return;
+
+		yield* collectValueMapPaths(value.then, prefix);
 		if (value.else !== undefined)
-			collectValueMapPaths(value.else, prefix, result);
+			yield* collectValueMapPaths(value.else, prefix);
 
 		return;
 	}
 
 	if (isConcatMapping(value)) {
-		value.concat.forEach(item => collectValueMapPaths(item, prefix, result));
+		for (const item of value.concat)
+			yield* collectValueMapPaths(item, prefix);
+
 		return;
 	}
 
-	if (isArrayMapping(value) || isObjectInContextMapping(value) || isObjectMapping(value)) {
-		collectPropertiesMapPaths(value.map, prefix, result);
+	if (isArrayMapping(value)) {
+		if (!isNonEmptyExpression(value.forEach))
+			return;
+
+		yield* collectPropertiesMapPaths(value.map, prefix);
+		return;
+	}
+
+	if (isObjectInContextMapping(value)) {
+		if (!isNonEmptyExpression(value.from))
+			return;
+
+		yield* collectPropertiesMapPaths(value.map, prefix);
+		return;
+	}
+
+	if (isObjectMapping(value)) {
+		yield* collectPropertiesMapPaths(value.map, prefix);
 		return;
 	}
 
 	if (isRootElementMapping(value)) {
-		collectValueMapPaths(value['*'], prefix, result);
+		yield* collectValueMapPaths(value['*'], prefix);
 		return;
 	}
 
-	collectPropertiesMapPaths(value as PropertiesMap, prefix, result);
+	yield* collectPropertiesMapPaths(value as PropertiesMap, prefix);
 }
 
 export function mappedFieldPaths(mapping: RootMapping): Set<string> {
-	const result = new Set<string>();
-	collectValueMapPaths(mapping, '', result);
-	return result;
+	return new Set(collectValueMapPaths(mapping, ''));
 }
