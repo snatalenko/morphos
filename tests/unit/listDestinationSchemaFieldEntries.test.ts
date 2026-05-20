@@ -110,4 +110,25 @@ describe('listDestinationSchemaFieldEntries', () => {
 			{ path: 'metadata', mapped: false }
 		]);
 	});
+
+	it('includes boolean tuple item schemas', () => {
+		const schema: JsonSchema = {
+			type: 'array',
+			items: [
+				true,
+				false
+			]
+		};
+
+		const fields = Array.from(listDestinationSchemaFieldEntries(schema, {}), entry => ({
+			path: entry.path,
+			schema: entry.schema,
+			mapped: entry.mapped
+		}));
+
+		expect(fields).to.deep.equal([
+			{ path: '0', schema: true, mapped: false },
+			{ path: '1', schema: false, mapped: false }
+		]);
+	});
 });

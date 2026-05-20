@@ -107,4 +107,34 @@ describe('countMappedFields', () => {
 			}
 		})).to.equal(1);
 	});
+
+	it('does not count object context mappings with empty source context', () => {
+		expect(countMappedFields({
+			buyer: {
+				from: '',
+				map: {
+					name: 'NAME'
+				}
+			}
+		})).to.equal(0);
+	});
+
+	it('counts whole value mappings', () => {
+		expect(countMappedFields({
+			tags: {
+				forEach: 'TAGS',
+				map: {
+					'*': '$record'
+				}
+			}
+		})).to.equal(1);
+	});
+
+	it('counts root element mappings', () => {
+		expect(countMappedFields({
+			value: {
+				'*': 'SOURCE'
+			}
+		})).to.equal(1);
+	});
 });
