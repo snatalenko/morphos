@@ -1,3 +1,11 @@
+# [1.8.0-alpha.7](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.6...v1.8.0-alpha.7) (2026-05-20)
+
+
+### Features
+
+* Anthropic integration ([1acdde9](https://github.com/snatalenko/morphos/commit/1acdde9025fc8c3691693569b0d48fa47428abd0))
+
+
 # [1.8.0-alpha.6](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.5...v1.8.0-alpha.6) (2026-05-20)
 
 
