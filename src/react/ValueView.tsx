@@ -436,6 +436,7 @@ export function ValueView({
 			const t = schemaType(s.schema);
 			return t !== 'object' && t !== 'array';
 		});
+		const whenMatchesSuggestion = whenSuggestions.some(s => s.path === value.when);
 		const valueInput = renderExpressionInput(
 			C,
 			value.when,
@@ -443,7 +444,7 @@ export function ValueView({
 			whenSuggestions,
 			labels.expressionPlaceholder,
 			!!sourceSchema,
-			true
+			value.when === '' || !whenMatchesSuggestion
 		);
 		const body = (
 			<>
