@@ -90,7 +90,7 @@ function* propertiesMapToJs(map: PropertiesMap, level: number): IterableIterator
 	yield `${prefix}return $output;`;
 }
 
-function* mappingToJs(mapping: RootMapping, level: number) {
+function* mappingToJs(mapping: RootMapping, level: number): IterableIterator<string> {
 
 	const prefix = '  '.repeat(level);
 
