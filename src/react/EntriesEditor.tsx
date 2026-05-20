@@ -73,7 +73,7 @@ export function EntriesEditor({
 	const schemaPropNames = schema?.properties ? Object.keys(schema.properties) : [];
 	const mappedKeys = new Set(entries.map(e => e.key));
 	const currentValueMapped = mappedKeys.has(WILDCARD_KEY);
-	const canMapCurrentValue = entries.length <= 1;
+	const canMapCurrentValue = entries.length === 0;
 
 	const availableForEntry = (entry: Entry): FieldOption[] => {
 		const result: FieldOption[] = [];
