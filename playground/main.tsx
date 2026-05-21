@@ -65,7 +65,7 @@ const aiProviderLabels: Record<AiProvider, string> = {
 	anthropic: 'Anthropic Claude'
 };
 const defaultFetchedAiModel: Partial<Record<AiProvider, string>> = {
-	openai: 'gpt-5-mini'
+	openai: 'gpt-5.4-mini'
 };
 const defaultFetchedReasoningEffort: Partial<Record<AiProvider, AiReasoningEffort>> = {
 	openai: 'low'
