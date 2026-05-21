@@ -1,3 +1,7 @@
+# [1.8.0-alpha.9](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.8...v1.8.0-alpha.9) (2026-05-21)
+
+
+
 # [1.8.0-alpha.8](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.7...v1.8.0-alpha.8) (2026-05-21)
 
 
