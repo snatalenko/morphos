@@ -12,6 +12,7 @@ export const defaultLabels: MappingEditorLabels = {
 	newField: 'New Field',
 	selectPlaceholder: '— select —',
 	advanced: 'Other…',
+	jsExpression: 'JS expression…',
 	useSuggestions: 'Use suggestions',
 	useSchemaFields: 'Use schema fields',
 	customSuffix: 'custom',

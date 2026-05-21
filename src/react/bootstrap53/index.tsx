@@ -121,7 +121,8 @@ function BS53SuggestedInput({
 	placeholder,
 	defaultAdvanced,
 	focusOnAdvancedMount,
-	onAdvanced
+	onAdvanced,
+	advancedLabel
 }: {
 	value: string;
 	onChange: (next: string) => void;
@@ -132,6 +133,7 @@ function BS53SuggestedInput({
 	defaultAdvanced?: boolean;
 	focusOnAdvancedMount?: boolean;
 	onAdvanced?: () => void;
+	advancedLabel?: string;
 }) {
 	const C = useContext(ComponentsContext);
 	const labels = useContext(LabelsContext);
@@ -198,7 +200,7 @@ function BS53SuggestedInput({
 				<option value="" disabled>{labels.selectPlaceholder}</option>
 			)}
 			{renderFieldOptions(options, labels)}
-			<option value={BS53_ADVANCED}>{labels.advanced}</option>
+			<option value={BS53_ADVANCED}>{advancedLabel ?? labels.advanced}</option>
 		</select>
 	);
 }
@@ -240,16 +242,20 @@ export const SuggestedValueInput: ComponentType<SuggestedValueInputProps> = ({
 	options,
 	placeholder,
 	defaultAdvanced
-}) => (
-	<BS53SuggestedInput
-		value={value}
-		onChange={onChange}
-		options={options}
-		inputClassName="form-control dm-mapping-value"
-		placeholder={placeholder}
-		defaultAdvanced={defaultAdvanced}
-	/>
-);
+}) => {
+	const labels = useContext(LabelsContext);
+	return (
+		<BS53SuggestedInput
+			value={value}
+			onChange={onChange}
+			options={options}
+			inputClassName="form-control dm-mapping-value"
+			placeholder={placeholder}
+			defaultAdvanced={defaultAdvanced}
+			advancedLabel={labels.jsExpression}
+		/>
+	);
+};
 
 export const RemoveButton: ComponentType<RemoveButtonProps> = ({ onClick }) => {
 	const labels = useContext(LabelsContext);

@@ -144,6 +144,7 @@ export interface MappingEditorLabels {
 	newField: string;
 	selectPlaceholder: string;
 	advanced: string;
+	jsExpression: string;
 	useSuggestions: string;
 	useSchemaFields: string;
 	customSuffix: string;

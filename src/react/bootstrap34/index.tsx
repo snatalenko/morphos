@@ -121,7 +121,8 @@ function SuggestedInput({
 	placeholder,
 	defaultAdvanced,
 	focusOnAdvancedMount,
-	onAdvanced
+	onAdvanced,
+	advancedLabel
 }: {
 	value: string;
 	onChange: (next: string) => void;
@@ -132,6 +133,7 @@ function SuggestedInput({
 	defaultAdvanced?: boolean;
 	focusOnAdvancedMount?: boolean;
 	onAdvanced?: () => void;
+	advancedLabel?: string;
 }) {
 	const C = useContext(ComponentsContext);
 	const labels = useContext(LabelsContext);
@@ -197,16 +199,23 @@ function SuggestedInput({
 				<option value="" disabled>{labels.selectPlaceholder}</option>
 			)}
 			{renderFieldOptions(options, labels)}
-			<option value={BS34_ADVANCED}>{labels.advanced}</option>
+			<option value={BS34_ADVANCED}>{advancedLabel ?? labels.advanced}</option>
 		</select>
 	);
 }
 
 export const SuggestedKeyInput: ComponentType<SuggestedKeyInputProps> = SuggestedInput;
 
-export const SuggestedValueInput: ComponentType<SuggestedValueInputProps> = props => (
-	<SuggestedInput {...props} inputClassName="form-control dm-mapping-value" />
-);
+export const SuggestedValueInput: ComponentType<SuggestedValueInputProps> = props => {
+	const labels = useContext(LabelsContext);
+	return (
+		<SuggestedInput
+			{...props}
+			inputClassName="form-control dm-mapping-value"
+			advancedLabel={labels.jsExpression}
+		/>
+	);
+};
 
 export const ValueInput: ComponentType<ValueInputProps> = ({ value, onChange, placeholder }) => (
 	<input

@@ -116,7 +116,8 @@ function DefaultSuggestedInput({
 	placeholder,
 	defaultAdvanced,
 	focusOnAdvancedMount,
-	onAdvanced
+	onAdvanced,
+	advancedLabel
 }: {
 	value: string;
 	onChange: (next: string) => void;
@@ -127,6 +128,7 @@ function DefaultSuggestedInput({
 	defaultAdvanced?: boolean;
 	focusOnAdvancedMount?: boolean;
 	onAdvanced?: () => void;
+	advancedLabel?: string;
 }) {
 	const C = useContext(ComponentsContext);
 	const labels = useContext(LabelsContext);
@@ -191,7 +193,7 @@ function DefaultSuggestedInput({
 				<option value="" disabled>{labels.selectPlaceholder}</option>
 			)}
 			{renderFieldOptions(options, labels)}
-			<option value={DM_ADVANCED_SENTINEL}>{labels.advanced}</option>
+			<option value={DM_ADVANCED_SENTINEL}>{advancedLabel ?? labels.advanced}</option>
 		</select>
 	);
 }
@@ -233,17 +235,21 @@ export const DefaultSuggestedValueInput: ComponentType<SuggestedValueInputProps>
 	options,
 	placeholder,
 	defaultAdvanced
-}) => (
-	<DefaultSuggestedInput
-		value={value}
-		onChange={onChange}
-		options={options}
-		inputClassName="dm-mapping-value"
-		wrapperClassName="dm-mapping-suggested-advanced"
-		placeholder={placeholder}
-		defaultAdvanced={defaultAdvanced}
-	/>
-);
+}) => {
+	const labels = useContext(LabelsContext);
+	return (
+		<DefaultSuggestedInput
+			value={value}
+			onChange={onChange}
+			options={options}
+			inputClassName="dm-mapping-value"
+			wrapperClassName="dm-mapping-suggested-advanced"
+			placeholder={placeholder}
+			defaultAdvanced={defaultAdvanced}
+			advancedLabel={labels.jsExpression}
+		/>
+	);
+};
 
 export const DefaultRemoveButton: ComponentType<RemoveButtonProps> = ({ onClick }) => {
 	const labels = useContext(LabelsContext);
