@@ -15,5 +15,5 @@ export function enumOptionsForSchema(schema: JsonSchema | undefined): FieldOptio
 	if (!schema?.enum || schema.enum.length > ENUM_MAX)
 		return [];
 
-	return schema.enum.map(v => ({ value: enumValueToExpr(v) }));
+	return schema.enum.map(v => ({ value: enumValueToExpr(v), group: 'enum' }));
 }

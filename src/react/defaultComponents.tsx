@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState, type ComponentType } from 'rea
 import { LabelsContext } from './LabelsContext.ts';
 // eslint-disable-next-line import/no-cycle
 import { ComponentsContext } from './ComponentsContext.ts';
+import { renderFieldOptions } from './renderFieldOptions.tsx';
 import type {
 	ContainerProps,
 	RowProps,
@@ -189,9 +190,7 @@ function DefaultSuggestedInput({
 			{!options.some(o => o.value === '') && (
 				<option value="" disabled>{labels.selectPlaceholder}</option>
 			)}
-			{options.map(o => (
-				<option key={o.value} value={o.value}>{o.label ?? o.value}</option>
-			))}
+			{renderFieldOptions(options, labels)}
 			<option value={DM_ADVANCED_SENTINEL}>{labels.advanced}</option>
 		</select>
 	);

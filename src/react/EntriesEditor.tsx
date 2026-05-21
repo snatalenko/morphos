@@ -89,7 +89,7 @@ export function EntriesEditor({
 				continue;
 
 			const required = requiredSet.has(name);
-			result.push({ value: name, label: name + (required ? ' *' : '') });
+			result.push({ value: name, label: name + (required ? ' *' : ''), group: 'field' });
 		}
 
 		return result;

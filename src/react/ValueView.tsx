@@ -9,13 +9,13 @@ import {
 	getTupleItemSchema,
 	findSourceFields,
 	resolveSourcePath,
-	extendSourceSchema,
 	createEntryValue,
 	enumOptionsForSchema,
 	typesCompatible,
 	preferNameMatches,
 	arrayContextSuggestions,
 	mergeSourceSuggestions,
+	parentContextSuggestions,
 	type EntryValue
 } from './utils/index.ts';
 import type {
@@ -37,7 +37,17 @@ function renderExpressionInput(
 	enumOptions: FieldOption[] = []
 ) {
 	if (suggestions.length > 0 || forceSuggested || enumOptions.length > 0) {
-		const sourceOptions: FieldOption[] = suggestions.map(s => ({ value: s.path, label: s.label }));
+		const sourceOptions: FieldOption[] = suggestions.map(s => ({
+			value: s.path,
+			label: s.label,
+			group: s.path === ''
+				? undefined
+				: s.scope === 'parent'
+				? 'parentField'
+				: s.scope === 'internal' || s.path.startsWith('$')
+					? 'internal'
+					: 'field'
+		}));
 		const options: FieldOption[] = [...enumOptions, ...sourceOptions];
 		return (
 			<C.SuggestedValueInput
@@ -332,8 +342,13 @@ export function ValueView({
 		const resolvedItems = (resolved && schemaType(resolved) === 'array')
 			? getItemsSchema(resolved)
 			: undefined;
-		const nestedSourceSchema = extendSourceSchema(resolvedItems, sourceSchema, value.forEach);
-		const nestedSourceSuggestions = arrayContextSuggestions(resolvedItems, resolved);
+		const nestedSourceSchema = resolvedItems ?? sourceSchema;
+		const nestedSourceSuggestions = resolvedItems
+			? [
+				...parentContextSuggestions(sourceSchema, sourceSuggestions, value.forEach),
+				...arrayContextSuggestions(resolvedItems, resolved)
+			]
+			: sourceSuggestions;
 		const valueInput = renderExpressionInput(
 			C,
 			value.forEach,
@@ -385,7 +400,10 @@ export function ValueView({
 		const resolvedFrom = (resolved && schemaType(resolved) === 'object')
 			? resolved
 			: undefined;
-		const nestedSourceSchema = extendSourceSchema(resolvedFrom, sourceSchema, value.from);
+		const nestedSourceSchema = resolvedFrom ?? sourceSchema;
+		const nestedSourceSuggestions = resolvedFrom
+			? parentContextSuggestions(sourceSchema, sourceSuggestions, value.from)
+			: sourceSuggestions;
 		const fromWithRoot: SourceFieldMatch[] = [
 			{ path: '', schema: {} },
 			...fromSuggestions
@@ -404,7 +422,7 @@ export function ValueView({
 				onChange={entries => onChange({ ...value, entries })}
 				schema={schema}
 				sourceSchema={nestedSourceSchema}
-				sourceSuggestions={sourceSuggestions}
+				sourceSuggestions={nestedSourceSuggestions}
 			/>
 		);
 

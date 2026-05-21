@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState, type ComponentType } from 'react';
 import { LabelsContext } from '../LabelsContext.ts';
 import { ComponentsContext } from '../ComponentsContext.ts';
+import { renderFieldOptions } from '../renderFieldOptions.tsx';
 import type {
 	ContainerProps,
 	RowProps,
@@ -195,9 +196,7 @@ function SuggestedInput({
 			{!options.some(o => o.value === '') && (
 				<option value="" disabled>{labels.selectPlaceholder}</option>
 			)}
-			{options.map(o => (
-				<option key={o.value} value={o.value}>{o.label ?? o.value}</option>
-			))}
+			{renderFieldOptions(options, labels)}
 			<option value={BS34_ADVANCED}>{labels.advanced}</option>
 		</select>
 	);

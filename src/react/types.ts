@@ -13,15 +13,19 @@ export interface SchemaFieldOption {
 	required: boolean;
 }
 
+export type FieldOptionGroup = 'enum' | 'field' | 'parentField' | 'internal';
+
 export interface FieldOption {
 	value: string;
 	label?: string;
+	group?: FieldOptionGroup;
 }
 
 export interface SourceFieldMatch {
 	path: string;
 	label?: string;
 	schema: JsonSchema;
+	scope?: 'current' | 'parent' | 'internal';
 }
 
 export interface ContainerProps {
@@ -144,6 +148,10 @@ export interface MappingEditorLabels {
 	useSchemaFields: string;
 	customSuffix: string;
 	currentValue: string;
+	enumValues: string;
+	nestedFields: string;
+	parentFields: string;
+	internalVariables: string;
 	forEach: string;
 	from: string;
 	when: string;

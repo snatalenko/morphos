@@ -43,6 +43,7 @@ export function arrayContextSuggestions(
 	return [
 		{
 			path: '$index',
+			scope: 'internal',
 			schema: {
 				type: 'integer',
 				description: 'Current array item index'
@@ -50,18 +51,32 @@ export function arrayContextSuggestions(
 		},
 		{
 			path: '$record',
+			scope: 'internal',
 			schema: recordSchema ?? {
 				description: 'Current array item value'
 			}
 		},
 		{
 			path: '$collection',
+			scope: 'internal',
 			schema: collectionSchema ?? {
 				type: 'array',
 				description: 'Current array collection'
 			}
 		}
 	];
+}
+
+function isInternalSuggestion(field: SourceFieldMatch): boolean {
+	return field.scope === 'internal' || field.path.startsWith('$');
+}
+
+function isConsumedPath(field: SourceFieldMatch, consumedPath: string | undefined): boolean {
+	if (!consumedPath)
+		return false;
+
+	const consumedKey = consumedPath.split('.')[0];
+	return field.path === consumedKey || field.path.startsWith(`${consumedKey}.`);
 }
 
 export function mergeSourceSuggestions(
@@ -76,4 +91,19 @@ export function mergeSourceSuggestions(
 		...fields,
 		...extraFields.filter(f => !seen.has(f.path))
 	];
+}
+
+export function parentContextSuggestions(
+	parentSchema: JsonSchema | undefined,
+	inheritedSuggestions: SourceFieldMatch[],
+	consumedPath?: string
+): SourceFieldMatch[] {
+	const parentFields = Array.from(findSourceFields(parentSchema, {}))
+		.filter(field => !isConsumedPath(field, consumedPath))
+		.map(field => ({ ...field, scope: 'parent' as const }));
+	const inheritedParentFields = inheritedSuggestions
+		.filter(field => !isInternalSuggestion(field))
+		.map(field => ({ ...field, scope: 'parent' as const }));
+
+	return mergeSourceSuggestions(parentFields, inheritedParentFields);
 }
