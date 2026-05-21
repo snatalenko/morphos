@@ -59,28 +59,28 @@
 	letter-spacing: 0.04em;
 }
 
-.dm-code-dots {
+.dm-code-toolbar-actions {
 	display: inline-flex;
-	gap: 5px;
+	align-items: center;
+	gap: 0.35rem;
 }
 
-.dm-code-dots span {
-	width: 7px;
-	height: 7px;
-	border-radius: 999px;
-	background: #cbd5e1;
+.dm-code-toolbar-button {
+	border: 1px solid #cbd5e1;
+	border-radius: 4px;
+	background: #fff;
+	color: #475569;
+	cursor: pointer;
+	font: inherit;
+	letter-spacing: 0;
+	line-height: 1;
+	padding: 0.25rem 0.45rem;
+	text-transform: none;
 }
 
-.dm-code-dots span:nth-child(1) {
-	background: #f87171;
-}
-
-.dm-code-dots span:nth-child(2) {
-	background: #fbbf24;
-}
-
-.dm-code-dots span:nth-child(3) {
-	background: #34d399;
+.dm-code-toolbar-button:hover {
+	background: #f8fafc;
+	border-color: #94a3b8;
 }
 
 .dm-code-textarea {

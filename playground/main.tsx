@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useRef, useState } from 'react';
+import { StrictMode, useEffect, useRef, useState, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
 	MappingEditor,
@@ -94,6 +94,18 @@ function getModelCacheKey(provider: AiProvider): string {
 	return `${aiModelCachePrefix}.${provider}`;
 }
 
+function normalizeAiModelName(model: string): string {
+	return model.trim().replace(/-\d{4}-\d{2}-\d{2}$/, '');
+}
+
+function normalizeAiModels(models: string[]): string[] {
+	return Array.from(new Set(
+		models
+			.map(normalizeAiModelName)
+			.filter(model => model !== '')
+	));
+}
+
 function loadCachedModels(provider: AiProvider): string[] | undefined {
 	try {
 		const raw = localStorage.getItem(getModelCacheKey(provider));
@@ -105,7 +117,8 @@ function loadCachedModels(provider: AiProvider): string[] | undefined {
 			return undefined;
 
 		const models = parsed.filter((model): model is string => typeof model === 'string' && model.trim() !== '');
-		return models.length ? sortModels(models) : undefined;
+		const normalizedModels = normalizeAiModels(models);
+		return normalizedModels.length ? sortModels(normalizedModels) : undefined;
 	}
 	catch {
 		return undefined;
@@ -114,7 +127,7 @@ function loadCachedModels(provider: AiProvider): string[] | undefined {
 
 function cacheModels(provider: AiProvider, models: string[]): void {
 	try {
-		localStorage.setItem(getModelCacheKey(provider), JSON.stringify(sortModels(models)));
+		localStorage.setItem(getModelCacheKey(provider), JSON.stringify(sortModels(normalizeAiModels(models))));
 	}
 	catch {
 		// localStorage can be unavailable in private or restricted browser modes.
@@ -192,13 +205,17 @@ function JsonTextarea({
 	onChange,
 	minRows = 5,
 	placeholder,
-	sizeKey
+	sizeKey,
+	toolbarActions,
+	title = 'JSON'
 }: {
 	value: string;
 	onChange: (next: string) => void;
 	minRows?: number;
 	placeholder?: string;
 	sizeKey?: string | number;
+	toolbarActions?: ReactNode;
+	title?: string;
 }) {
 	const ref = useRef<HTMLTextAreaElement>(null);
 
@@ -210,15 +227,25 @@ function JsonTextarea({
 		el.style.height = `${el.scrollHeight}px`;
 	}, [value, sizeKey]);
 
+	const formatJson = () => {
+		try {
+			onChange(JSON.stringify(JSON.parse(value), null, 2));
+		}
+		catch {
+			onChange(value);
+		}
+	};
+
 	return (
 		<div className="dm-code-frame">
 			<div className="dm-code-toolbar">
-				<span className="dm-code-dots" aria-hidden="true">
-					<span />
-					<span />
-					<span />
-				</span>
-				<span className="dm-code-label">JSON</span>
+				<span className="dm-code-label">{title}</span>
+				<div className="dm-code-toolbar-actions">
+					{toolbarActions}
+					<button type="button" className="dm-code-toolbar-button" onClick={formatJson}>
+						Format
+					</button>
+				</div>
 			</div>
 			<textarea
 				ref={ref}
@@ -236,6 +263,13 @@ function JsonTextarea({
 const labelStyle = { fontSize: '0.8rem', color: '#666', marginBottom: '0.25rem', display: 'block' } as const;
 const errStyle = { color: '#c00', fontSize: '0.8rem', marginTop: '0.25rem' } as const;
 const sectionStyle = { display: 'flex', flexDirection: 'column' as const, gap: '0.5rem', minWidth: 0 };
+const editorPanelStyle = {
+	border: '1px solid #e3e7ec',
+	borderRadius: 4,
+	padding: '0.75rem',
+	background: '#fff',
+	overflow: 'auto'
+} as const;
 const primaryButtonStyle = {
 	padding: '0.4rem 0.8rem',
 	background: '#1a73e8',
@@ -317,7 +351,8 @@ function App() {
 		return getDefaultFetchedReasoningEffort('openai', model);
 	});
 	const [aiInstructions, setAiInstructions] = useState('');
-	const [aiSendCurrentMappingTemplate, setAiSendCurrentMappingTemplate] = useState(true);
+	const [aiSendAdditionalInstructions, setAiSendAdditionalInstructions] = useState(false);
+	const [aiSendCurrentMappingTemplate, setAiSendCurrentMappingTemplate] = useState(false);
 	const [aiGenerateMappingTemplate, setAiGenerateMappingTemplate] = useState(false);
 	const [aiGenerateRequiredFields, setAiGenerateRequiredFields] = useState(false);
 	const [loading, setLoading] = useState(false);
@@ -411,17 +446,6 @@ function App() {
 		}
 	};
 
-	const formatSourceData = () => {
-		try {
-			const parsed = sourceDataText.trim() ? JSON.parse(sourceDataText) : {};
-			setSourceDataText(JSON.stringify(parsed, null, 2));
-			setSourceDataError(null);
-		}
-		catch (e) {
-			setSourceDataError((e as Error).message);
-		}
-	};
-
 	const generateSourceDataSample = (schema = sourceSchema) => {
 		if (!schema) {
 			setSourceDataError('Source schema is required');
@@ -431,8 +455,7 @@ function App() {
 			const sample = sampleForSchema(schema as unknown as JSONSchema4);
 			setSourceDataText(JSON.stringify(sample, null, 2));
 			setSourceDataError(null);
-			if (mode === 'test')
-				setSourceTab('data');
+			setSourceTab('data');
 		}
 		catch (e) {
 			setSourceDataError((e as Error).message);
@@ -589,14 +612,14 @@ function App() {
 			if (!models.length)
 				throw new Error(`${aiProviderLabels[aiProvider]} returned no models`);
 
-			const sortedModels = sortModels(models);
+			const sortedModels = sortModels(normalizeAiModels(models));
 			const model = getDefaultFetchedModel(aiProvider, sortedModels);
 
 			cacheModels(aiProvider, sortedModels);
 			setCachedAiModels(current => ({ ...current, [aiProvider]: sortedModels }));
 			setAiModel(model);
 			setAiReasoningEffort(getDefaultFetchedReasoningEffort(aiProvider, model));
-			setAiModelMessage(`Loaded ${models.length} models`);
+			setAiModelMessage(`Loaded ${sortedModels.length} models`);
 		}
 		catch (e) {
 			setAiError((e as Error).message);
@@ -652,7 +675,7 @@ function App() {
 		try {
 			const commonOptions = {
 				model: aiModel,
-				instructions: aiInstructions || undefined,
+				instructions: aiSendAdditionalInstructions ? aiInstructions || undefined : undefined,
 				mappingTemplate: aiSendCurrentMappingTemplate && !isEmptyMapping(mapping) ? mapping : undefined,
 				generateMappingTemplate: aiGenerateMappingTemplate,
 				generateRequiredFields: aiGenerateRequiredFields,
@@ -798,34 +821,35 @@ function App() {
 									)}
 									placeholder='{ "type": "object", "properties": { ... } }'
 									sizeKey={`${editorType}-${sourceTab}`}
+									title="JsonSchema"
 								/>
 							) : (
-								<SchemaEditor
-									value={sourceSchema ?? emptySchema}
-									onChange={updateSourceSchemaFromEditor}
-									components={schemaComponents}
-								/>
+								<div style={editorPanelStyle}>
+									<SchemaEditor
+										value={sourceSchema ?? emptySchema}
+										onChange={updateSourceSchemaFromEditor}
+										components={schemaComponents}
+									/>
+								</div>
 							)}
 							{sourceError && <div style={errStyle}>{sourceError}</div>}
 						</>
 					) : (
 						<>
-							<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-								<label style={{ ...labelStyle, marginBottom: 0 }}>JSON document to transform</label>
-								<div style={{ display: 'flex', gap: '0.35rem' }}>
-									<button type="button" style={secondaryButtonStyle} onClick={() => generateSourceDataSample()}>
-										Generate sample
-									</button>
-									<button type="button" style={secondaryButtonStyle} onClick={formatSourceData}>
-										Format
-									</button>
-								</div>
-							</div>
 							<JsonTextarea
 								value={sourceDataText}
 								onChange={updateSourceDataText}
 								placeholder='{ "PO_HDR": { ... }, "LINES": [ ... ] }'
 								sizeKey={`${editorType}-${sourceTab}`}
+								toolbarActions={
+									<button
+										type="button"
+										className="dm-code-toolbar-button"
+										onClick={() => generateSourceDataSample()}
+									>
+										Generate sample
+									</button>
+								}
 							/>
 							{sourceDataError && <div style={errStyle}>{sourceDataError}</div>}
 						</>
@@ -871,10 +895,7 @@ function App() {
 
 					<div style={{
 						order: 2,
-						border: '1px solid #e3e7ec',
-						borderRadius: 4,
-						padding: '0.75rem',
-						background: '#fff',
+						...(editorType === 'json' ? {} : editorPanelStyle),
 						minHeight: editorExpanded ? 'calc(100vh - 6.5rem)' : 200,
 						overflow: 'auto'
 					}}>
@@ -1080,30 +1101,43 @@ function App() {
 											checked={aiGenerateRequiredFields}
 											onChange={e => setAiGenerateRequiredFields(e.target.checked)}
 										/>
-										Add missing required placeholders after the response
+										Add missing required placeholders after response received
+									</label>
+									<label
+										title="instructions"
+										style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', margin: 0 }}
+									>
+										<input
+											type="checkbox"
+											checked={aiSendAdditionalInstructions}
+											onChange={e => setAiSendAdditionalInstructions(e.target.checked)}
+										/>
+										Send additional instructions
 									</label>
 								</div>
 							</div>
-							<div style={{ ...aiControlRowStyle, alignItems: 'flex-start', marginTop: '0.5rem' }}>
-								<label style={aiControlLabelStyle}>Instructions</label>
-								<textarea
-									value={aiInstructions}
-									onChange={e => setAiInstructions(e.target.value)}
-									rows={2}
-									placeholder="e.g. use snake_case for all field names, map dates to ISO 8601 strings…"
-									style={{
-										flex: '1 1 auto',
-										width: '100%',
-										fontFamily: 'system-ui, -apple-system, sans-serif',
-										fontSize: '0.85rem',
-										padding: '0.4rem 0.5rem',
-										boxSizing: 'border-box',
-										border: '1px solid #ccc',
-										borderRadius: 4,
-										resize: 'vertical'
-									}}
-								/>
-							</div>
+							{aiSendAdditionalInstructions && (
+								<div style={{ ...aiControlRowStyle, alignItems: 'flex-start', marginTop: '0.5rem' }}>
+									<label style={aiControlLabelStyle}>Instructions</label>
+									<textarea
+										value={aiInstructions}
+										onChange={e => setAiInstructions(e.target.value)}
+										rows={2}
+										placeholder="e.g. use snake_case for all field names, map dates to ISO 8601 strings…"
+										style={{
+											flex: '1 1 auto',
+											width: '100%',
+											fontFamily: 'system-ui, -apple-system, sans-serif',
+											fontSize: '0.85rem',
+											padding: '0.4rem 0.5rem',
+											boxSizing: 'border-box',
+											border: '1px solid #ccc',
+											borderRadius: 4,
+											resize: 'vertical'
+										}}
+									/>
+								</div>
+							)}
 							<div style={{ marginTop: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
 								<button
 									type="button"
@@ -1195,13 +1229,16 @@ function App() {
 									)}
 									placeholder='{ "type": "object", "properties": { ... } }'
 									sizeKey={`${editorType}-${destinationTab}`}
+									title="JsonSchema"
 								/>
 							) : (
-								<SchemaEditor
-									value={destSchema ?? emptySchema}
-									onChange={updateDestSchemaFromEditor}
-									components={schemaComponents}
-								/>
+								<div style={editorPanelStyle}>
+									<SchemaEditor
+										value={destSchema ?? emptySchema}
+										onChange={updateDestSchemaFromEditor}
+										components={schemaComponents}
+									/>
+								</div>
 							)}
 							{destError && <div style={errStyle}>{destError}</div>}
 						</>
