@@ -1,3 +1,11 @@
+# [1.8.0-alpha.8](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.7...v1.8.0-alpha.8) (2026-05-21)
+
+
+### Changes
+
+* Group mapping suggestions by categories ([dadb33d](https://github.com/snatalenko/morphos/commit/dadb33de74ceaa66b736e7f3f0ee902667715ac3))
+
+
 # [1.8.0-alpha.7](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.6...v1.8.0-alpha.7) (2026-05-20)
 
 
