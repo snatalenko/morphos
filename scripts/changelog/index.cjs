@@ -6,9 +6,10 @@ const { resolve } = require('path');
 const known = require('./commits.json');
 
 const TITLES = [
-	{ title: 'Features', tags: ['+', 'new', 'feature'] },
-	{ title: 'Fixes', tags: ['-', 'fix', 'fixes'] },
-	{ title: 'Changes', tags: ['*', 'change'] },
+	{ title: 'Features', tags: ['new', 'feature'] },
+	{ title: 'Fixes', tags: ['fix', 'fixes'] },
+	{ title: 'Changes', tags: ['change'] },
+	{ title: 'Security', tags: ['security'] },
 	{ title: 'Performance Improvements', tags: ['perf', 'performance'] },
 	{ title: 'Refactoring', tags: ['!', 'refactor', 'refactoring'] },
 	{ title: 'Documentation', tags: ['doc', 'docs'] },
