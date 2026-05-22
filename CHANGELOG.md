@@ -1,3 +1,15 @@
+# [1.8.0-alpha.10](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.9...v1.8.0-alpha.10) (2026-05-22)
+
+
+### Security
+
+* Harden VM mapper context isolation ([5110fc8](https://github.com/snatalenko/morphos/commit/5110fc881a667d4611df007b63d04d031d314d33))
+
+### Build System
+
+* Log security commits to changelog ([b8cbbc8](https://github.com/snatalenko/morphos/commit/b8cbbc83b03ba7c9358f1ef88dad6c2883393c8b))
+
+
 # [1.8.0-alpha.9](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.8...v1.8.0-alpha.9) (2026-05-21)
 
 
@@ -62,7 +74,7 @@
 
 * JsonSchema editor ([926cd6a](https://github.com/snatalenko/morphos/commit/926cd6a87da098ab10e6800264e8768ca35318f7))
 
-### Changes
+### Security
 
 * Patch vulnerabilities in dev dependencies ([8970c9d](https://github.com/snatalenko/morphos/commit/8970c9d79c3d4c95093a6f466c639e81a62e51f9))
 
@@ -88,9 +100,12 @@
 ### Changes
 
 * Playground page for experimenting with the editor and mapping auto-generation ([9b264bf](https://github.com/snatalenko/morphos/commit/9b264bf81370d002324aea32e56c802d20d7994f))
+* Change name "declarative-mapper" to "morphos" ([5b1a7a9](https://github.com/snatalenko/morphos/commit/5b1a7a9d5bd431ee67d2d17402f87da01bdaa0c2))
+
+### Security
+
 * Patch vulnerabilities in dev dependencies ([fcd7764](https://github.com/snatalenko/morphos/commit/fcd7764398a7ccbcd3b1773f87bda4addf46529e))
 * Set min-release-age=7 for npm packages ([073c6ee](https://github.com/snatalenko/morphos/commit/073c6eec0558e6b233362872164b3b318af59a37))
-* Change name "declarative-mapper" to "morphos" ([5b1a7a9](https://github.com/snatalenko/morphos/commit/5b1a7a9d5bd431ee67d2d17402f87da01bdaa0c2))
 
 ### Documentation
 
