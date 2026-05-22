@@ -189,8 +189,11 @@ function* mappingToJs(mapping: RootMapping, level: number): IterableIterator<str
  */
 export default function createScript(map: RootMapping) {
 	return `
+$input = JSON.parse(JSON.stringify($input));
 var $omit = Symbol('morphos.omit');
-with ($createGlobalContext($input)) {
+var $globalContext = $createGlobalContext($input);
+$createGlobalContext = undefined;
+with ($globalContext) {
   $result =
 ${Array.from(mappingToJs(map, 1)).join('\n')}
 }

@@ -109,6 +109,8 @@
     "playground": "vite",
     "build:playground": "vite build",
     "test": "jest",
+    "test:performance": "jest tests/**/*.performance.test.ts",
+    "test:security": "jest tests/**/*.security.test.ts",
     "test:coverage": "jest --collect-coverage",
     "changelog": "conventional-changelog -n ./scripts/changelog/index.cjs -r 0 > CHANGELOG.md",
     "rebuild": "npm run cleanup && npm run build",

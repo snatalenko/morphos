@@ -52,7 +52,7 @@ That is where Morphos came in:
 - **JSON-defined** - mappings are JSON documents, so they are easy to store, diff, generate, validate, and edit from a UI.
 - **JavaScript-native** - transformations use ordinary JavaScript expressions instead of a custom DSL.
 - **Secure** - expressions run in a separate [V8 Virtual Machine](https://nodejs.org/api/vm.html) context with restricted access to the outside environment.
-- **Fast** - mapping instructions are compiled once up front, allowing processing at ~200k objects/sec on Apple M1 Pro.
+- **Fast** - mapping instructions are compiled once up front, allowing processing at ~100k objects/sec on Apple M1 Pro.
 - **Typed** - written in TypeScript
 - **Lightweight** - no dependencies
 

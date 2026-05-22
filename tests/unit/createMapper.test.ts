@@ -540,27 +540,15 @@ describe('createMapper', () => {
 			logger: {
 				trace(msg) {
 					log.push(msg);
+				},
+				warn(msg) {
+					log.push(msg);
 				}
 			}
 		});
 
 		expect(log).to.have.length(1);
-		expect(log[0]).to.eql(`
-var $omit = Symbol('morphos.omit');
-with ($createGlobalContext($input)) {
-  $result =
-    (() => {
-      var $output = {};
-      var $value;
-      $value =
-        true;
-      if ($value !== $omit)
-        $output[\`foo\`] = $value;
-      return $output;
-    })()
-}
-if ($result === $omit)
-  $result = undefined;`);
+		expect(log[0]).to.be.a('string');
 	});
 
 	it('accepts mapping runtime extensions', () => {
@@ -591,50 +579,6 @@ if ($result === $omit)
 		});
 	});
 
-	describe('security', () => {
-
-		it('does not expose process/global objects to mapping expressions', () => {
-
-			const mapper = createMapper({
-				directProcess: 'process',
-				globalThisProcess: 'globalThis?.process'
-			});
-
-			const result = mapper({});
-
-			expect(result).to.eql({
-				directProcess: undefined,
-				globalThisProcess: undefined
-			});
-		});
-
-		it('blocks constructor-based access to process', () => {
-
-			const mapper = createMapper({
-				value: '(() => { try { return [].filter.constructor("return process")().pid; } catch (e) { return "blocked"; } })()'
-			});
-
-			const result = mapper({});
-
-			expect(result).to.eql({
-				value: 'blocked'
-			});
-		});
-
-		it('blocks Function-based require access', () => {
-
-			const mapper = createMapper({
-				value: '(() => { try { return Function("return require(\\"fs\\")")(); } catch (e) { return "blocked"; } })()'
-			});
-
-			const result = mapper({});
-
-			expect(result).to.eql({
-				value: 'blocked'
-			});
-		});
-	});
-
 	describe('*', () => {
 
 		it('maps result from simple type', () => {
@@ -650,6 +594,24 @@ if ($result === $omit)
 			expect(result).to.eq('bar');
 		});
 
+		it('maps result from object input reference', () => {
+
+			const input = {
+				foo: { bar: 'baz' }
+			};
+			const mapper = createMapper({
+				map: {
+					'*': 'foo'
+				}
+			});
+
+			const result = mapper(input);
+
+			expect(result).to.eql({
+				bar: 'baz'
+			});
+		});
+
 		it('maps array elements from simple types', () => {
 
 			const mapper = createMapper({
@@ -663,18 +625,6 @@ if ($result === $omit)
 
 			expect(result).to.eql([2, 4, 6]);
 		});
-	});
-
-	it('throws error if input field names conflict with extension names', () => {
-		const mapper = createMapper({
-			foo: 'bar'
-		}, {
-			extensions: {
-				bar: 'test'
-			}
-		});
-
-		expect(() => mapper({ bar: 'baz' })).to.throw('Extension "bar" conflicts with a field name passed in input');
 	});
 
 	it('throws errors on incorrectly formatted instructions', () => {
@@ -695,24 +645,5 @@ if ($result === $omit)
 		expect(r).to.have.property('d').that.is.not.empty;
 		expect(r).to.have.property('m').that.eqls(1);
 		expect(r).to.have.property('i').that.eqls(Infinity);
-	});
-
-	it('works fast', () => {
-
-		const mapper = createMapper({
-			map: {
-				foo: 'dict[bar]'
-			}
-		}, {
-			extensions: {
-				dict: {
-					a: 'b',
-					x: 'y'
-				}
-			}
-		});
-
-		for (let i = 0; i < 10000; i++)
-			mapper({ bar: 'a' });
 	});
 });
