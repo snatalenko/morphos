@@ -148,6 +148,7 @@ export interface MappingEditorLabels {
 	useSuggestions: string;
 	useSchemaFields: string;
 	customSuffix: string;
+	currentFields: string;
 	currentValue: string;
 	enumValues: string;
 	nestedFields: string;

@@ -112,6 +112,8 @@ conditional `when` expressions:
 
 * **Field values** suggest scalar paths from the source schema (e.g. `QTY`, `CUSTOMER.NAME`).
   Name matches (`qty` ≈ `QTY`, `lineItems` ≈ `LINE_ITEMS`) are sorted to the top.
+  They also include **All nested fields**, which writes the expression `'*'` and copies the
+  current object fields or list elements into that destination field.
 * **`forEach`** suggests array paths.
 * **`from`** suggests object paths.
 * **`when`** suggests scalar paths that can be used as truthy/falsy conditions.
@@ -258,6 +260,7 @@ const labels = {
 | `useSuggestions`          | `Use suggestions`    | Back-button aria/title on value inputs.          |
 | `useSchemaFields`         | `Use schema fields`  | Back-button aria/title on key inputs.            |
 | `currentValue`             | `Current value`       | Key dropdown option for wildcard `'*'` mapping.  |
+| `currentFields`           | `All nested fields`  | Value dropdown option for copying current fields. |
 | `forEach`                 | `forEach`            | Array section header label.                      |
 | `from`                    | `from`               | Object section optional source selector label.   |
 | `when`                    | `when`               | Conditional section header label.                |

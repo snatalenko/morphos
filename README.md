@@ -169,6 +169,7 @@ The right side is either a string with a valid JS expression or an object with m
   "key": "true",              // boolean value, produces `"key": true`
   "key": "'text'",            // text value, produces `"key": "text"` (notice inner quotation marks)
   "key": "foo",               // access to an input variable `foo`
+  "key": "*",                 // copy all fields/elements from the current context
   "key": "Number(foo)",       // access to an input variable `foo` converted to a number, produces `"key": 100`
   "key": "arr.map(e => ...)", // more complex JS expression that produces an array
   "key": {                    // object mapping, produces `{ foo: 'bar' }`
@@ -189,6 +190,10 @@ The right side is either a string with a valid JS expression or an object with m
   "key": {                    // object mapping from a different context 
     "from": "some.nested.field",
     "map": { /*...*/ }
+  },
+  "key": {                    // copy current object fields, then override/add fields
+    "*": "*",
+    "foo": "foo + 1"
   },
   "key": {                    // conditionally include a value
     "when": "someField",
@@ -237,6 +242,33 @@ Both examples above produce the same result (the second one is more verbose, but
   "key": {
     "foo": -1
   } 
+```
+
+Use `"*"` as a value to copy the current source object or array into one destination field:
+
+```json
+{
+  "key": "*"
+}
+```
+
+Use `"*": "*"` inside an object mapping to copy all current source fields/elements into the current
+destination object or array before applying explicit mappings:
+
+```json
+{
+  "*": "*",
+  "normalizedName": "name.trim()"
+}
+```
+
+If the current context is an array, numeric destination keys override array positions:
+
+```json
+{
+  "*": "*",
+  "1": "$context[1] + 10"
+}
 ```
 
 ### Arrays
@@ -381,6 +413,30 @@ Or up in the source document:
 ```
 
 Inside `from` mappings, you can still reference root-level fields through `$input`.
+
+You can also preserve the selected context while adding mapped fields:
+
+```json
+{
+  "from": "BUYER",
+  "map": {
+    "rawData": "*",
+    "mappedName": "NAME"
+  }
+}
+```
+
+Or copy the selected context into the current output object and override selected fields:
+
+```json
+{
+  "from": "BUYER",
+  "map": {
+    "*": "*",
+    "mappedName": "NAME"
+  }
+}
+```
 
 Runtime variables:
 

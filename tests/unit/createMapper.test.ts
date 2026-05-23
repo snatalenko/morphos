@@ -581,6 +581,116 @@ describe('createMapper', () => {
 
 	describe('*', () => {
 
+		it('copies current object fields and applies explicit overrides', () => {
+
+			const mapper = createMapper({
+				map: {
+					'*': '*',
+					x: 'x + 1',
+					modified: 'true'
+				}
+			});
+
+			const result = mapper({ id: 1, x: 10, name: 'A' });
+
+			expect(result).to.eql({
+				id: 1,
+				x: 11,
+				name: 'A',
+				modified: true
+			});
+		});
+
+		it('copies current object fields under a regular destination field', () => {
+
+			const mapper = createMapper({
+				from: 'BUYER',
+				map: {
+					rawData: '*',
+					mappedName: 'NAME'
+				}
+			});
+
+			const result = mapper({
+				BUYER: {
+					ID: 'B-1',
+					NAME: 'Acme'
+				}
+			});
+
+			expect(result).to.eql({
+				rawData: {
+					ID: 'B-1',
+					NAME: 'Acme'
+				},
+				mappedName: 'Acme'
+			});
+		});
+
+		it('copies current array elements under a regular destination field', () => {
+
+			const mapper = createMapper({
+				from: 'values',
+				map: {
+					rawData: '*',
+					second: '$context[1]'
+				}
+			});
+
+			const result = mapper({ values: ['a', 'b'] });
+
+			expect(result).to.eql({
+				rawData: ['a', 'b'],
+				second: 'b'
+			});
+		});
+
+		it('copies current array elements and applies numeric overrides', () => {
+
+			const mapper = createMapper({
+				from: 'values',
+				map: {
+					'*': '*',
+					1: '$context[1] + 10',
+					3: "'new'"
+				}
+			});
+
+			const result = mapper({ values: ['a', 2, 'c'] });
+
+			expect(result).to.eql(['a', 12, 'c', 'new']);
+		});
+
+		it('copies array records in forEach maps and applies element overrides', () => {
+
+			const mapper = createMapper({
+				forEach: 'matrix',
+				map: {
+					'*': '*',
+					0: '$record[0] * 2'
+				}
+			});
+
+			const result = mapper({ matrix: [[1, 2], [3, 4]] });
+
+			expect(result).to.eql([[2, 2], [6, 4]]);
+		});
+
+		it('copies nothing from scalar contexts before applying explicit fields', () => {
+
+			const mapper = createMapper({
+				forEach: 'values',
+				map: {
+					'*': '*',
+					value: '$record'
+				}
+			});
+
+			const result = mapper({ values: [1, 2] });
+
+			expect(result).to.eql([{ value: 1 }, { value: 2 }]);
+		});
+
 		it('maps result from simple type', () => {
 
 			const mapper = createMapper({

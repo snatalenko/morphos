@@ -16,6 +16,7 @@ export const defaultLabels: MappingEditorLabels = {
 	useSuggestions: 'Use suggestions',
 	useSchemaFields: 'Use schema fields',
 	customSuffix: 'custom',
+	currentFields: 'All nested fields',
 	currentValue: 'Current value',
 	enumValues: 'Enum values',
 	nestedFields: 'Nested fields',

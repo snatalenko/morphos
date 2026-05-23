@@ -315,6 +315,9 @@ export function ValueView({
 			name
 		);
 		const enumOptions = enumOptionsForSchema(schema);
+		const wildcardOptions: FieldOption[] = sourceSchema
+			? [{ value: WILDCARD_KEY, label: labels.currentFields, group: 'field' }]
+			: [];
 		return renderExpressionInput(
 			C,
 			value.expr,
@@ -323,7 +326,7 @@ export function ValueView({
 			labels.expressionPlaceholder,
 			!!sourceSchema,
 			undefined,
-			enumOptions
+			[...wildcardOptions, ...enumOptions]
 		);
 	}
 
@@ -365,6 +368,7 @@ export function ValueView({
 				schema={itemsSchema}
 				sourceSchema={nestedSourceSchema}
 				sourceSuggestions={nestedSourceSuggestions}
+				wildcardCreatesSpread
 			/>
 		);
 
@@ -423,6 +427,7 @@ export function ValueView({
 				schema={schema}
 				sourceSchema={nestedSourceSchema}
 				sourceSuggestions={nestedSourceSuggestions}
+				wildcardCreatesSpread
 			/>
 		);
 

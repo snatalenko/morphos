@@ -1,13 +1,14 @@
 /* eslint-disable no-use-before-define */
-import type {
-	RootMapping,
-	ValueMap,
-	PropertiesMap,
-	ArrayMapping,
-	ObjectInContextMapping,
-	ObjectMapping,
-	ConditionalMapping,
-	ConcatMapping
+import {
+	isTupleArrayMapping,
+	type RootMapping,
+	type ValueMap,
+	type PropertiesMap,
+	type ArrayMapping,
+	type ObjectInContextMapping,
+	type ObjectMapping,
+	type ConditionalMapping,
+	type ConcatMapping
 } from '../../mappingTypes.ts';
 import type { AddKind, JsonSchema } from '../types.ts';
 export type {
@@ -39,11 +40,6 @@ export const WILDCARD_KEY = '*';
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
 	return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
-
-function isTupleArrayMapping(v: Record<string, unknown>): boolean {
-	const keys = Object.keys(v);
-	return keys.length > 0 && keys.every(k => /^\d+$/.test(k));
 }
 
 function assertNever(value: never): never {

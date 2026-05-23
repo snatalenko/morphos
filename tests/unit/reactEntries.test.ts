@@ -83,6 +83,31 @@ describe('react entries', () => {
 		expect(entriesToProps(rootToEntries(mapping))).to.deep.equal(mapping);
 	});
 
+	it('recognizes JSON arrays as tuple array mappings', () => {
+		const mapping = {
+			tuple: [
+				'sku',
+				'quantity'
+			]
+		};
+
+		expect(entriesToProps(rootToEntries(mapping))).to.deep.equal({
+			tuple: {
+				0: 'sku',
+				1: 'quantity'
+			}
+		});
+	});
+
+	it('round-trips wildcard spread mappings with explicit overrides', () => {
+		const mapping = {
+			'*': '*',
+			modified: 'x + 1'
+		};
+
+		expect(entriesToProps(rootToEntries(mapping))).to.deep.equal(mapping);
+	});
+
 	it('converts concat mappings to tuple array mappings', () => {
 		expect(convertEntryValue({
 			kind: 'concat',

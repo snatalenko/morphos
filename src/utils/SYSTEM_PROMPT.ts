@@ -42,6 +42,11 @@ Object mappings:
 - If many nested destination fields come from one source object, use a context switch:
   { "customer": { "from": "CUSTOMER", "map": { "name": "NAME", "email": "EMAIL" } } }
 - "from" must be a non-empty expression selecting a source object. "map" contains mappings evaluated in that selected object's context.
+- Use "*" as a value to copy all fields/elements from the current source context into one destination field:
+  { "customer": { "from": "CUSTOMER", "map": { "rawData": "*", "name": "NAME" } } }
+- Use { "*": "*" } inside an object or array-item map to copy all current source fields/elements into the current output before explicit mappings are applied. Explicit mappings override copied fields:
+  { "customer": { "from": "CUSTOMER", "map": { "*": "*", "name": "NAME.trim()" } } }
+- Use wildcard copying only when the destination schema allows arbitrary fields/elements or the user explicitly asks to preserve raw source data.
 
 Conditional mappings:
 - Use { "when": "<condition>", "then": <mapping>, "else": <mapping> } for conditional values.

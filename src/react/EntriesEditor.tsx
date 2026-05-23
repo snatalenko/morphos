@@ -23,13 +23,15 @@ export function EntriesEditor({
 	onChange,
 	schema,
 	sourceSchema,
-	sourceSuggestions = []
+	sourceSuggestions = [],
+	wildcardCreatesSpread = false
 }: {
 	entries: Entry[];
 	onChange: (next: Entry[]) => void;
 	schema?: JsonSchema;
 	sourceSchema?: JsonSchema;
 	sourceSuggestions?: SourceFieldMatch[];
+	wildcardCreatesSpread?: boolean;
 }) {
 	const C = useContext(ComponentsContext);
 	const labels = useContext(LabelsContext);
@@ -56,6 +58,15 @@ export function EntriesEditor({
 	};
 
 	const createEntryForKey = (key: string, keyAdvanced = false, id = genId()): Entry => {
+		if (key === WILDCARD_KEY && wildcardCreatesSpread) {
+			return {
+				id,
+				key,
+				value: { kind: 'expr', expr: WILDCARD_KEY },
+				keyAdvanced
+			};
+		}
+
 		const sub = key === WILDCARD_KEY ? schema : getPropertySchema(schema, key);
 		const value = sub ? createEntryValueForSchema(sub) : createEntryValue('expr');
 		return { id, key, value, keyAdvanced };
@@ -72,13 +83,14 @@ export function EntriesEditor({
 	const requiredSet = new Set(schema?.required ?? []);
 	const schemaPropNames = schema?.properties ? Object.keys(schema.properties) : [];
 	const mappedKeys = new Set(entries.map(e => e.key));
-	const currentValueMapped = mappedKeys.has(WILDCARD_KEY);
-	const canMapCurrentValue = entries.length === 0;
+	const wildcardEntry = entries.find(e => e.key === WILDCARD_KEY);
+	const wildcardIsSpread = wildcardEntry?.value.kind === 'expr' && wildcardEntry.value.expr === WILDCARD_KEY;
+	const currentValueMapped = wildcardEntry !== undefined && !wildcardIsSpread;
 
 	const availableForEntry = (entry: Entry): FieldOption[] => {
 		const result: FieldOption[] = [];
 
-		if (entry.key === WILDCARD_KEY || (!currentValueMapped && canMapCurrentValue))
+		if (entry.key === WILDCARD_KEY || !mappedKeys.has(WILDCARD_KEY))
 			result.push({ value: WILDCARD_KEY, label: labels.currentValue });
 
 		for (const name of schemaPropNames) {

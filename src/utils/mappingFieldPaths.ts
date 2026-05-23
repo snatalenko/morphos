@@ -1,53 +1,18 @@
 /* eslint-disable no-use-before-define */
-import type {
-	ArrayMapping,
-	ConcatMapping,
-	ConditionalMapping,
-	ObjectInContextMapping,
-	ObjectMapping,
-	PropertiesMap,
-	RootMapping,
-	ValueMap
+import {
+	isArrayMapping,
+	isConcatMapping,
+	isConditionalMapping,
+	isObjectInContextMapping,
+	isObjectMapping,
+	isRootElementMapping,
+	type PropertiesMap,
+	type RootMapping,
+	type ValueMap
 } from '../mappingTypes.ts';
-import { isRecord } from './jsonSchemaUtils.ts';
 
 function pathJoin(prefix: string, fieldName: string): string {
 	return prefix ? `${prefix}.${fieldName}` : fieldName;
-}
-
-function hasOnlyKeys(value: Record<string, unknown>, keys: string[]): boolean {
-	const actual = Object.keys(value);
-	return actual.length === keys.length && keys.every(key => actual.includes(key));
-}
-
-function isConditionalMapping(value: ValueMap): value is ConditionalMapping {
-	return isRecord(value)
-		&& 'when' in value
-		&& Object.keys(value).every(key => key === 'when' || key === 'then' || key === 'else');
-}
-
-function isConcatMapping(value: ValueMap): value is ConcatMapping {
-	const record = value as Record<string, unknown>;
-	return isRecord(value) && hasOnlyKeys(value, ['concat']) && Array.isArray(record.concat);
-}
-
-function isArrayMapping(value: ValueMap): value is ArrayMapping {
-	const record = value as Record<string, unknown>;
-	return isRecord(value) && hasOnlyKeys(value, ['forEach', 'map']) && isRecord(record.map);
-}
-
-function isObjectInContextMapping(value: ValueMap): value is ObjectInContextMapping {
-	const record = value as Record<string, unknown>;
-	return isRecord(value) && hasOnlyKeys(value, ['from', 'map']) && isRecord(record.map);
-}
-
-function isObjectMapping(value: ValueMap): value is ObjectMapping {
-	const record = value as Record<string, unknown>;
-	return isRecord(value) && hasOnlyKeys(value, ['map']) && isRecord(record.map);
-}
-
-function isRootElementMapping(value: ValueMap): value is { '*': ValueMap } {
-	return isRecord(value) && hasOnlyKeys(value, ['*']);
 }
 
 function isNonEmptyExpression(value: string): boolean {

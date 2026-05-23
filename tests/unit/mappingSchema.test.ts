@@ -80,6 +80,56 @@ describe('mappingSchema', () => {
 
 		v.validate(map, schema, { throwError: true });
 
+		map = {
+			'*': '*',
+			modified: 'x + 1'
+		};
+
+		v.validate(map, schema, { throwError: true });
+
+		map = {
+			rawData: '*',
+			mappedName: 'NAME'
+		};
+
+		v.validate(map, schema, { throwError: true });
+
+		map = {
+			from: 'BUYER',
+			map: {
+				rawData: '*',
+				mappedName: 'NAME'
+			}
+		};
+
+		v.validate(map, schema, { throwError: true });
+
+		map = {
+			from: 'BUYER',
+			map: {
+				'*': '*',
+				mappedName: 'NAME'
+			}
+		};
+
+		v.validate(map, schema, { throwError: true });
+
+		map = {
+			from: 'values',
+			map: {
+				'*': '*',
+				1: '$context[1] + 10'
+			}
+		};
+
+		v.validate(map, schema, { throwError: true });
+
+		map = {
+			'*': '*'
+		};
+
+		v.validate(map, schema, { throwError: true });
+
 		map = [
 			'foo',
 			{

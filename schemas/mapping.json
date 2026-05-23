@@ -2,7 +2,7 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "id": "https://github.com/snatalenko/morphos/mapping",
     "title": "Mapping Schema for JSON Data Transformations",
-    "description": "A schema defining a structure for JSON mappings. Field names in the mappings correspond to fields in the destination JSON format, while field values can be any valid JavaScript expression.",
+    "description": "A schema defining a structure for JSON mappings. Field names in the mappings correspond to fields in the destination JSON format, while field values can be JavaScript expressions, wildcard current-context copies, or nested mapping instructions.",
     "oneOf": [
         {
             "$ref": "#/definitions/StrictMappingObject"
@@ -30,12 +30,13 @@
         },
         "JsExpression": {
             "title": "JavaScript Expression",
-            "description": "A valid JavaScript expression represented as a string. Will be evaluated in the context of the current source object.",
+            "description": "A valid JavaScript expression represented as a string. Will be evaluated in the context of the current source object. The expression \"*\" copies all fields/elements from the current source context.",
             "type": "string",
             "minLength": 1,
             "examples": [
                 "`Invoice ${ID}`",
                 "QTY * PRICE",
+                "*",
                 "true",
                 "UPC.substring(0, 5)",
                 "LINE_ITEMS.find(i => i.QTY == 0)"
@@ -79,15 +80,32 @@
             "required": [
                 "*"
             ],
+            "not": {
+                "properties": {
+                    "*": {
+                        "const": "*"
+                    }
+                },
+                "required": [
+                    "*"
+                ]
+            },
             "additionalProperties": false
         },
         "ObjectFieldsMapping": {
             "title": "Object Fields Mapping",
-            "description": "Maps the fields of a destination object. Each key-value pair in the mapping represents a field and its mapping expression.",
+            "description": "Maps the fields of a destination object. Each key-value pair in the mapping represents a field and its mapping expression. A \"*\": \"*\" entry copies all current source object fields or array elements before explicit mappings are applied.",
             "type": "object",
             "minProperties": 1,
+            "properties": {
+                "*": {
+                    "title": "Wildcard Spread",
+                    "description": "Copies all fields from the current source object or array before applying explicit field mappings.",
+                    "const": "*"
+                }
+            },
             "patternProperties": {
-                "^(?!(\\*)|(map)|(forEach)|(from)|(when)|(then)|(else)|(concat)).+$": {
+                "^(?!(\\*|map|forEach|from|when|then|else|concat)$).+$": {
                     "$ref": "#/definitions/AnyMapping"
                 }
             },
@@ -98,6 +116,14 @@
                     "qty": "QTY",
                     "price": "PRICE",
                     "amount": "QTY * PRICE"
+                },
+                {
+                    "*": "*",
+                    "mappedName": "NAME"
+                },
+                {
+                    "rawData": "*",
+                    "mappedName": "NAME"
                 }
             ]
         },
@@ -159,6 +185,13 @@
                         "price": "PRICE",
                         "amount": "QTY * PRICE"
                     }
+                },
+                {
+                    "forEach": "LINE_ITEMS",
+                    "map": {
+                        "*": "*",
+                        "amount": "QTY * PRICE"
+                    }
                 }
             ]
         },
@@ -179,6 +212,22 @@
             "required": [
                 "from",
                 "map"
+            ],
+            "examples": [
+                {
+                    "from": "BUYER",
+                    "map": {
+                        "rawData": "*",
+                        "mappedName": "NAME"
+                    }
+                },
+                {
+                    "from": "BUYER",
+                    "map": {
+                        "*": "*",
+                        "mappedName": "NAME"
+                    }
+                }
             ],
             "additionalProperties": false
         },
