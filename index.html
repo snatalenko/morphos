@@ -4,8 +4,60 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Morphos · Documentation</title>
+	<title>Morphos JSON-to-JSON Mapper · Secure JavaScript Mapping Specs</title>
+	<meta name="description" content="Morphos is a TypeScript JSON-to-JSON mapper with JSON mapping specs, JavaScript expressions, secure VM execution, React editors, and AI mapping generation." />
+	<meta name="keywords" content="JSON mapper, JSON-to-JSON mapper, data mapper, TypeScript mapper, mapping editor, JSON Schema editor, OpenAI mapping generation, Anthropic Claude mapping generation, secure JavaScript transformations" />
+	<meta name="robots" content="index, follow" />
+	<link rel="canonical" href="https://natalenko.com/morphos/" />
 	<link rel="icon" type="image/svg+xml" href="docs/images/morphos_logo.svg" />
+	<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+	<meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)" />
+
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="Morphos" />
+	<meta property="og:title" content="Morphos JSON-to-JSON Mapper" />
+	<meta property="og:description" content="TypeScript JSON-to-JSON mapping with JSON specs, JavaScript expressions, secure VM execution, React editors, and AI-assisted mapping generation." />
+	<meta property="og:url" content="https://natalenko.com/morphos/" />
+	<meta property="og:image" content="https://natalenko.com/morphos/docs/images/morphos_logo.svg" />
+
+	<meta name="twitter:card" content="summary" />
+	<meta name="twitter:title" content="Morphos JSON-to-JSON Mapper" />
+	<meta name="twitter:description" content="TypeScript JSON-to-JSON mapping with JSON specs, JavaScript expressions, secure VM execution, React editors, and AI-assisted mapping generation." />
+	<meta name="twitter:image" content="https://natalenko.com/morphos/docs/images/morphos_logo.svg" />
+
+	<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@graph": [
+				{
+					"@type": "WebSite",
+					"name": "Morphos",
+					"url": "https://natalenko.com/morphos/",
+					"description": "Documentation for Morphos, a TypeScript JSON-to-JSON mapper with JSON mapping specs, JavaScript expressions, secure VM execution, React editors, and AI mapping generation."
+				},
+				{
+					"@type": "SoftwareSourceCode",
+					"name": "Morphos",
+					"codeRepository": "https://github.com/snatalenko/morphos",
+					"programmingLanguage": "TypeScript",
+					"runtimePlatform": "Node.js and browser",
+					"license": "https://www.apache.org/licenses/LICENSE-2.0",
+					"url": "https://natalenko.com/morphos/",
+					"description": "A JSON-to-JSON mapper where mapping specifications are JSON and transformations are JavaScript expressions executed in a secure VM.",
+					"keywords": [
+						"JSON mapper",
+						"JSON-to-JSON mapper",
+						"data mapping",
+						"TypeScript",
+						"React mapping editor",
+						"JSON Schema editor",
+						"OpenAI",
+						"Anthropic Claude"
+					]
+				}
+			]
+		}
+	</script>
 
 	<script>
 		// pre-paint, before tailwind loads — sets the .dark class so there's no flash of light theme
@@ -415,7 +467,24 @@
 
 		<main class="flex-1 min-w-0 py-8">
 			<article id="content" class="prose">
-				<p class="text-slate-500">Loading…</p>
+				<h1>Morphos JSON-to-JSON Mapper</h1>
+				<p>
+					Morphos is a TypeScript library for transforming one JSON document into another using a user-defined JSON mapping specification.
+					Mapping values are plain JavaScript expressions, so transformations stay predictable while execution remains isolated in a secure VM.
+				</p>
+				<h2>What It Provides</h2>
+				<ul>
+					<li>JSON-to-JSON mapping with object, array, conditional, concat, and context-switching instructions.</li>
+					<li>A React visual mapping editor for building mappings in web applications.</li>
+					<li>A React JSON Schema editor for shaping source and destination formats.</li>
+					<li>OpenAI and Anthropic Claude integrations for generating first-pass mappings from known input and output schemas.</li>
+					<li>An interactive playground for designing, testing, and running mappings in the browser.</li>
+				</ul>
+				<p>
+					Read the full documentation below, try the <a href="playground/">interactive playground</a>,
+					view the <a href="https://github.com/snatalenko/morphos">GitHub repository</a>,
+					or install the package from <a href="https://www.npmjs.com/package/morphos">npm</a>.
+				</p>
 			</article>
 
 			<div id="error" class="hidden mt-4 p-4 bg-red-50 border border-red-200 rounded text-red-800 text-sm"></div>
@@ -472,6 +541,7 @@
 		// folder paths that should resolve to a README.md inside them
 		const MODULE_DIRS = new Set([
 			'src/react',
+			'src/react-schema-editor',
 			'src/openai',
 			'src/anthropic'
 		]);
