@@ -1,3 +1,11 @@
+# [1.8.0-alpha.11](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.10...v1.8.0-alpha.11) (2026-05-23)
+
+
+### Features
+
+* Add wildcard context copy expression ([2e13f76](https://github.com/snatalenko/morphos/commit/2e13f76560972c581e5bc62c52d0700ae02319b9))
+
+
 # [1.8.0-alpha.10](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.9...v1.8.0-alpha.10) (2026-05-22)
 
 

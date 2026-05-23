@@ -1,6 +1,6 @@
 {
   "name": "morphos",
-  "version": "1.8.0-alpha.10",
+  "version": "1.8.0-alpha.11",
   "description": "JSON-to-JSON mapper with user-defined JSON mapping specs, plain JS transformation expressions, and secure VM execution.",
   "keywords": [
     "config-driven",
