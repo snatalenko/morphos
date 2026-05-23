@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useRef, useState, type ReactNode } from 'react';
+import { StrictMode, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
 	MappingEditor,
@@ -44,6 +44,33 @@ type SourceTab = 'schema' | 'data';
 type DestinationTab = 'schema' | 'result';
 type AiProvider = 'openai' | 'anthropic';
 type AiReasoningEffort = '' | 'none' | 'minimal' | 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+
+const editorTypes: EditorType[] = ['json', 'default', 'bs34', 'bs53'];
+const editorTypeUrlSegments: Record<EditorType, string> = {
+	json: 'json',
+	default: 'default',
+	bs34: 'bootstrap34',
+	bs53: 'bootstrap53'
+};
+
+function isEditorType(value: string): value is EditorType {
+	return editorTypes.includes(value as EditorType);
+}
+
+function getEditorTypeFromUrl(): EditorType {
+	const segment = window.location.hash.match(/^#\/([^/?#]+)/)?.[1];
+	const editorType = Object.entries(editorTypeUrlSegments)
+		.find(([, urlSegment]) => urlSegment === segment)?.[0];
+	return editorType && isEditorType(editorType) ? editorType : 'json';
+}
+
+function setEditorTypeUrlSegment(editorType: EditorType): void {
+	const nextHash = `/${editorTypeUrlSegments[editorType]}`;
+	if (window.location.hash === `#${nextHash}`)
+		return;
+
+	window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#${nextHash}`);
+}
 
 function isEmptyMapping(m: RootMapping): boolean {
 	return typeof m === 'object' && m !== null && !Array.isArray(m) && Object.keys(m).length === 0;
@@ -329,7 +356,7 @@ function App() {
 	const [runError, setRunError] = useState<string | null>(null);
 	const [runMs, setRunMs] = useState<number | null>(null);
 
-	const [editorType, setEditorType] = useState<EditorType>('json');
+	const [editorType, setEditorType] = useState<EditorType>(() => getEditorTypeFromUrl());
 	const [mapping, setMapping] = useState<RootMapping>(initial);
 	const [mappingText, setMappingText] = useState(JSON.stringify(initial, null, 2));
 	const [mappingError, setMappingError] = useState<string | null>(null);
@@ -552,7 +579,7 @@ function App() {
 		}
 	};
 
-	const switchEditor = (next: EditorType) => {
+	const switchEditor = useCallback((next: EditorType, updateUrl = true) => {
 		if (next === 'json' && editorType !== 'json') {
 			const current = editorRef.current?.value;
 			if (current) {
@@ -562,7 +589,19 @@ function App() {
 		}
 		setMappingError(null);
 		setEditorType(next);
-	};
+		if (updateUrl)
+			setEditorTypeUrlSegment(next);
+	}, [editorType]);
+
+	useEffect(() => {
+		const handleHashChange = () => {
+			switchEditor(getEditorTypeFromUrl(), false);
+		};
+		window.addEventListener('hashchange', handleHashChange);
+		return () => {
+			window.removeEventListener('hashchange', handleHashChange);
+		};
+	}, [switchEditor]);
 
 	const updateMappingText = (text: string) => {
 		userModifiedRef.current = true;
