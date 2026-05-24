@@ -1,3 +1,11 @@
+# [1.8.0-alpha.13](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.12...v1.8.0-alpha.13) (2026-05-24)
+
+
+### Changes
+
+* Improve support for root level conditional and composed list mappings ([6b3ddb3](https://github.com/snatalenko/morphos/commit/6b3ddb3e04872b4fe4644b7812cb161b6535e349))
+
+
 # [1.8.0-alpha.12](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.11...v1.8.0-alpha.12) (2026-05-24)
 
 
