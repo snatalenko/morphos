@@ -23,4 +23,5 @@ export type Entry = {
 	value: EntryValue;
 	keyAdvanced?: boolean;
 	template?: boolean;
+	rootValue?: boolean;
 };

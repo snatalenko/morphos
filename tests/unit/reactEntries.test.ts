@@ -3,6 +3,7 @@ import type { JsonSchema } from '../../src/JsonSchema.ts';
 import {
 	convertEntryValue,
 	convertEntryValueForSchema,
+	entriesToRootMapping,
 	entriesToProps,
 	rootToEntries,
 	type ExprEntryValue
@@ -11,6 +12,49 @@ import { createEntryValueForSchema } from '../../src/react/utils/createEntryValu
 import { getTupleItemSchema } from '../../src/react/utils/schemaProps.ts';
 
 describe('react entries', () => {
+
+	it('round-trips top-level conditional mappings', () => {
+		const mapping = {
+			when: 'recordType === \'invoice\'',
+			then: {
+				invoiceNumber: 'docNo',
+				totalAmount: 'total'
+			},
+			else: {
+				documentType: '\'ignored\''
+			}
+		};
+
+		const entries = rootToEntries(mapping);
+
+		expect(entries).to.have.length(1);
+		expect(entries[0]).to.deep.include({ key: '*', rootValue: true });
+		expect(entries[0].value).to.deep.include({
+			kind: 'conditional',
+			when: 'recordType === \'invoice\''
+		});
+		expect(entriesToRootMapping(entries)).to.deep.equal(mapping);
+	});
+
+	it('round-trips top-level concat mappings', () => {
+		const mapping = {
+			concat: [
+				{
+					when: 'purchaseOrderNumber',
+					then: {
+						type: '\'po\'',
+						bizTransaction: 'purchaseOrderNumber'
+					}
+				}
+			]
+		};
+
+		const entries = rootToEntries(mapping);
+
+		expect(entries).to.have.length(1);
+		expect(entries[0]).to.deep.include({ key: '*', rootValue: true });
+		expect(entriesToRootMapping(entries)).to.deep.equal(mapping);
+	});
 
 	it('round-trips conditional mappings', () => {
 		const mapping = {

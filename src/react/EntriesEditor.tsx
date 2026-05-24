@@ -123,17 +123,19 @@ export function EntriesEditor({
 			if (e.id !== id)
 				return e;
 
+			const nextEntry = { ...e, rootValue: undefined };
+
 			if (newSub) {
 				const expected = createEntryValueForSchema(newSub);
 				return {
-					...e,
+					...nextEntry,
 					key: newKey,
 					value: e.value.kind === expected.kind ? e.value : expected,
 					keyAdvanced: false
 				};
 			}
 
-			return { ...e, key: newKey, keyAdvanced: true };
+			return { ...nextEntry, key: newKey, keyAdvanced: true };
 		}));
 	};
 

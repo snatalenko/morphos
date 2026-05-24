@@ -12,7 +12,7 @@ import { LabelsContext } from './LabelsContext.ts';
 import { defaultComponents } from './defaultComponents.tsx';
 import { defaultLabels } from './defaultLabels.ts';
 import { generateInitialMapping } from '../utils/generateInitialMapping.ts';
-import { rootToEntries, entriesToProps, type Entry } from './utils/index.ts';
+import { rootToEntries, entriesToRootMapping, type Entry } from './utils/index.ts';
 import { EntriesEditor } from './EntriesEditor.tsx';
 import type { MappingEditorComponents, MappingEditorLabels, JsonSchema } from './types.ts';
 
@@ -50,7 +50,7 @@ const MappingEditor = forwardRef<MappingEditorHandle, MappingEditorProps>(functi
 
 	useImperativeHandle(ref, () => ({
 		get value(): RootMapping {
-			return entriesToProps(entriesRef.current);
+			return entriesToRootMapping(entriesRef.current);
 		}
 	}), []);
 
@@ -66,7 +66,7 @@ const MappingEditor = forwardRef<MappingEditorHandle, MappingEditorProps>(functi
 	const handleEntriesChange = (next: Entry[]) => {
 		setEntries(next);
 		if (props.onChange)
-			props.onChange(entriesToProps(next));
+			props.onChange(entriesToRootMapping(next));
 	};
 
 	return (

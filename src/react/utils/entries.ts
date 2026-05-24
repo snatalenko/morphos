@@ -1,5 +1,7 @@
 /* eslint-disable no-use-before-define */
 import {
+	isConditionalMapping,
+	isConcatMapping,
 	isTupleArrayMapping,
 	type RootMapping,
 	type ValueMap,
@@ -55,6 +57,15 @@ function propsToEntries(map: PropertiesMap | undefined): Entry[] {
 		key,
 		value: valueToEntryValue(value as ValueMap)
 	}));
+}
+
+function rootValueToEntries(value: ValueMap): Entry[] {
+	return [{
+		id: genId(),
+		key: WILDCARD_KEY,
+		value: valueToEntryValue(value),
+		rootValue: true
+	}];
 }
 
 function mergeRequiredEntries(entries: Entry[], schema: JsonSchema): Entry[] {
@@ -145,6 +156,9 @@ export function rootToEntries(root: RootMapping | undefined): Entry[] {
 	if (root == null || typeof root === 'string' || Array.isArray(root))
 		return [];
 
+	if (isConditionalMapping(root) || isConcatMapping(root))
+		return rootValueToEntries(root);
+
 	if ('forEach' in root && 'map' in root)
 		return propsToEntries((root as ArrayMapping).map);
 
@@ -155,6 +169,14 @@ export function rootToEntries(root: RootMapping | undefined): Entry[] {
 		return propsToEntries((root as ObjectMapping).map);
 
 	return propsToEntries(root as PropertiesMap);
+}
+
+export function entriesToRootMapping(entries: Entry[]): RootMapping {
+	const mappedEntries = entries.filter(e => e.key !== '');
+	if (mappedEntries.length === 1 && mappedEntries[0].rootValue === true)
+		return entryValueToValue(mappedEntries[0].value) as RootMapping;
+
+	return entriesToProps(entries);
 }
 
 export function entriesToProps(entries: Entry[]): PropertiesMap {

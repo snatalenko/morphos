@@ -17,6 +17,7 @@ Hard constraints:
 - Do not add destination keys outside the destination schema or mapping template unless arbitrary additional properties are allowed.
 - Do not invent weak source matches.
 - Do not emit null, empty strings, defaults, examples, or enum values as placeholders for unknown data.
+- If the source schema describes multiple business object or event types and the destination schema describes one specific type, wrap the whole mapping in a top-level "when"/"then" condition.
 - Do not use synthetic singleton arrays in "forEach"; for example, do not write "forEach": "[Asset_Code]" to force a scalar field into an array.
 - Keep directive objects exact: "forEach" with "map", "from" with "map", "when" with "then" and optional "else", or "concat" alone.
 - Do not use global objects, constructors, prototypes, arguments, callers, or execution-time values.
@@ -61,8 +62,8 @@ Object mappings:
 - If many nested destination fields come from one source object, use a context switch:
   { "customer": { "from": "CUSTOMER", "map": { "name": "NAME", "email": "EMAIL" } } }
 - "from" must be a non-empty expression selecting a source object. "map" contains mappings evaluated in that selected object's context.
-- If the whole source object may or may not represent the destination object based on business logic, wrap the mapping in a top-level condition so non-matching source objects produce no result:
-  { "when": "type === 'transfer'", "then": { "eventID": "Operation_ID", "action": "'OBSERVE'" } }
+- Use top-level conditions for discriminator fields such as type, eventType, recordType, kind, category, or status when only some source records match the destination object type.
+- Choose the discriminator value that semantically matches the destination title, description, const, or single-value enum. Do not map non-matching source object types just because their fields have compatible names.
 - Wildcard copying has two forms:
   - { "rawData": "*" } copies the whole current source context into the destination field "rawData":
     { "customer": { "from": "CUSTOMER", "map": { "rawData": "*", "name": "NAME" } } }
