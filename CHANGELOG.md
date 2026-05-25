@@ -1,113 +1,4 @@
-# [1.8.0-alpha.13](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.12...v1.8.0-alpha.13) (2026-05-24)
-
-
-### Changes
-
-* Improve support for root level conditional and composed list mappings ([6b3ddb3](https://github.com/snatalenko/morphos/commit/6b3ddb3e04872b4fe4644b7812cb161b6535e349))
-
-
-# [1.8.0-alpha.12](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.11...v1.8.0-alpha.12) (2026-05-24)
-
-
-
-# [1.8.0-alpha.11](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.10...v1.8.0-alpha.11) (2026-05-23)
-
-
-### Features
-
-* Add wildcard context copy expression ([2e13f76](https://github.com/snatalenko/morphos/commit/2e13f76560972c581e5bc62c52d0700ae02319b9))
-
-
-# [1.8.0-alpha.10](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.9...v1.8.0-alpha.10) (2026-05-22)
-
-
-### Security
-
-* Harden VM mapper context isolation ([5110fc8](https://github.com/snatalenko/morphos/commit/5110fc881a667d4611df007b63d04d031d314d33))
-
-### Build System
-
-* Log security commits to changelog ([b8cbbc8](https://github.com/snatalenko/morphos/commit/b8cbbc83b03ba7c9358f1ef88dad6c2883393c8b))
-
-
-# [1.8.0-alpha.9](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.8...v1.8.0-alpha.9) (2026-05-21)
-
-
-
-# [1.8.0-alpha.8](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.7...v1.8.0-alpha.8) (2026-05-21)
-
-
-### Changes
-
-* Group mapping suggestions by categories ([dadb33d](https://github.com/snatalenko/morphos/commit/dadb33de74ceaa66b736e7f3f0ee902667715ac3))
-
-
-# [1.8.0-alpha.7](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.6...v1.8.0-alpha.7) (2026-05-20)
-
-
-### Features
-
-* Anthropic integration ([1acdde9](https://github.com/snatalenko/morphos/commit/1acdde9025fc8c3691693569b0d48fa47428abd0))
-
-
-# [1.8.0-alpha.6](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.5...v1.8.0-alpha.6) (2026-05-20)
-
-
-### Changes
-
-* Add "morphos/utils" lightweight export for browser environment ([af004d2](https://github.com/snatalenko/morphos/commit/af004d298720915fc4d90e4c3cc2382ed60c98cb))
-* Replace obsolete mappingForSchema util with generateInitialMapping ([295cc07](https://github.com/snatalenko/morphos/commit/295cc07f689834992be166bbcf03732a58b28c8a))
-* Make mapped field utility functions to count only leaf nodes and ignore empty mappings ([9279c02](https://github.com/snatalenko/morphos/commit/9279c02976e279d32bade213a0bb79e55e05f233))
-
-
-# [1.8.0-alpha.5](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.4...v1.8.0-alpha.5) (2026-05-19)
-
-
-### Features
-
-* Tuple array support in mapping editor ([6fd86b5](https://github.com/snatalenko/morphos/commit/6fd86b553ef60c3c496c4e1f68c5c0c019bee057))
-* `isDestinationSchemaFullyMapped` and `countMappedFields` utils ([ea28564](https://github.com/snatalenko/morphos/commit/ea285646a6eb712e305ebdf22ff772e6a2e19900))
-* `readOnly` setting for SchemaEditor ([218a3ca](https://github.com/snatalenko/morphos/commit/218a3ca91b07ffa33c5f35b9af909feae2760694))
-
-### Changes
-
-* Allow custom or auto-generated mapping placeholder to be passed ([2bd3858](https://github.com/snatalenko/morphos/commit/2bd38580e1f6f0e17779e9ac5323d6394d1730c1))
-* Generate missed required field placeholders optionally thru post-processing after AI output ([597352a](https://github.com/snatalenko/morphos/commit/597352a2b4186d668fea39c41e304aa9a013ebe4))
-
-
-# [1.8.0-alpha.4](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.3...v1.8.0-alpha.4) (2026-05-19)
-
-
-
-# [1.8.0-alpha.3](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.2...v1.8.0-alpha.3) (2026-05-18)
-
-
-### Features
-
-* Option to hide root element on json schema editor ([e0975c5](https://github.com/snatalenko/morphos/commit/e0975c59e4bcb173bd2b36f5ef2f556a353cef5a))
-
-
-# [1.8.0-alpha.2](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.1...v1.8.0-alpha.2) (2026-05-18)
-
-
-### Features
-
-* JsonSchema editor ([926cd6a](https://github.com/snatalenko/morphos/commit/926cd6a87da098ab10e6800264e8768ca35318f7))
-
-### Security
-
-* Patch vulnerabilities in dev dependencies ([8970c9d](https://github.com/snatalenko/morphos/commit/8970c9d79c3d4c95093a6f466c639e81a62e51f9))
-
-
-# [1.8.0-alpha.1](https://github.com/snatalenko/morphos/compare/v1.8.0-alpha.0...v1.8.0-alpha.1) (2026-05-16)
-
-
-### Build System
-
-* Enable CI scripts on alpha and beta branches ([bf763fa](https://github.com/snatalenko/morphos/commit/bf763fab8fbb559699f725e5a7e69d9239b3cf10))
-
-
-# [1.8.0-alpha.0](https://github.com/snatalenko/morphos/compare/v1.7.2...v1.8.0-alpha.0) (2026-05-15)
+# [2.0.0-alpha.0](https://github.com/snatalenko/morphos/compare/v1.7.2...v2.0.0-alpha.0) (2026-05-25)
 
 
 ### Features
@@ -116,21 +7,38 @@
 * Mapping editor in React with bootstrap 3.4/5.3 themes ([24d1b18](https://github.com/snatalenko/morphos/commit/24d1b18aad5fed2bdee480e87946f0837c560691))
 * `concat` instruction for composing arrays from multiple optional sources ([0c6b964](https://github.com/snatalenko/morphos/commit/0c6b9643b0f0f6dbe06b23bdef0289df41b082be))
 * Conditional when/then statements ([d98b402](https://github.com/snatalenko/morphos/commit/d98b4020d6b9747c4dbc6ae29f61901e1ff4ac76))
+* Option to hide root element on json schema editor ([e0975c5](https://github.com/snatalenko/morphos/commit/e0975c59e4bcb173bd2b36f5ef2f556a353cef5a))
+* JsonSchema editor ([926cd6a](https://github.com/snatalenko/morphos/commit/926cd6a87da098ab10e6800264e8768ca35318f7))
+* Tuple array support in mapping editor ([6fd86b5](https://github.com/snatalenko/morphos/commit/6fd86b553ef60c3c496c4e1f68c5c0c019bee057))
+* `isDestinationSchemaFullyMapped` and `countMappedFields` utils ([ea28564](https://github.com/snatalenko/morphos/commit/ea285646a6eb712e305ebdf22ff772e6a2e19900))
+* `readOnly` setting for SchemaEditor ([218a3ca](https://github.com/snatalenko/morphos/commit/218a3ca91b07ffa33c5f35b9af909feae2760694))
+* Anthropic integration ([1acdde9](https://github.com/snatalenko/morphos/commit/1acdde9025fc8c3691693569b0d48fa47428abd0))
+* Add wildcard context copy expression ([2e13f76](https://github.com/snatalenko/morphos/commit/2e13f76560972c581e5bc62c52d0700ae02319b9))
 
 ### Changes
 
 * Playground page for experimenting with the editor and mapping auto-generation ([9b264bf](https://github.com/snatalenko/morphos/commit/9b264bf81370d002324aea32e56c802d20d7994f))
 * Change name "declarative-mapper" to "morphos" ([5b1a7a9](https://github.com/snatalenko/morphos/commit/5b1a7a9d5bd431ee67d2d17402f87da01bdaa0c2))
+* Allow custom or auto-generated mapping placeholder to be passed ([2bd3858](https://github.com/snatalenko/morphos/commit/2bd38580e1f6f0e17779e9ac5323d6394d1730c1))
+* Generate missed required field placeholders optionally thru post-processing after AI output ([597352a](https://github.com/snatalenko/morphos/commit/597352a2b4186d668fea39c41e304aa9a013ebe4))
+* Add "morphos/utils" lightweight export for browser environment ([af004d2](https://github.com/snatalenko/morphos/commit/af004d298720915fc4d90e4c3cc2382ed60c98cb))
+* Replace obsolete mappingForSchema util with generateInitialMapping ([295cc07](https://github.com/snatalenko/morphos/commit/295cc07f689834992be166bbcf03732a58b28c8a))
+* Make mapped field utility functions to count only leaf nodes and ignore empty mappings ([9279c02](https://github.com/snatalenko/morphos/commit/9279c02976e279d32bade213a0bb79e55e05f233))
+* Group mapping suggestions by categories ([dadb33d](https://github.com/snatalenko/morphos/commit/dadb33de74ceaa66b736e7f3f0ee902667715ac3))
+* Improve support for root level conditional and composed list mappings ([6b3ddb3](https://github.com/snatalenko/morphos/commit/6b3ddb3e04872b4fe4644b7812cb161b6535e349))
 
 ### Security
 
 * Patch vulnerabilities in dev dependencies ([fcd7764](https://github.com/snatalenko/morphos/commit/fcd7764398a7ccbcd3b1773f87bda4addf46529e))
 * Set min-release-age=7 for npm packages ([073c6ee](https://github.com/snatalenko/morphos/commit/073c6eec0558e6b233362872164b3b318af59a37))
+* Patch vulnerabilities in dev dependencies ([8970c9d](https://github.com/snatalenko/morphos/commit/8970c9d79c3d4c95093a6f466c639e81a62e51f9))
+* Harden VM mapper context isolation ([5110fc8](https://github.com/snatalenko/morphos/commit/5110fc881a667d4611df007b63d04d031d314d33))
 
 ### Documentation
 
 * Update readme, add index.html ([2751e39](https://github.com/snatalenko/morphos/commit/2751e399c889bba85824b9a3650558ffd3e9bffa))
 * Publish the interactive editor playground ([9771069](https://github.com/snatalenko/morphos/commit/9771069d0b42a4f7c247e1f39ed26979afe81f3b))
+* Add migration instruction ([3a8dcca](https://github.com/snatalenko/morphos/commit/3a8dcca5820e7a8c7c66b7e70c871cb4ea2054e0))
 
 ### Tests
 
@@ -141,6 +49,8 @@
 * Add alpha/beta tag support to GH publish workflow ([716f221](https://github.com/snatalenko/morphos/commit/716f22174a57d3407286c092018b7419c192a455))
 * Update tags cleanup script with alpha/beta/rc version support ([36f3c03](https://github.com/snatalenko/morphos/commit/36f3c035ac938b359fd918bccd0adee4d0b0f21d))
 * Replace npmignore with "files" list ([b7a73f1](https://github.com/snatalenko/morphos/commit/b7a73f146fdcd84a6ffa7241d6d935d66acc09b0))
+* Enable CI scripts on alpha and beta branches ([bf763fa](https://github.com/snatalenko/morphos/commit/bf763fab8fbb559699f725e5a7e69d9239b3cf10))
+* Log security commits to changelog ([b8cbbc8](https://github.com/snatalenko/morphos/commit/b8cbbc83b03ba7c9358f1ef88dad6c2883393c8b))
 
 
 ## [1.7.2](https://github.com/snatalenko/morphos/compare/v1.7.1...v1.7.2) (2026-03-04)
