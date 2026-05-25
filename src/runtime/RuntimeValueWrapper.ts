@@ -13,14 +13,21 @@ export function isBlockedRuntimeProperty(key: string | symbol): key is string {
 	return typeof key === 'string' && BLOCKED_PROPERTY_NAMES.has(key);
 }
 
+export type RuntimeValueSerializer<T = any> = {
+	check: (value: unknown) => value is T,
+	serialize: (value: T) => unknown
+}
+
 export default class RuntimeValueWrapper {
 
 	#wrappedValues = new WeakMap<object, any>();
 	#unwrappedValues = new WeakMap<object, object>();
+	#serializers: RuntimeValueSerializer[];
 	#logger?: ILogger;
 
-	constructor(logger?: ILogger) {
+	constructor(logger?: ILogger, serializers: RuntimeValueSerializer[] = []) {
 		this.#logger = logger;
+		this.#serializers = serializers;
 	}
 
 	/**
@@ -77,12 +84,25 @@ export default class RuntimeValueWrapper {
 		throw this.wrap(new SecurityViolationError(message));
 	}
 
+	#serializeValue<T>(value: T): T | undefined {
+		for (const serializer of this.#serializers) {
+			if (serializer.check(value))
+				return serializer.serialize(value) as T;
+		}
+
+		return undefined;
+	}
+
 	/**
 	 * Exposes a host value to VM code while blocking constructor-based escapes
 	 */
 	wrap<T>(value: T, protect = false): T {
 		if (value === null || (typeof value !== 'object' && typeof value !== 'function'))
 			return value;
+
+		const serialized = this.#serializeValue(value);
+		if (serialized !== undefined)
+			return serialized;
 
 		if (this.#unwrappedValues.has(value as object))
 			return value;

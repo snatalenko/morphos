@@ -861,6 +861,44 @@ if (false) {
 		expect(returnedValue.injected).to.eql('allowed');
 	});
 
+	it('clones extension returned dates into the VM realm', () => {
+
+		const mapper = createMapper({
+			value: `(() => {
+				const start = dates.startOfYear(1723677703511);
+				const shifted = dates.addMonths(start, 5);
+
+				return {
+					time: shifted.getTime(),
+					process: shifted.constructor.constructor("return typeof process")()
+				};
+			})()`
+		}, {
+			extensions: {
+				dates: {
+					startOfYear(value: number | Date) {
+						const date = new Date(value);
+
+						return new Date(date.getFullYear(), 0, 1);
+					},
+					addMonths(value: Date, months: number) {
+						const date = new Date(value.getTime());
+						date.setMonth(date.getMonth() + months);
+
+						return date;
+					}
+				}
+			}
+		});
+
+		expect(mapper({})).to.eql({
+			value: {
+				time: new Date(2024, 5, 1).getTime(),
+				process: 'undefined'
+			}
+		});
+	});
+
 	it('allows extension functions to prevent extensions on extension return values', () => {
 
 		const returnedValue = { value: 'returned' };

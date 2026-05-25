@@ -3,7 +3,11 @@ import type { ILogger } from './ILogger.ts';
 import * as vm from 'vm';
 import createScript from './createScript.ts';
 import { createGlobalContext } from './runtime/index.ts';
-import RuntimeValueWrapper from './runtime/RuntimeValueWrapper.ts';
+import RuntimeValueWrapper, { type RuntimeValueSerializer } from './runtime/RuntimeValueWrapper.ts';
+
+function isDate(value: unknown): value is Date {
+	return value instanceof Date;
+}
 
 type TMappingScriptEnvironment<TSource, TResult> = {
 
@@ -49,17 +53,24 @@ export default function createMapper<TSource extends object, TResult>(map: RootM
 
 	const script = new vm.Script(scriptBody);
 	const extensionNames = options?.extensions ? new Set(Object.keys(options.extensions)) : undefined;
-	const valueWrapper = new RuntimeValueWrapper(options?.logger);
+
+	const sandbox: TMappingScriptEnvironment<TSource, TResult> = {};
+	const ctx = vm.createContext(sandbox) as TMappingScriptEnvironment<TSource, TResult>;
+
+	const RuntimeDate = new vm.Script('Date').runInContext(ctx) as DateConstructor;
+	const serializers: RuntimeValueSerializer[] = [{
+		check: isDate,
+		serialize: value => new RuntimeDate(value.getTime())
+	}];
+	const valueWrapper = new RuntimeValueWrapper(options?.logger, serializers);
+
 	const $createGlobalContext = (input: object) => createGlobalContext(input, extensionNames, {
 		logger: options?.logger,
 		valueWrapper
 	});
-	const sandbox: TMappingScriptEnvironment<TSource, TResult> = {};
 
 	for (const extensionName of extensionNames ?? [])
 		sandbox[extensionName] = valueWrapper.wrap(options?.extensions?.[extensionName], true);
-
-	const ctx = vm.createContext(sandbox) as TMappingScriptEnvironment<TSource, TResult>;
 
 	return (document: TSource): TResult | undefined => {
 
