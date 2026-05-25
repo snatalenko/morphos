@@ -57,7 +57,7 @@ export default function createMapper<TSource extends object, TResult>(map: RootM
 	const sandbox: TMappingScriptEnvironment<TSource, TResult> = {};
 
 	for (const extensionName of extensionNames ?? [])
-		sandbox[extensionName] = valueWrapper.wrap(options?.extensions?.[extensionName]);
+		sandbox[extensionName] = valueWrapper.wrap(options?.extensions?.[extensionName], true);
 
 	const ctx = vm.createContext(sandbox) as TMappingScriptEnvironment<TSource, TResult>;
 

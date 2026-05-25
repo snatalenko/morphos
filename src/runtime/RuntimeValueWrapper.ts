@@ -51,8 +51,8 @@ export default class RuntimeValueWrapper {
 		const runtimeValueWrapper = this;
 
 		return function runtimeCallback(this: any, ...args: any[]) {
-			const receiver = runtimeValueWrapper.wrap(this);
-			const wrappedArgs = args.map(arg => runtimeValueWrapper.wrap(arg));
+			const receiver = runtimeValueWrapper.wrap(this, true);
+			const wrappedArgs = args.map(arg => runtimeValueWrapper.wrap(arg, true));
 			const result = Reflect.apply(callback, receiver, wrappedArgs);
 
 			return result;
@@ -80,7 +80,7 @@ export default class RuntimeValueWrapper {
 	/**
 	 * Exposes a host value to VM code while blocking constructor-based escapes
 	 */
-	wrap<T>(value: T): T {
+	wrap<T>(value: T, protect = false): T {
 		if (value === null || (typeof value !== 'object' && typeof value !== 'function'))
 			return value;
 
@@ -114,12 +114,18 @@ export default class RuntimeValueWrapper {
 				}
 			},
 
-			defineProperty: (_target: object, key: string | symbol) => {
-				this.#raiseBlockedMutation('property definition', key);
+			defineProperty: (target: object, key: string | symbol, descriptor: PropertyDescriptor) => {
+				if (protect)
+					this.#raiseBlockedMutation('property definition', key);
+
+				return Reflect.defineProperty(target, key, descriptor);
 			},
 
-			deleteProperty: (_target: object, key: string | symbol) => {
-				this.#raiseBlockedMutation('property deletion', key);
+			deleteProperty: (target: object, key: string | symbol) => {
+				if (protect)
+					this.#raiseBlockedMutation('property deletion', key);
+
+				return Reflect.deleteProperty(target, key);
 			},
 
 			get: (target: object, key: string | symbol, receiver: any) => {
@@ -130,7 +136,7 @@ export default class RuntimeValueWrapper {
 
 				try {
 					const propertyValue = Reflect.get(target, key, receiver);
-					return this.wrap(propertyValue);
+					return this.wrap(propertyValue, protect);
 				}
 				catch (error) {
 					throw this.wrap(error);
@@ -149,11 +155,11 @@ export default class RuntimeValueWrapper {
 						return descriptor;
 
 					if ('value' in descriptor)
-						descriptor.value = this.wrap(descriptor.value);
+						descriptor.value = this.wrap(descriptor.value, protect);
 					if (descriptor.get)
-						descriptor.get = this.wrap(descriptor.get);
+						descriptor.get = this.wrap(descriptor.get, protect);
 					if (descriptor.set)
-						descriptor.set = this.wrap(descriptor.set);
+						descriptor.set = this.wrap(descriptor.set, protect);
 
 					return descriptor;
 				}
@@ -173,16 +179,28 @@ export default class RuntimeValueWrapper {
 				return Reflect.has(target, key);
 			},
 
-			preventExtensions: () => {
-				this.#raiseBlockedMutation('preventExtensions');
+			preventExtensions: (target: object) => {
+				if (protect)
+					return false;
+
+				if (Reflect.isExtensible(target))
+					Reflect.setPrototypeOf(target, null);
+
+				return Reflect.preventExtensions(target);
 			},
 
-			set: (_target: object, key: string | symbol) => {
-				this.#raiseBlockedMutation('property assignment', key);
+			set: (target: object, key: string | symbol, newValue: any, receiver: any) => {
+				if (protect)
+					this.#raiseBlockedMutation('property assignment', key);
+
+				return Reflect.set(target, key, newValue, receiver);
 			},
 
-			setPrototypeOf: () => {
-				this.#raiseBlockedMutation('prototype assignment');
+			setPrototypeOf: (target: object, prototype: object | null) => {
+				if (protect)
+					this.#raiseBlockedMutation('prototype assignment');
+
+				return Reflect.setPrototypeOf(target, prototype);
 			}
 		});
 

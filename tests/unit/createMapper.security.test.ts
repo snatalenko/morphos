@@ -815,6 +815,118 @@ if (false) {
 		expect(otherExt).to.eql({ value: 'original' });
 	});
 
+	it('allows mutation of extension function return values while blocking sensitive properties', () => {
+
+		const returnedValue: { value: string, injected?: string } = { value: 'returned' };
+
+		const mapper = createMapper({
+			value: `(() => {
+				const value = helper.create();
+				value.injected = 'allowed';
+				const preventExtensionsResult = Object.preventExtensions(value) === value;
+
+				let constructorAccess;
+				try {
+					constructorAccess = value.constructor.constructor("return process")().pid;
+				}
+				catch (e) {
+					constructorAccess = 'blocked';
+				}
+
+				return {
+					injected: value.injected,
+					isExtensible: Object.isExtensible(value),
+					preventExtensionsResult,
+					constructorAccess
+				};
+			})()`
+		}, {
+			extensions: {
+				helper: {
+					create() {
+						return returnedValue;
+					}
+				}
+			}
+		});
+
+		expect(mapper({})).to.eql({
+			value: {
+				injected: 'allowed',
+				isExtensible: false,
+				preventExtensionsResult: true,
+				constructorAccess: 'blocked'
+			}
+		});
+		expect(returnedValue.injected).to.eql('allowed');
+	});
+
+	it('allows extension functions to prevent extensions on extension return values', () => {
+
+		const returnedValue = { value: 'returned' };
+
+		const mapper = createMapper({
+			value: 'helper.freeze(helper.create())'
+		}, {
+			extensions: {
+				helper: {
+					create() {
+						return returnedValue;
+					},
+					freeze(value: object) {
+						Object.preventExtensions(value);
+
+						return Object.isExtensible(value);
+					}
+				}
+			}
+		});
+
+		expect(mapper({})).to.eql({ value: false });
+		expect(Object.isExtensible(returnedValue)).to.eql(false);
+	});
+
+	it('allows prototype checks after preventing extensions on extension return values', () => {
+
+		const returnedValue = { value: 'returned' };
+
+		const mapper = createMapper({
+			value: `(() => {
+				const value = helper.create();
+				Object.preventExtensions(value);
+
+				return {
+					isExtensible: Object.isExtensible(value),
+					prototype: Object.getPrototypeOf(value),
+					constructorAccess: (() => {
+						try {
+							return Object.getPrototypeOf(value)?.constructor.constructor("return process")().pid;
+						}
+						catch (e) {
+							return 'blocked';
+						}
+					})()
+				};
+			})()`
+		}, {
+			extensions: {
+				helper: {
+					create() {
+						return returnedValue;
+					}
+				}
+			}
+		});
+
+		expect(mapper({})).to.eql({
+			value: {
+				isExtensible: false,
+				prototype: null,
+				constructorAccess: undefined
+			}
+		});
+	});
+
 	it('allows non-mutating Array.prototype.slice on a wrapped extension array', () => {
 
 		const hostArr = [1, 2, 3, 4];
