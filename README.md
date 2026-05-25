@@ -42,6 +42,7 @@ Try it in the [interactive playground](https://snatalenko.github.io/morphos/play
   - [Dynamic Output Keys](#dynamic-output-keys)
 - [Extensions](#extensions)
 - [Complex Mapping Example](#complex-mapping-example)
+- [Upgrading](#upgrading)
 
 ### Reasoning
 
@@ -663,3 +664,11 @@ const result = mapper(input);
 
 expect(result).to.eql(desiredOutput);
 ```
+
+## Upgrading
+
+### From 1.x to 2.x
+
+Mapper input must now be JSON-serializable. If your input already contains only JSON-compatible values, no changes are needed.
+
+If input used complex values like `Date` or `BigInt`, convert them to primitives before passing them to the mapper, such as timestamps, ISO strings, or strings.
