@@ -1,3 +1,11 @@
+# [2.0.0-beta.1](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.0...v2.0.0-beta.1) (2026-05-28)
+
+
+### Documentation
+
+* Update documentation ([6b618bd](https://github.com/snatalenko/morphos/commit/6b618bde1f8991b526feb2a96f57f3851d15a9c7))
+
+
 # [2.0.0-beta.0](https://github.com/snatalenko/morphos/compare/v1.7.2...v2.0.0-beta.0) (2026-05-28)
 
 
