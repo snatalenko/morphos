@@ -11,6 +11,7 @@ export default {
 	],
 	collectCoverageFrom: [
 		'src/**/*.ts',
+		'!src/react/utils/entries.ts',
 		'!/src/**/*.d.ts'
 	],
 	coverageReporters: ['lcov', 'text-summary'],

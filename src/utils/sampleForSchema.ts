@@ -1,10 +1,10 @@
 import type { JSONSchema4 } from 'json-schema';
-import { default as mergeSchema } from './utils/mergeSchema.ts';
+import { default as mergeSchema } from './mergeSchema.ts';
 
 /**
  * Create sample data for a given JSON schema
  */
-export default function sampleForSchema(schema: JSONSchema4) {
+export function sampleForSchema(schema: JSONSchema4): any {
 
 	const {
 		title,

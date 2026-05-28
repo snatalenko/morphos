@@ -10,8 +10,10 @@
         "outDir": "./dist",
         "rootDir": "./src",
         "lib": [
-            "ES2018"
+            "ES2018",
+            "DOM"
         ],
+        "jsx": "react-jsx",
         "strictNullChecks": true,
         "allowSyntheticDefaultImports": true,
         "resolveJsonModule": true,

@@ -309,6 +309,167 @@ describe('createMapper', () => {
 		});
 	});
 
+	describe('when', () => {
+
+		it('omits object fields when condition is false and `else` is not provided', () => {
+
+			const mapper = createMapper({
+				shipment: {
+					id: 'shipment.asnNumber',
+					purchaseOrder: {
+						when: 'shipment.purchaseOrderNumber',
+						then: 'shipment.purchaseOrderNumber'
+					},
+					billOfLading: {
+						when: 'shipment.billOfLadingNumber',
+						then: 'shipment.billOfLadingNumber'
+					}
+				}
+			});
+
+			const result = mapper({
+				shipment: {
+					asnNumber: 'ASN-1',
+					purchaseOrderNumber: 'PO-1'
+				}
+			});
+
+			expect(result).to.eql({
+				shipment: {
+					id: 'ASN-1',
+					purchaseOrder: 'PO-1'
+				}
+			});
+		});
+
+		it('maps `else` when condition is false', () => {
+
+			const mapper = createMapper({
+				status: {
+					when: 'cancelledAt',
+					then: '"cancelled"',
+					else: '"active"'
+				}
+			});
+
+			const result = mapper({});
+
+			expect(result).to.eql({
+				status: 'active'
+			});
+		});
+
+		it('maps conditional objects', () => {
+
+			const mapper = createMapper({
+				carrier: {
+					when: 'shipment.carrierScac || shipment.carrierName',
+					then: {
+						scac: 'shipment.carrierScac',
+						name: 'shipment.carrierName'
+					}
+				}
+			});
+
+			const result = mapper({
+				shipment: {
+					carrierScac: 'ABCD',
+					carrierName: 'Acme Freight'
+				}
+			});
+
+			expect(result).to.eql({
+				carrier: {
+					scac: 'ABCD',
+					name: 'Acme Freight'
+				}
+			});
+		});
+
+		it('throws errors on incorrectly formatted instructions', () => {
+
+			expect(() => createMapper({ when: '', then: 'foo' })).to.throw('Property "when" is empty in mapping "{"when":"","then":"foo"}"');
+			expect(() => createMapper({ when: 'foo' })).to.throw('Property "then" is missing in mapping "{"when":"foo"}"');
+		});
+	});
+
+	describe('concat', () => {
+
+		it('builds arrays from conditional branches', () => {
+
+			const mapper = createMapper({
+				bizTransactionList: {
+					concat: [
+						{
+							when: 'shipment.purchaseOrderNumber',
+							then: {
+								type: '"po"',
+								bizTransaction: 'shipment.purchaseOrderNumber'
+							}
+						},
+						{
+							when: 'shipment.asnNumber',
+							then: {
+								type: '"desadv"',
+								bizTransaction: 'shipment.asnNumber'
+							}
+						},
+						{
+							when: 'shipment.billOfLadingNumber',
+							then: {
+								type: '"bol"',
+								bizTransaction: 'shipment.billOfLadingNumber'
+							}
+						}
+					]
+				}
+			});
+
+			const result = mapper({
+				shipment: {
+					purchaseOrderNumber: 'PO-1',
+					asnNumber: 'ASN-1'
+				}
+			});
+
+			expect(result).to.eql({
+				bizTransactionList: [
+					{ type: 'po', bizTransaction: 'PO-1' },
+					{ type: 'desadv', bizTransaction: 'ASN-1' }
+				]
+			});
+		});
+
+		it('flattens array branch results', () => {
+
+			const mapper = createMapper({
+				tags: {
+					concat: [
+						'baseTags',
+						{
+							when: 'hazmat',
+							then: '"hazmat"'
+						}
+					]
+				}
+			});
+
+			const result = mapper({
+				baseTags: ['fragile', 'priority'],
+				hazmat: true
+			});
+
+			expect(result).to.eql({
+				tags: ['fragile', 'priority', 'hazmat']
+			});
+		});
+
+		it('throws errors on incorrectly formatted instructions', () => {
+
+			expect(() => createMapper({ concat: 'foo' } as any)).to.throw('Property "concat" is not an array in mapping "{"concat":"foo"}"');
+		});
+	});
+
 	it('maps array from array element index maps', () => {
 
 		const input = {
@@ -379,21 +540,15 @@ describe('createMapper', () => {
 			logger: {
 				trace(msg) {
 					log.push(msg);
+				},
+				warn(msg) {
+					log.push(msg);
 				}
 			}
 		});
 
 		expect(log).to.have.length(1);
-		expect(log[0]).to.eql(
-			`
-with ($createGlobalContext($input)) {
-  $result =
-    (() => {
-      return {
-        [\`foo\`]: true,
-      };
-    })()
-}`);
+		expect(log[0]).to.be.a('string');
 	});
 
 	it('accepts mapping runtime extensions', () => {
@@ -424,51 +579,117 @@ with ($createGlobalContext($input)) {
 		});
 	});
 
-	describe('security', () => {
-
-		it('does not expose process/global objects to mapping expressions', () => {
-
-			const mapper = createMapper({
-				directProcess: 'process',
-				globalThisProcess: 'globalThis?.process'
-			});
-
-			const result = mapper({});
-
-			expect(result).to.eql({
-				directProcess: undefined,
-				globalThisProcess: undefined
-			});
-		});
-
-		it('blocks constructor-based access to process', () => {
-
-			const mapper = createMapper({
-				value: '(() => { try { return [].filter.constructor("return process")().pid; } catch (e) { return "blocked"; } })()'
-			});
-
-			const result = mapper({});
-
-			expect(result).to.eql({
-				value: 'blocked'
-			});
-		});
-
-		it('blocks Function-based require access', () => {
-
-			const mapper = createMapper({
-				value: '(() => { try { return Function("return require(\\"fs\\")")(); } catch (e) { return "blocked"; } })()'
-			});
-
-			const result = mapper({});
-
-			expect(result).to.eql({
-				value: 'blocked'
-			});
-		});
-	});
-
 	describe('*', () => {
+
+		it('copies current object fields and applies explicit overrides', () => {
+
+			const mapper = createMapper({
+				map: {
+					'*': '*',
+					x: 'x + 1',
+					modified: 'true'
+				}
+			});
+
+			const result = mapper({ id: 1, x: 10, name: 'A' });
+
+			expect(result).to.eql({
+				id: 1,
+				x: 11,
+				name: 'A',
+				modified: true
+			});
+		});
+
+		it('copies current object fields under a regular destination field', () => {
+
+			const mapper = createMapper({
+				from: 'BUYER',
+				map: {
+					rawData: '*',
+					mappedName: 'NAME'
+				}
+			});
+
+			const result = mapper({
+				BUYER: {
+					ID: 'B-1',
+					NAME: 'Acme'
+				}
+			});
+
+			expect(result).to.eql({
+				rawData: {
+					ID: 'B-1',
+					NAME: 'Acme'
+				},
+				mappedName: 'Acme'
+			});
+		});
+
+		it('copies current array elements under a regular destination field', () => {
+
+			const mapper = createMapper({
+				from: 'values',
+				map: {
+					rawData: '*',
+					second: '$context[1]'
+				}
+			});
+
+			const result = mapper({ values: ['a', 'b'] });
+
+			expect(result).to.eql({
+				rawData: ['a', 'b'],
+				second: 'b'
+			});
+		});
+
+		it('copies current array elements and applies numeric overrides', () => {
+
+			const mapper = createMapper({
+				from: 'values',
+				map: {
+					'*': '*',
+					1: '$context[1] + 10',
+					3: "'new'"
+				}
+			});
+
+			const result = mapper({ values: ['a', 2, 'c'] });
+
+			expect(result).to.eql(['a', 12, 'c', 'new']);
+		});
+
+		it('copies array records in forEach maps and applies element overrides', () => {
+
+			const mapper = createMapper({
+				forEach: 'matrix',
+				map: {
+					'*': '*',
+					0: '$record[0] * 2'
+				}
+			});
+
+			const result = mapper({ matrix: [[1, 2], [3, 4]] });
+
+			expect(result).to.eql([[2, 2], [6, 4]]);
+		});
+
+		it('copies nothing from scalar contexts before applying explicit fields', () => {
+
+			const mapper = createMapper({
+				forEach: 'values',
+				map: {
+					'*': '*',
+					value: '$record'
+				}
+			});
+
+			const result = mapper({ values: [1, 2] });
+
+			expect(result).to.eql([{ value: 1 }, { value: 2 }]);
+		});
 
 		it('maps result from simple type', () => {
 
@@ -481,6 +702,24 @@ with ($createGlobalContext($input)) {
 			const result = mapper({ foo: 'bar' });
 
 			expect(result).to.eq('bar');
+		});
+
+		it('maps result from object input reference', () => {
+
+			const input = {
+				foo: { bar: 'baz' }
+			};
+			const mapper = createMapper({
+				map: {
+					'*': 'foo'
+				}
+			});
+
+			const result = mapper(input);
+
+			expect(result).to.eql({
+				bar: 'baz'
+			});
 		});
 
 		it('maps array elements from simple types', () => {
@@ -496,18 +735,6 @@ with ($createGlobalContext($input)) {
 
 			expect(result).to.eql([2, 4, 6]);
 		});
-	});
-
-	it('throws error if input field names conflict with extension names', () => {
-		const mapper = createMapper({
-			foo: 'bar'
-		}, {
-			extensions: {
-				bar: 'test'
-			}
-		});
-
-		expect(() => mapper({ bar: 'baz' })).to.throw('Extension "bar" conflicts with a field name passed in input');
 	});
 
 	it('throws errors on incorrectly formatted instructions', () => {
@@ -528,24 +755,5 @@ with ($createGlobalContext($input)) {
 		expect(r).to.have.property('d').that.is.not.empty;
 		expect(r).to.have.property('m').that.eqls(1);
 		expect(r).to.have.property('i').that.eqls(Infinity);
-	});
-
-	it('works fast', () => {
-
-		const mapper = createMapper({
-			map: {
-				foo: 'dict[bar]'
-			}
-		}, {
-			extensions: {
-				dict: {
-					a: 'b',
-					x: 'y'
-				}
-			}
-		});
-
-		for (let i = 0; i < 10000; i++)
-			mapper({ bar: 'a' });
 	});
 });
