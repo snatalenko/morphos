@@ -314,6 +314,10 @@ const secondaryButtonStyle = {
 	cursor: 'pointer',
 	fontSize: '0.8rem'
 } as const;
+const disabledToolbarButtonStyle = {
+	opacity: 0.55,
+	cursor: 'not-allowed'
+} as const;
 const aiControlLabelStyle = { ...labelStyle, marginBottom: 0, minWidth: '5rem' } as const;
 const aiControlRowStyle = {
 	display: 'flex',
@@ -920,12 +924,26 @@ function App() {
 							{runError && <span style={{ ...errStyle, marginTop: 0 }}>{runError}</span>}
 							<button
 								type="button"
-								style={tabStyle(aiPanelVisible)}
+								style={{
+									...tabStyle(aiPanelVisible),
+									...(editorExpanded ? disabledToolbarButtonStyle : {})
+								}}
+								disabled={editorExpanded}
 								onClick={() => setAiPanelVisible(v => !v)}
 							>
 								Generate with AI
 							</button>
-							<button type="button" onClick={runMapping} style={secondaryButtonStyle}>Run</button>
+							<button
+								type="button"
+								onClick={runMapping}
+								style={{
+									...secondaryButtonStyle,
+									...(editorExpanded ? disabledToolbarButtonStyle : {})
+								}}
+								disabled={editorExpanded}
+							>
+								Run
+							</button>
 							<button type="button" style={secondaryButtonStyle} onClick={() => setEditorExpanded(v => !v)}>
 								{editorExpanded ? 'Exit full screen' : 'Full screen'}
 							</button>
