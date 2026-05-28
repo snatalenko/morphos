@@ -13,7 +13,7 @@ Morphos
 
 ## Overview
 
-JSON-to-JSON mapper with user-defined JSON mapping specs, plain JS transformation expressions, and secure VM execution.
+JSON-to-JSON mapper with user-defined JSON mapping specs, plain JS transformation expressions, and isolated VM execution.
 
 Users define the mapping as JSON, so it can be stored, versioned, generated, or edited from a UI. Unlike many transformation tools, it does not invent a custom expression language: field transforms are plain JavaScript expressions, executed in a restricted VM context for predictable behavior without giving mappings access to the host environment.
 
@@ -22,10 +22,11 @@ Try it in the [interactive playground](https://snatalenko.github.io/morphos/play
 ### Table of Contents
 
 - [Overview](#overview)
-  - [Reasoning](#reasoning)
+  - [Features](#features)
   - [Visual Mapping Editor](#visual-mapping-editor)
   - [JSON Schema Editor](#json-schema-editor)
   - [AI Mapping Generation](#ai-mapping-generation)
+  - [Installation](#installation)
   - [Quick Start Example](#quick-start-example)
 - [Compatibility](#compatibility)
 - [Security](#security)
@@ -44,18 +45,14 @@ Try it in the [interactive playground](https://snatalenko.github.io/morphos/play
 - [Complex Mapping Example](#complex-mapping-example)
 - [Upgrading](#upgrading)
 
-### Reasoning
-
-On several projects, I needed a library that could convert one JSON document shape to another (for example, an invoice from one system into another). The mapping itself had to be plain JSON so business-facing tools could create and persist it, but the transformation logic still had to be expressive enough for real-world rules like calculations, conditionals, and array reductions.
-
-That is where Morphos came in:
+### Features
 
 - **JSON-defined** - mappings are JSON documents, so they are easy to store, diff, generate, validate, and edit from a UI.
 - **JavaScript-native** - transformations use ordinary JavaScript expressions instead of a custom DSL.
-- **Secure** - expressions run in a separate [V8 Virtual Machine](https://nodejs.org/api/vm.html) context with restricted access to the outside environment.
+- **Isolated** - expressions run in a separate [V8 Virtual Machine](https://nodejs.org/api/vm.html) context with restricted access to the outside environment.
 - **Fast** - mapping instructions are compiled once up front, allowing processing at ~100k objects/sec on Apple M1 Pro.
 - **Typed** - written in TypeScript
-- **Lightweight** - no dependencies
+- **Lightweight** - the runtime has no required dependencies; integrations use optional peer dependencies.
 
 ### Visual Mapping Editor
 
@@ -64,7 +61,9 @@ Need users to build or maintain mappings in a web app? Use the React mapping edi
 <table>
   <tr>
     <td width="50%" style="border: none">
-      <img src="docs/images/mapping-editor-browser.png" alt="Mapping editor in browser" width="100%" />
+      <a href="https://natalenko.com/morphos/playground/#/bootstrap53" target="_blank">
+        <img src="docs/images/mapping-editor-browser.png" alt="Mapping editor in browser" width="100%" />
+      </a>
     </td>
     <td width="50%" style="border: none">
       <img src="docs/images/mapping-editor-code.png" alt="Mapping JSON in code editor" width="100%" />
@@ -72,7 +71,7 @@ Need users to build or maintain mappings in a web app? Use the React mapping edi
   </tr>
 </table>
 
-The editor can suggest source and destination fields from JSON Schemas, lets users choose mapping instructions such as fields, objects, arrays, conditionals, and concatenation, and outputs plain JSON. A typical flow is: users build mappings in a web app, the app saves those JSON specs, and the server executes them later in the secure runtime.
+The editor can suggest source and destination fields from JSON Schemas, lets users choose mapping instructions such as fields, objects, arrays, conditionals, and concatenation, and outputs plain JSON. A typical flow is: users build mappings in a web app, the app saves those JSON specs, and the server executes them later in the isolated runtime.
 
 The UI is available as an optional subpath import and is loaded only when used:
 
@@ -109,6 +108,26 @@ import { generateMapping } from 'morphos/anthropic';
 See [`morphos/openai`](src/openai/README.md) for schema-based mapping generation and natural-language instructions.
 See [`morphos/anthropic`](src/anthropic/README.md) for the same workflow using Anthropic Claude.
 
+### Installation
+
+```sh
+npm install morphos
+```
+
+Optional React UI packages require React:
+
+```sh
+npm install react react-dom
+```
+
+AI mapping helpers require the relevant provider SDK:
+
+```sh
+npm install openai
+# or
+npm install @anthropic-ai/sdk
+```
+
 ### Quick Start Example
 
 ```ts
@@ -143,7 +162,7 @@ const mapper = createMapper({
   totalAmount: 'lineItems.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0)'
 });
 
-// Use in a loop; 200k+ objects/sec
+// Use in a loop; 100k+ objects/sec on simple mappings
 const results = sourceOrders.map(mapper); 
 ```
 
@@ -158,6 +177,8 @@ Similar mappings can be achieved with plain JavaScript, but this library is desi
 
 Mappings stay simple for non-technical users, while technical users can still use JavaScript expressions.
 Instead of `eval`, expressions run in an isolated VM context with built-ins, mapping input, and explicit `extensions` only, which reduces JS injection risk.
+
+`timeout` prevents long-running expressions from blocking the process indefinitely. It has a performance cost, so use it only when executing mappings that cannot be trusted.
 
 ## Mapping Instructions
 
@@ -279,9 +300,9 @@ Assume we have input with an array of objects and need to produce one output obj
 ```json
 {
   "inputArray": [{
-    "arrayInnerProp": "value1"
+    "arrayInnerProperty": "value1"
   }, {
-    "arrayInnerProp": "value2"
+    "arrayInnerProperty": "value2"
   }]
 }
 ```

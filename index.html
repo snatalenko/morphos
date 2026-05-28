@@ -4,9 +4,9 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Morphos JSON-to-JSON Mapper · Secure JavaScript Mapping Specs</title>
-	<meta name="description" content="Morphos is a TypeScript JSON-to-JSON mapper with JSON mapping specs, JavaScript expressions, secure VM execution, React editors, and AI mapping generation." />
-	<meta name="keywords" content="JSON mapper, JSON-to-JSON mapper, data mapper, TypeScript mapper, mapping editor, JSON Schema editor, OpenAI mapping generation, Anthropic Claude mapping generation, secure JavaScript transformations" />
+	<title>Morphos JSON-to-JSON Mapper · Isolated JavaScript Mapping Specs</title>
+	<meta name="description" content="Morphos is a TypeScript JSON-to-JSON mapper with JSON mapping specs, JavaScript expressions, isolated VM execution, React editors, and AI mapping generation." />
+	<meta name="keywords" content="JSON mapper, JSON-to-JSON mapper, data mapper, TypeScript mapper, mapping editor, JSON Schema editor, OpenAI mapping generation, Anthropic Claude mapping generation, isolated JavaScript transformations" />
 	<meta name="robots" content="index, follow" />
 	<link rel="canonical" href="https://natalenko.com/morphos/" />
 	<link rel="icon" type="image/svg+xml" href="docs/images/morphos_logo.svg" />
@@ -16,13 +16,13 @@
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="Morphos" />
 	<meta property="og:title" content="Morphos JSON-to-JSON Mapper" />
-	<meta property="og:description" content="TypeScript JSON-to-JSON mapping with JSON specs, JavaScript expressions, secure VM execution, React editors, and AI-assisted mapping generation." />
+	<meta property="og:description" content="TypeScript JSON-to-JSON mapping with JSON specs, JavaScript expressions, isolated VM execution, React editors, and AI-assisted mapping generation." />
 	<meta property="og:url" content="https://natalenko.com/morphos/" />
 	<meta property="og:image" content="https://natalenko.com/morphos/docs/images/morphos_logo.svg" />
 
 	<meta name="twitter:card" content="summary" />
 	<meta name="twitter:title" content="Morphos JSON-to-JSON Mapper" />
-	<meta name="twitter:description" content="TypeScript JSON-to-JSON mapping with JSON specs, JavaScript expressions, secure VM execution, React editors, and AI-assisted mapping generation." />
+	<meta name="twitter:description" content="TypeScript JSON-to-JSON mapping with JSON specs, JavaScript expressions, isolated VM execution, React editors, and AI-assisted mapping generation." />
 	<meta name="twitter:image" content="https://natalenko.com/morphos/docs/images/morphos_logo.svg" />
 
 	<script type="application/ld+json">
@@ -33,7 +33,7 @@
 					"@type": "WebSite",
 					"name": "Morphos",
 					"url": "https://natalenko.com/morphos/",
-					"description": "Documentation for Morphos, a TypeScript JSON-to-JSON mapper with JSON mapping specs, JavaScript expressions, secure VM execution, React editors, and AI mapping generation."
+					"description": "Documentation for Morphos, a TypeScript JSON-to-JSON mapper with JSON mapping specs, JavaScript expressions, isolated VM execution, React editors, and AI mapping generation."
 				},
 				{
 					"@type": "SoftwareSourceCode",
@@ -43,7 +43,7 @@
 					"runtimePlatform": "Node.js and browser",
 					"license": "https://www.apache.org/licenses/LICENSE-2.0",
 					"url": "https://natalenko.com/morphos/",
-					"description": "A JSON-to-JSON mapper where mapping specifications are JSON and transformations are JavaScript expressions executed in a secure VM.",
+					"description": "A JSON-to-JSON mapper where mapping specifications are JSON and transformations are JavaScript expressions executed in an isolated VM.",
 					"keywords": [
 						"JSON mapper",
 						"JSON-to-JSON mapper",
@@ -385,7 +385,7 @@
 			</button>
 			<div class="flex-1">
 				<h1 class="text-lg font-semibold text-slate-900 dark:text-slate-100">Morphos</h1>
-				<p class="text-xs text-slate-500 dark:text-slate-400 -mt-0.5 hidden sm:block">JSON-to-JSON mapper with user-defined JSON mapping specs, plain JS transformation expressions, and secure VM execution</p>
+				<p class="text-xs text-slate-500 dark:text-slate-400 -mt-0.5 hidden sm:block">JSON-to-JSON mapper with user-defined JSON mapping specs, plain JS transformation expressions, and isolated VM execution</p>
 			</div>
 			<button id="theme-toggle" type="button" aria-label="Toggle dark mode" class="ml-auto text-sm text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white p-1.5 border border-slate-200 dark:border-slate-700 rounded-md hover:bg-slate-50 dark:hover:bg-slate-800">
 				<svg class="w-4 h-4 hidden dark:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -414,10 +414,11 @@
 						<li>
 							<a href="#overview" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Overview</a>
 							<ul class="toc-sub space-y-0.5">
-								<li><a href="#reasoning" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Reasoning</a></li>
+								<li><a href="#features" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Features</a></li>
 								<li><a href="#visual-mapping-editor" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Visual Mapping Editor</a></li>
 								<li><a href="#json-schema-editor" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">JSON Schema Editor</a></li>
 								<li><a href="#ai-mapping-generation" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">AI Mapping Generation</a></li>
+								<li><a href="#installation" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Installation</a></li>
 								<li><a href="#quick-start-example" class="toc-link block px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800">Quick Start</a></li>
 							</ul>
 						</li>
@@ -470,7 +471,7 @@
 				<h1>Morphos JSON-to-JSON Mapper</h1>
 				<p>
 					Morphos is a TypeScript library for transforming one JSON document into another using a user-defined JSON mapping specification.
-					Mapping values are plain JavaScript expressions, so transformations stay predictable while execution remains isolated in a secure VM.
+					Mapping values are plain JavaScript expressions, so transformations stay predictable while execution remains isolated in a VM.
 				</p>
 				<h2>What It Provides</h2>
 				<ul>
