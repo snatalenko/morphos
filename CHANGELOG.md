@@ -1,3 +1,11 @@
+# [2.0.0-beta.2](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2026-05-29)
+
+
+### Fixes
+
+* Incorrect mappingSchema export in ESM build ([7c20e44](https://github.com/snatalenko/morphos/commit/7c20e442e3f7aa7202370efd17795f793bbc4007))
+
+
 # [2.0.0-beta.1](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.0...v2.0.0-beta.1) (2026-05-28)
 
 
