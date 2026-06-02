@@ -1,0 +1,83 @@
+import { expect } from 'chai';
+import type { JsonSchema } from '../../src/JsonSchema.ts';
+import {
+	findSourceFields,
+	parseSourcePath,
+	resolveSourcePath
+} from '../../src/react/utils/sourceFields.ts';
+import { getItemsSchema } from '../../src/react/utils/schemaProps.ts';
+import { parentContextSuggestions } from '../../src/react/utils/sourceSuggestions.ts';
+
+describe('source field utilities', () => {
+	const sourceSchema: JsonSchema = {
+		type: 'object',
+		properties: {
+			HEADER: {
+				type: 'object',
+				properties: {
+					BUYER: {
+						type: 'object',
+						properties: {
+							NAME: { type: 'string' }
+						}
+					}
+				}
+			},
+			DETAILS: {
+				type: 'object',
+				properties: {
+					LINE_ITEMS: {
+						type: 'array',
+						items: {
+							type: 'object',
+							properties: {
+								SKU: { type: 'string' }
+							}
+						}
+					}
+				}
+			},
+			TOTAL: { type: 'number' }
+		}
+	};
+
+	it('parses source paths with dot and bracket property access', () => {
+		expect(parseSourcePath('HEADER.BUYER')).to.deep.equal(['HEADER', 'BUYER']);
+		expect(parseSourcePath('HEADER[\'BUYER\']')).to.deep.equal(['HEADER', 'BUYER']);
+		expect(parseSourcePath('DETAILS["LINE_ITEMS"]')).to.deep.equal(['DETAILS', 'LINE_ITEMS']);
+		expect(parseSourcePath('["HEADER"].BUYER')).to.deep.equal(['HEADER', 'BUYER']);
+		expect(parseSourcePath('HEADER[BUYER]')).to.equal(undefined);
+	});
+
+	it('resolves source schemas from quoted bracket property paths', () => {
+		expect(resolveSourcePath(sourceSchema, 'HEADER[\'BUYER\']'))
+			.to.equal((sourceSchema.properties?.HEADER as JsonSchema).properties?.BUYER);
+		expect(resolveSourcePath(sourceSchema, 'DETAILS["LINE_ITEMS"]'))
+			.to.equal((sourceSchema.properties?.DETAILS as JsonSchema).properties?.LINE_ITEMS);
+	});
+
+	it('lists inner object field suggestions from quoted from paths', () => {
+		const buyerSchema = resolveSourcePath(sourceSchema, 'HEADER[\'BUYER\']');
+
+		expect(Array.from(findSourceFields(buyerSchema, {}), s => s.path))
+			.to.deep.equal(['NAME']);
+	});
+
+	it('lists inner array item field suggestions from quoted forEach paths', () => {
+		const lineItemsSchema = resolveSourcePath(sourceSchema, 'DETAILS["LINE_ITEMS"]');
+		const lineItemSchema = lineItemsSchema ? getItemsSchema(lineItemsSchema) : undefined;
+
+		expect(Array.from(findSourceFields(lineItemSchema, {}), s => s.path))
+			.to.deep.equal(['SKU']);
+	});
+
+	it('filters consumed parent suggestions for quoted bracket property paths', () => {
+		const suggestions = parentContextSuggestions(sourceSchema, [], 'DETAILS["LINE_ITEMS"]');
+
+		expect(suggestions.map(s => s.path)).to.not.include.members([
+			'DETAILS',
+			'DETAILS.LINE_ITEMS'
+		]);
+		expect(suggestions.map(s => s.path)).to.include('TOTAL');
+	});
+});

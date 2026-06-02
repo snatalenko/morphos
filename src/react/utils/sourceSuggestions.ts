@@ -1,5 +1,5 @@
 import type { JsonSchema, SourceFieldMatch } from '../types.ts';
-import { findSourceFields } from './sourceFields.ts';
+import { findSourceFields, sourcePathRoot } from './sourceFields.ts';
 
 export function typesCompatible(destType: string | undefined, sourceType: string | undefined): boolean {
 	if (!destType)
@@ -75,7 +75,10 @@ function isConsumedPath(field: SourceFieldMatch, consumedPath: string | undefine
 	if (!consumedPath)
 		return false;
 
-	const consumedKey = consumedPath.split('.')[0];
+	const consumedKey = sourcePathRoot(consumedPath);
+	if (!consumedKey)
+		return false;
+
 	return field.path === consumedKey || field.path.startsWith(`${consumedKey}.`);
 }
 

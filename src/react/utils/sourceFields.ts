@@ -6,12 +6,104 @@ function normalizeName(name: string): string {
 }
 
 const IDENT_RE = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
+const IDENT_START_RE = /[a-zA-Z_$]/;
+const IDENT_CHAR_RE = /[a-zA-Z0-9_$]/;
+
 function joinPath(parent: string, name: string): string {
 	const safe = IDENT_RE.test(name);
 	if (parent === '')
 		return safe ? name : `["${name.replace(/"/g, '\\"')}"]`;
 
 	return safe ? `${parent}.${name}` : `${parent}["${name.replace(/"/g, '\\"')}"]`;
+}
+
+function readIdentifier(path: string, start: number): [string, number] | undefined {
+	if (!IDENT_START_RE.test(path[start]))
+		return undefined;
+
+	let index = start + 1;
+	while (index < path.length && IDENT_CHAR_RE.test(path[index]))
+		index += 1;
+
+	return [path.slice(start, index), index];
+}
+
+function readQuotedProperty(path: string, start: number): [string, number] | undefined {
+	if (path[start] !== '[')
+		return undefined;
+
+	const quote = path[start + 1];
+	if (quote !== '"' && quote !== '\'')
+		return undefined;
+
+	let index = start + 2;
+	let value = '';
+	while (index < path.length) {
+		const char = path[index];
+		if (char === '\\') {
+			if (index + 1 >= path.length)
+				return undefined;
+
+			value += path[index + 1];
+			index += 2;
+			continue;
+		}
+
+		if (char === quote) {
+			if (path[index + 1] !== ']')
+				return undefined;
+
+			return [value, index + 2];
+		}
+
+		value += char;
+		index += 1;
+	}
+
+	return undefined;
+}
+
+export function parseSourcePath(path: string): string[] | undefined {
+	if (!path)
+		return undefined;
+
+	const parts: string[] = [];
+	let index = 0;
+
+	const first = readIdentifier(path, index) ?? readQuotedProperty(path, index);
+	if (!first)
+		return undefined;
+
+	parts.push(first[0]);
+	index = first[1];
+
+	while (index < path.length) {
+		if (path[index] === '.') {
+			const next = readIdentifier(path, index + 1);
+			if (!next)
+				return undefined;
+
+			parts.push(next[0]);
+			index = next[1];
+			continue;
+		}
+
+		const next = readQuotedProperty(path, index);
+		if (!next)
+			return undefined;
+
+		parts.push(next[0]);
+		index = next[1];
+	}
+
+	return parts;
+}
+
+export function sourcePathRoot(path: string | undefined): string | undefined {
+	if (!path)
+		return undefined;
+
+	return parseSourcePath(path)?.[0];
 }
 
 function* walkSchema(
@@ -62,7 +154,7 @@ export function extendSourceSchema(
 	if (!inner.properties || schemaType(inner) !== 'object')
 		return inner;
 
-	const consumedKey = consumedPath ? consumedPath.split('.')[0] : undefined;
+	const consumedKey = sourcePathRoot(consumedPath);
 	const merged: { [name: string]: JsonSchema | boolean } = { ...inner.properties };
 	for (const [k, v] of Object.entries(outer.properties)) {
 		if (k in merged)
@@ -82,10 +174,11 @@ export function resolveSourcePath(
 ): JsonSchema | undefined {
 	if (!sourceSchema || !path)
 		return undefined;
-	if (!/^[a-zA-Z_$][a-zA-Z0-9_$.]*$/.test(path))
+
+	const parts = parseSourcePath(path);
+	if (!parts)
 		return undefined;
 
-	const parts = path.split('.');
 	let current: JsonSchema | undefined = sourceSchema;
 	for (const part of parts) {
 		if (!current || !current.properties)
