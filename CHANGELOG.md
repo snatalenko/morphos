@@ -1,3 +1,15 @@
+# [2.0.0-beta.3](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.2...v2.0.0-beta.3) (2026-06-02)
+
+
+### Fixes
+
+* Resolve editor source schema paths with bracket notation ([6b14a8a](https://github.com/snatalenko/morphos/commit/6b14a8accd4f6412c52099a37c05c11dfe1f487a))
+
+### Changes
+
+* Add VSCode debug configurations ([38d687c](https://github.com/snatalenko/morphos/commit/38d687cbeadd3bcf6131363336d35810bbd65e71))
+
+
 # [2.0.0-beta.2](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.1...v2.0.0-beta.2) (2026-05-29)
 
 
