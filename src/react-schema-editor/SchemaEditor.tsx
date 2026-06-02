@@ -340,6 +340,10 @@ interface PropertySlot {
 	focusNameOnMount?: boolean;
 }
 
+function isCommittedPropertySlot(slot: PropertySlot): boolean {
+	return slot.name !== undefined;
+}
+
 function rootLabel(labels: SchemaEditorLabels): string {
 	return labels.rootElement;
 }
@@ -415,7 +419,7 @@ function SchemaNodeEditor({
 				value: propertyName,
 				focusNameOnMount: true
 			} : slot);
-			if (updated.every(slot => slot.name))
+			if (updated.every(isCommittedPropertySlot))
 				updated.push({ id: nextPropertySlotIdRef.current++, value: '' });
 			return updated;
 		});
@@ -423,7 +427,7 @@ function SchemaNodeEditor({
 	};
 
 	const renameProperty = (from: string, to: string): boolean => {
-		if (to === '' || from === to)
+		if (from === to)
 			return false;
 
 		const properties = schema.properties ?? {};
@@ -479,7 +483,7 @@ function SchemaNodeEditor({
 		onChange(next);
 		setPropertySlots(slots => {
 			const updated = slots.filter(slot => slot.name !== propertyName);
-			if (updated.every(slot => slot.name))
+			if (updated.every(isCommittedPropertySlot))
 				updated.push({ id: nextPropertySlotIdRef.current++, value: '' });
 			return updated;
 		});
@@ -521,7 +525,9 @@ function SchemaNodeEditor({
 		/>
 	) : undefined;
 
-	const slotNames = new Set(propertySlots.map(slot => slot.name).filter((slotName): slotName is string => !!slotName));
+	const slotNames = new Set(
+		propertySlots.map(slot => slot.name).filter((slotName): slotName is string => slotName !== undefined)
+	);
 	const properties = schema.properties ?? {};
 
 	const nestedContent = type === 'object' ? (
@@ -541,17 +547,18 @@ function SchemaNodeEditor({
 					readOnly={readOnly}
 				/>
 			))}
-			{propertySlots.map(slot => slot.name ? (
-				properties[slot.name] ? (
+			{propertySlots.map(slot => slot.name !== undefined ? (
+				slot.name in properties ? (
 					<SchemaNodeEditor
 						key={slot.id}
 						name={slot.name}
 						schema={asSchema(properties[slot.name])}
 						onNameChange={next => renameSlottedProperty(slot.id, slot.name ?? '', next)}
-						onChange={next => slot.name && updateProperty(slot.name, next)}
+						onChange={next => slot.name !== undefined && updateProperty(slot.name, next)}
 						required={(schema.required ?? []).includes(slot.name)}
-						onRequiredChange={next => slot.name && onChange(setRequired(schema, slot.name, next))}
-						onRemove={() => slot.name && removeProperty(slot.name)}
+						onRequiredChange={next =>
+							slot.name !== undefined && onChange(setRequired(schema, slot.name, next))}
+						onRemove={() => slot.name !== undefined && removeProperty(slot.name)}
 						exposeTitle={exposeTitle}
 						exposeDescription={exposeDescription}
 						readOnly={readOnly}
