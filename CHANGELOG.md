@@ -1,3 +1,7 @@
+# [2.0.0-beta.5](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.4...v2.0.0-beta.5) (2026-06-06)
+
+
+
 # [2.0.0-beta.4](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.3...v2.0.0-beta.4) (2026-06-02)
 
 
