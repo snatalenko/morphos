@@ -28,6 +28,7 @@ Mapping syntax:
 - Expression strings run in the current source context. Source properties in that context are available as bare variables when their names are valid JavaScript identifiers.
 - At the top level, root-level source fields are available as bare identifiers and through $input.
 - When a source property name is not a valid JavaScript identifier, do not write it bare. Use bracket access on the explicit context variable: $input["item-code"] at the root, $record["1stQty"] inside forEach, or $context["ship.to"] inside from.
+- When a source property name conflicts with a JavaScript global object or function name, do not write it bare even if it is a valid identifier. Use bracket access on the explicit context variable: $input["Date"] at the root, $record["Math"] inside forEach, or $context["Date"] inside from.
 - String constants must be quoted inside the expression string: { "status": "'OPEN'" }.
 - Prefer single quotes inside JavaScript expression strings. Use template literals only when interpolation is needed.
 - Numeric, boolean, null, arithmetic, template literals, optional chaining, array methods, and standard JavaScript built-ins are allowed in expression strings.
