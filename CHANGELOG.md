@@ -1,3 +1,11 @@
+# [2.0.0-beta.6](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.5...v2.0.0-beta.6) (2026-06-23)
+
+
+### Features
+
+* Add streaming JSON schema generator from samples ([27fd377](https://github.com/snatalenko/morphos/commit/27fd3772d3924839e49f5dfe31d75fb09802141b))
+
+
 # [2.0.0-beta.5](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.4...v2.0.0-beta.5) (2026-06-06)
 
 
