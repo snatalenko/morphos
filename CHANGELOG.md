@@ -1,3 +1,15 @@
+# [2.0.0-beta.8](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.7...v2.0.0-beta.8) (2026-06-23)
+
+
+### Fixes
+
+* Improve schema editor enum handling ([f15519d](https://github.com/snatalenko/morphos/commit/f15519d525ef63dc0783851ec750c53b8712a4be))
+
+### Changes
+
+* Add examples inference to JSON schema generator; improve enums detection ([f98cef3](https://github.com/snatalenko/morphos/commit/f98cef3f2a4368446300e3ae9147377917c98c9b))
+
+
 # [2.0.0-beta.7](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.5...v2.0.0-beta.7) (2026-06-23)
 
 
