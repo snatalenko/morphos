@@ -10,11 +10,44 @@ export type JsonSchemaGeneratorOptions = {
 
 	/**
 	 * Minimum ratio of shared object property names required to merge an object
-	 * sample into an existing object schema cluster. A value of 0.5 means the
-	 * sample must share at least half of the combined property names with the
-	 * cluster. Defaults to 0.5.
+	 * sample into an existing object schema cluster. Defaults to 0.5.
 	 */
 	objectMatchThreshold?: number;
+
+	/**
+	 * Similarity metric used for object clustering. "overlap" compares shared
+	 * properties to the smaller property set and is better for sparse table rows.
+	 * "jaccard" compares shared properties to the combined property set.
+	 * Defaults to "overlap".
+	 */
+	objectMatchStrategy?: 'overlap' | 'jaccard';
+
+	/**
+	 * Minimum number of shared property names required before two object samples
+	 * can be merged into the same object schema cluster. The effective value is
+	 * capped by the smaller object's property count so one-column and subset
+	 * shapes can still merge. Defaults to 2.
+	 */
+	objectMatchMinSharedProperties?: number;
+
+	/**
+	 * Value emitted as additionalProperties on inferred object schemas. Defaults
+	 * to true. Set to false to make every inferred object schema closed.
+	 */
+	additionalProperties?: boolean;
+
+	/**
+	 * Emit required arrays for object fields seen in every matching object
+	 * sample. Defaults to true. Set to false to omit required arrays entirely.
+	 */
+	required?: boolean;
+
+	/**
+	 * Maximum number of unique primitive sample values to emit under the JSON
+	 * Schema examples keyword for simple type fields. Defaults to 0, which skips
+	 * example collection. Set this before adding samples to collect examples.
+	 */
+	maxExamples?: number;
 
 	/**
 	 * Infer string enums from repeated low-cardinality values. Defaults to true.
@@ -22,10 +55,42 @@ export type JsonSchemaGeneratorOptions = {
 	inferEnums?: boolean;
 
 	/**
+	 * Configure string enum detection. Name lists are matched case-insensitively
+	 * against normalized property names. Low-probability names block enum
+	 * inference. Object property names must match the high-probability list to
+	 * infer enums; root and array item strings use only value distribution.
+	 * Values longer than maxValueLength block enum inference. Defaults:
+	 * maxValueLength 32, plus built-in high/low probability name lists.
+	 */
+	enumDetection?: JsonSchemaEnumDetectionOptions;
+
+	/**
 	 * Infer common string formats such as date-time, date, email, uri, uuid,
 	 * ipv4, and ipv6. Defaults to true.
 	 */
 	inferFormats?: boolean;
+}
+
+export type JsonSchemaEnumDetectionOptions = {
+
+	/**
+	 * Property names that are likely to be categorical enum fields. Matched
+	 * case-insensitively after normalizing spaces, separators, and camelCase.
+	 */
+	highProbabilityNames?: string[];
+
+	/**
+	 * Property names that are likely to be identifiers, labels, or free text.
+	 * Matched as normalized name tokens after normalizing spaces, separators,
+	 * and camelCase. Matching names block enum inference.
+	 */
+	lowProbabilityNames?: string[];
+
+	/**
+	 * Maximum string value length allowed for inferred enums. Any longer observed
+	 * value blocks enum inference for that field. Defaults to 32.
+	 */
+	maxValueLength?: number;
 }
 
 export type JsonSchemaGenerator = {
@@ -36,22 +101,36 @@ export type JsonSchemaGenerator = {
 
 type JsonType = 'null' | 'boolean' | 'string' | 'integer' | 'number' | 'object' | 'array';
 
-type RequiredOptions = Required<JsonSchemaGeneratorOptions>;
+type RequiredEnumDetectionOptions = Required<JsonSchemaEnumDetectionOptions>;
+
+type RequiredOptions = Omit<Required<JsonSchemaGeneratorOptions>, 'enumDetection'> & {
+	enumDetection: RequiredEnumDetectionOptions;
+}
 
 type StringFormat = 'date-time' | 'date' | 'time' | 'email' | 'uri' | 'uuid' | 'ipv4' | 'ipv6';
 
+type SimpleJsonType = Exclude<JsonType, 'object' | 'array'>;
+
 type JsonSchemaStats = {
 	count: number;
+	propertyName?: string;
 	types: JsonType[];
+	examples?: Map<SimpleJsonType, ExampleStats>;
 	string?: StringStats;
 	array?: ArrayStats;
 	objectClusters: ObjectClusterStats[];
+}
+
+type ExampleStats = {
+	values: unknown[];
+	keys: Set<string>;
 }
 
 type StringStats = {
 	count: number;
 	enumCounts: Map<string, number>;
 	enumOverflow: boolean;
+	hasLongEnumValue: boolean;
 	formatCandidates: Set<StringFormat>;
 }
 
@@ -71,10 +150,44 @@ type ObjectPropertyStats = {
 }
 
 const ENUM_MAX_VALUES = 10;
+const DEFAULT_ENUM_DETECTION: RequiredEnumDetectionOptions = {
+	highProbabilityNames: [
+		'action',
+		'category',
+		'kind',
+		'role',
+		'state',
+		'status',
+		'type',
+		'unit'
+	],
+	lowProbabilityNames: [
+		'address',
+		'code',
+		'description',
+		'email',
+		'file',
+		'from',
+		'hash',
+		'id',
+		'md5',
+		'name',
+		'number',
+		'phone',
+		'to',
+		'url'
+	],
+	maxValueLength: 32
+};
 
-const DEFAULT_OPTIONS: RequiredOptions = {
+const DEFAULT_OPTIONS: Omit<RequiredOptions, 'enumDetection'> = {
 	unionKeyword: 'oneOf',
 	objectMatchThreshold: 0.5,
+	objectMatchStrategy: 'overlap',
+	objectMatchMinSharedProperties: 2,
+	additionalProperties: true,
+	required: true,
+	maxExamples: 0,
 	inferEnums: true,
 	inferFormats: true
 };
@@ -93,13 +206,32 @@ const FORMAT_DETECTORS: Array<[StringFormat, (value: string) => boolean]> = [
 function normalizeOptions(options?: JsonSchemaGeneratorOptions): RequiredOptions {
 	return {
 		...DEFAULT_OPTIONS,
+		...options,
+		maxExamples: normalizeMaxExamples(options?.maxExamples ?? DEFAULT_OPTIONS.maxExamples),
+		enumDetection: normalizeEnumDetectionOptions(options?.enumDetection)
+	};
+}
+
+function normalizeMaxExamples(value: number): number {
+	if (!Number.isFinite(value) || value <= 0)
+		return 0;
+
+	return Math.floor(value);
+}
+
+function normalizeEnumDetectionOptions(
+	options?: JsonSchemaEnumDetectionOptions
+): RequiredEnumDetectionOptions {
+	return {
+		...DEFAULT_ENUM_DETECTION,
 		...options
 	};
 }
 
-function createStats(): JsonSchemaStats {
+function createStats(propertyName?: string): JsonSchemaStats {
 	return {
 		count: 0,
+		propertyName,
 		types: [],
 		objectClusters: []
 	};
@@ -110,6 +242,7 @@ function createStringStats(): StringStats {
 		count: 0,
 		enumCounts: new Map(),
 		enumOverflow: false,
+		hasLongEnumValue: false,
 		formatCandidates: new Set(FORMAT_DETECTORS.map(([format]) => format))
 	};
 }
@@ -152,19 +285,22 @@ function orderedSchemaTypes(stats: JsonSchemaStats): JsonType[] {
 function observe(stats: JsonSchemaStats, sample: unknown, options: RequiredOptions, path: string): void {
 	if (sample === null) {
 		observeType(stats, 'null');
+		observeExample(stats, 'null', sample, options);
 
 		return;
 	}
 
 	if (typeof sample === 'string') {
 		observeType(stats, 'string');
-		observeString(stats, sample);
+		observeExample(stats, 'string', sample, options);
+		observeString(stats, sample, options);
 
 		return;
 	}
 
 	if (typeof sample === 'boolean') {
 		observeType(stats, 'boolean');
+		observeExample(stats, 'boolean', sample, options);
 
 		return;
 	}
@@ -173,7 +309,10 @@ function observe(stats: JsonSchemaStats, sample: unknown, options: RequiredOptio
 		if (!Number.isFinite(sample))
 			throw new TypeError(`Invalid JSON sample at "${path}": numbers must be finite`);
 
-		observeType(stats, Number.isInteger(sample) ? 'integer' : 'number');
+		const type = Number.isInteger(sample) ? 'integer' : 'number';
+
+		observeType(stats, type);
+		observeExample(stats, type, sample, options);
 
 		return;
 	}
@@ -200,15 +339,54 @@ function observeType(stats: JsonSchemaStats, type: JsonType): void {
 	addType(stats.types, type);
 }
 
-function observeString(stats: JsonSchemaStats, value: string): void {
+function observeExample(
+	stats: JsonSchemaStats,
+	type: SimpleJsonType,
+	value: unknown,
+	options: RequiredOptions
+): void {
+	if (options.maxExamples <= 0)
+		return;
+
+	const exampleStats = stats.examples ?? (stats.examples = new Map());
+	let typeExamples = exampleStats.get(type);
+
+	if (!typeExamples) {
+		typeExamples = {
+			values: [],
+			keys: new Set()
+		};
+		exampleStats.set(type, typeExamples);
+	}
+
+	if (typeExamples.values.length >= options.maxExamples)
+		return;
+
+	const key = exampleKey(type, value);
+
+	if (typeExamples.keys.has(key))
+		return;
+
+	typeExamples.keys.add(key);
+	typeExamples.values.push(value);
+}
+
+function exampleKey(type: SimpleJsonType, value: unknown): string {
+	return `${type}:${JSON.stringify(value)}`;
+}
+
+function observeString(stats: JsonSchemaStats, value: string, options: RequiredOptions): void {
 	const stringStats = stats.string ?? (stats.string = createStringStats());
 
 	stringStats.count++;
-	observeStringEnum(stringStats, value);
+	observeStringEnum(stringStats, value, options.enumDetection);
 	observeStringFormat(stringStats, value);
 }
 
-function observeStringEnum(stats: StringStats, value: string): void {
+function observeStringEnum(stats: StringStats, value: string, options: RequiredEnumDetectionOptions): void {
+	if (value.length > options.maxValueLength)
+		stats.hasLongEnumValue = true;
+
 	if (stats.enumOverflow)
 		return;
 
@@ -251,7 +429,7 @@ function observeObject(
 	options: RequiredOptions,
 	path: string
 ): void {
-	const cluster = matchingObjectCluster(stats.objectClusters, sample, options.objectMatchThreshold);
+	const cluster = matchingObjectCluster(stats.objectClusters, sample, options);
 
 	cluster.count++;
 
@@ -263,7 +441,7 @@ function observeObject(
 		if (!property) {
 			property = {
 				count: 0,
-				stats: createStats()
+				stats: createStats(key)
 			};
 			cluster.properties.set(key, property);
 		}
@@ -276,10 +454,10 @@ function observeObject(
 function matchingObjectCluster(
 	clusters: ObjectClusterStats[],
 	sample: Record<string, unknown>,
-	threshold: number
+	options: RequiredOptions
 ): ObjectClusterStats {
 	const sampleKeys = new Set(Object.keys(sample));
-	const cluster = clusters.find(existing => objectSimilarity(sampleKeys, existing.keys) >= threshold);
+	const cluster = clusters.find(existing => objectMatchesCluster(sampleKeys, existing.keys, options));
 
 	if (cluster)
 		return cluster;
@@ -295,18 +473,42 @@ function matchingObjectCluster(
 	return next;
 }
 
-function objectSimilarity(sampleKeys: Set<string>, existingKeys: Set<string>): number {
-	const unionKeys = new Set([...existingKeys, ...sampleKeys]);
+function objectMatchesCluster(
+	sampleKeys: Set<string>,
+	existingKeys: Set<string>,
+	options: RequiredOptions
+): boolean {
+	const shared = sharedPropertyCount(sampleKeys, existingKeys);
+	const minShared = Math.min(options.objectMatchMinSharedProperties, sampleKeys.size, existingKeys.size);
 
-	if (!unionKeys.size)
-		return 1;
+	return shared >= minShared &&
+		objectSimilarity(sampleKeys, existingKeys, shared, options.objectMatchStrategy) >= options.objectMatchThreshold;
+}
 
+function sharedPropertyCount(sampleKeys: Set<string>, existingKeys: Set<string>): number {
 	let shared = 0;
 
 	for (const key of sampleKeys) {
 		if (existingKeys.has(key))
 			shared++;
 	}
+
+	return shared;
+}
+
+function objectSimilarity(
+	sampleKeys: Set<string>,
+	existingKeys: Set<string>,
+	shared: number,
+	strategy: RequiredOptions['objectMatchStrategy']
+): number {
+	const unionKeys = new Set([...existingKeys, ...sampleKeys]);
+
+	if (!unionKeys.size)
+		return 1;
+
+	if (strategy === 'overlap')
+		return shared / Math.min(sampleKeys.size, existingKeys.size);
 
 	return shared / unionKeys.size;
 }
@@ -342,7 +544,7 @@ function schemaFromStats(stats: JsonSchemaStats, options: RequiredOptions): Json
 	const hasNull = types.length !== nonNullTypes.length;
 
 	if (!nonNullTypes.length)
-		return { type: 'null' };
+		return schemaWithExamples({ type: 'null' }, stats, ['null'], options);
 
 	if (nonNullTypes.length === 1) {
 		const schema = schemaForType(stats, nonNullTypes[0], options);
@@ -351,7 +553,7 @@ function schemaFromStats(stats: JsonSchemaStats, options: RequiredOptions): Json
 	}
 
 	if (nonNullTypes.every(isPrimitiveType))
-		return { type: types };
+		return schemaWithExamples({ type: types }, stats, types as SimpleJsonType[], options);
 
 	const branches = nonNullTypes.map(type => schemaForType(stats, type, options));
 	const unionSchema = {
@@ -366,8 +568,14 @@ function isPrimitiveType(type: JsonType): boolean {
 }
 
 function schemaForType(stats: JsonSchemaStats, type: JsonType, options: RequiredOptions): JsonSchema {
-	if (type === 'string')
-		return stringSchemaFromStats(stats.string, options);
+	if (type === 'string') {
+		return schemaWithExamples(
+			stringSchemaFromStats(stats.string, options, stats.propertyName),
+			stats,
+			['string'],
+			options
+		);
+	}
 
 	if (type === 'object')
 		return objectSchemaFromStats(stats.objectClusters, options);
@@ -375,7 +583,44 @@ function schemaForType(stats: JsonSchemaStats, type: JsonType, options: Required
 	if (type === 'array')
 		return arraySchemaFromStats(stats.array, options);
 
-	return { type };
+	return schemaWithExamples(
+		{ type },
+		stats,
+		type === 'number' ? ['integer', 'number'] : [type],
+		options
+	);
+}
+
+function schemaWithExamples(
+	schema: JsonSchema,
+	stats: JsonSchemaStats,
+	types: SimpleJsonType[],
+	options: RequiredOptions
+): JsonSchema {
+	if (options.maxExamples <= 0 || !stats.examples || schema.enum)
+		return schema;
+
+	const examples: unknown[] = [];
+
+	for (const type of types) {
+		for (const value of stats.examples.get(type)?.values ?? []) {
+			if (examples.length >= options.maxExamples)
+				break;
+
+			examples.push(value);
+		}
+
+		if (examples.length >= options.maxExamples)
+			break;
+	}
+
+	if (!examples.length)
+		return schema;
+
+	return {
+		...schema,
+		examples
+	};
 }
 
 function arraySchemaFromStats(stats: ArrayStats | undefined, options: RequiredOptions): JsonSchema {
@@ -410,16 +655,21 @@ function objectClusterSchemaFromStats(cluster: ObjectClusterStats, options: Requ
 
 	const schema: JsonSchema = {
 		type: 'object',
-		properties
+		properties,
+		additionalProperties: options.additionalProperties
 	};
 
-	if (required.length)
+	if (options.required && required.length)
 		schema.required = required;
 
 	return schema;
 }
 
-function stringSchemaFromStats(stats: StringStats | undefined, options: RequiredOptions): JsonSchema {
+function stringSchemaFromStats(
+	stats: StringStats | undefined,
+	options: RequiredOptions,
+	propertyName?: string
+): JsonSchema {
 	const schema: JsonSchema = { type: 'string' };
 	const format = options.inferFormats ? inferStringFormat(stats) : undefined;
 
@@ -429,7 +679,7 @@ function stringSchemaFromStats(stats: StringStats | undefined, options: Required
 		return schema;
 	}
 
-	const enumValues = options.inferEnums ? inferStringEnum(stats) : undefined;
+	const enumValues = options.inferEnums ? inferStringEnum(stats, options, propertyName) : undefined;
 
 	if (enumValues)
 		schema.enum = enumValues;
@@ -437,18 +687,70 @@ function stringSchemaFromStats(stats: StringStats | undefined, options: Required
 	return schema;
 }
 
-function inferStringEnum(stats: StringStats | undefined): string[] | undefined {
-	if (!stats || stats.count < 3 || stats.enumOverflow)
+function inferStringEnum(
+	stats: StringStats | undefined,
+	options: RequiredOptions,
+	propertyName?: string
+): string[] | undefined {
+	if (!stats || stats.count < 3 || stats.enumOverflow || stats.hasLongEnumValue)
+		return undefined;
+
+	if (inferStringFormat(stats))
+		return undefined;
+
+	const enumNameProbability = enumNameProbabilityForProperty(propertyName, options.enumDetection);
+
+	if (enumNameProbability === 'low' || (propertyName && enumNameProbability !== 'high'))
 		return undefined;
 
 	const hasRepeatedValue = Array.from(stats.enumCounts.values()).some(count => count > 1);
 
 	const enumValues = Array.from(stats.enumCounts.keys());
 
-	if (!hasRepeatedValue || enumValues.length > ENUM_MAX_VALUES || enumValues.length / stats.count > 0.6)
+	if (!hasRepeatedValue || enumValues.length > ENUM_MAX_VALUES)
+		return undefined;
+
+	if (enumNameProbability !== 'high' && enumValues.length / stats.count > 0.6)
 		return undefined;
 
 	return enumValues;
+}
+
+function enumNameProbabilityForProperty(
+	propertyName: string | undefined,
+	options: RequiredEnumDetectionOptions
+): 'high' | 'low' | undefined {
+	if (!propertyName)
+		return undefined;
+
+	const normalizedName = normalizePropertyName(propertyName);
+
+	if (normalizedNameContainsAny(normalizedName, options.lowProbabilityNames))
+		return 'low';
+
+	if (normalizedNameContainsAny(normalizedName, options.highProbabilityNames))
+		return 'high';
+
+	return undefined;
+}
+
+function normalizedNameContainsAny(name: string, candidates: string[]): boolean {
+	const nameTokens = new Set(name.split(' '));
+
+	return candidates.some(candidate => {
+		const candidateTokens = normalizePropertyName(candidate).split(' ');
+
+		return candidateTokens.every(token => nameTokens.has(token));
+	});
+}
+
+function normalizePropertyName(name: string): string {
+	return name
+		.replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+		.replace(/[_\-.]+/g, ' ')
+		.replace(/\s+/g, ' ')
+		.trim()
+		.toLowerCase();
 }
 
 function inferStringFormat(stats: StringStats | undefined): StringFormat | undefined {
@@ -509,7 +811,8 @@ function isUri(value: string): boolean {
 }
 
 function isUuid(value: string): boolean {
-	return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+	return /^[0-9a-f]{32}$/i.test(value) ||
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
 function isIpv4(value: string): boolean {
@@ -572,7 +875,9 @@ class DefaultJsonSchemaGenerator implements JsonSchemaGenerator {
 		return schemaFromStats(this.stats, normalizeOptions({
 			...this.options,
 			...options,
-			objectMatchThreshold: this.options.objectMatchThreshold
+			objectMatchThreshold: this.options.objectMatchThreshold,
+			objectMatchStrategy: this.options.objectMatchStrategy,
+			objectMatchMinSharedProperties: this.options.objectMatchMinSharedProperties
 		}));
 	}
 }
@@ -583,7 +888,7 @@ export function createJsonSchemaGenerator(
 ): JsonSchemaGenerator {
 	const generator = new DefaultJsonSchemaGenerator(options);
 
-	if (arguments.length > 0)
+	if (arguments.length > 0 && !(arguments.length > 1 && sample === undefined))
 		generator.addSample(sample);
 
 	return generator;
