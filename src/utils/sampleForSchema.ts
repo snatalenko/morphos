@@ -8,7 +8,7 @@ export function sampleForSchema(schema: JSONSchema4): any {
 
 	const {
 		title,
-		type,
+		type: rawType,
 		properties,
 		additionalProperties,
 		items,
@@ -24,6 +24,7 @@ export function sampleForSchema(schema: JSONSchema4): any {
 		anyOf,
 		oneOf
 	} = schema;
+	const type = Array.isArray(rawType) ? rawType.find(t => t !== 'null') ?? rawType[0] : rawType;
 
 	if (example)
 		return example;
@@ -94,6 +95,6 @@ export function sampleForSchema(schema: JSONSchema4): any {
 		}
 	}
 	else {
-		throw new TypeError(`Unexpected type "${type}" in "${title || JSON.stringify(schema)}"`);
+		throw new TypeError(`Unexpected type "${rawType}" in "${title || JSON.stringify(schema)}"`);
 	}
 }

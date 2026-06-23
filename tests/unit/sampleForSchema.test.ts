@@ -2,6 +2,7 @@ import { sampleForSchema } from '../../src';
 import { sampleForSchema as sampleForSchemaFromUtils } from '../../src/utils/index.ts';
 import type { JSONSchema4 } from 'json-schema';
 import * as sampleSchema from './data/sampleSchema.json';
+import { gs1ObjectEvent } from '../../playground/shared/schemas/gs1ObjectEvent.ts';
 import { expect } from 'chai';
 
 function clone<T>(obj: T): T {
@@ -89,6 +90,26 @@ describe('sampleForSchema', () => {
 		} as JSONSchema4);
 
 		expect(sample).to.eql(10);
+	});
+
+	it('uses the first non-null type for schema type arrays', () => {
+		expect(sampleForSchema({
+			type: ['null', 'object'],
+			properties: {
+				id: { type: 'string' }
+			}
+		} as JSONSchema4)).to.eql({ id: 'text' });
+
+		expect(sampleForSchema({
+			type: ['string', 'array', 'object']
+		} as JSONSchema4)).to.equal('text');
+	});
+
+	it('generates sample data for GS1 event schemas', () => {
+		const sample = sampleForSchema(gs1ObjectEvent.schema as unknown as JSONSchema4);
+
+		expect(sample).to.have.property('@context', 'text');
+		expect(sample).to.have.property('type');
 	});
 
 	it('is exported from utils', () => {
