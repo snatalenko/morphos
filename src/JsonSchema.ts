@@ -4,6 +4,9 @@ export type JsonSchema = {
 		[name: string]: JsonSchema | boolean
 	};
 	items?: JsonSchema | boolean | Array<JsonSchema | boolean>;
+	additionalProperties?: JsonSchema | boolean;
+	oneOf?: Array<JsonSchema | boolean>;
+	anyOf?: Array<JsonSchema | boolean>;
 	required?: string[];
 	enum?: unknown[];
 	format?: string;

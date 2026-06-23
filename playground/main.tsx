@@ -5,7 +5,7 @@ import {
 	type MappingEditorHandle,
 	type MappingEditorComponents
 } from '../src/react/index.ts';
-import { generateInitialMapping, sampleForSchema } from '../src/utils/index.ts';
+import { createJsonSchemaGenerator, generateInitialMapping, sampleForSchema } from '../src/utils/index.ts';
 import bootstrap34 from '../src/react/bootstrap34/index.tsx';
 import bootstrap53 from '../src/react/bootstrap53/index.tsx';
 import {
@@ -493,6 +493,29 @@ function App() {
 		}
 	};
 
+	const generateSchemaFromData = (
+		text: string,
+		setText: (s: string) => void,
+		setSchema: (s: JsonSchema | undefined) => void,
+		setSchemaError: (s: string | null) => void,
+		setDataError: (s: string | null) => void,
+		onGenerated: () => void
+	) => {
+		try {
+			const data = JSON.parse(text);
+			const schema = createJsonSchemaGenerator(data).toJsonSchema();
+			setText(JSON.stringify(schema, null, 2));
+			setSchema(schema);
+			setSchemaError(null);
+			setDataError(null);
+			onGenerated();
+		}
+		catch (e) {
+			setSchemaError((e as Error).message);
+			setDataError((e as Error).message);
+		}
+	};
+
 	const loadSample = (
 		sample: JsonSchema | null,
 		setText: (s: string) => void,
@@ -864,6 +887,26 @@ function App() {
 									)}
 									placeholder='{ "type": "object", "properties": { ... } }'
 									sizeKey={`${editorType}-${sourceTab}`}
+									toolbarActions={
+										<button
+											type="button"
+											className="dm-code-toolbar-button"
+											disabled={!sourceDataText.trim()}
+											onClick={() => generateSchemaFromData(
+												sourceDataText,
+												setSourceText,
+												setSourceSchema,
+												setSourceError,
+												setSourceDataError,
+												() => {
+													setSourceSchemaSelection('');
+													setSourceTab('schema');
+												}
+											)}
+										>
+											Generate from data
+										</button>
+									}
 									title="JsonSchema"
 								/>
 							) : (
@@ -1286,6 +1329,26 @@ function App() {
 									)}
 									placeholder='{ "type": "object", "properties": { ... } }'
 									sizeKey={`${editorType}-${destinationTab}`}
+									toolbarActions={
+										<button
+											type="button"
+											className="dm-code-toolbar-button"
+											disabled={!resultText.trim()}
+											onClick={() => generateSchemaFromData(
+												resultText,
+												setDestText,
+												setDestSchema,
+												setDestError,
+												setRunError,
+												() => {
+													setDestSchemaSelection('');
+													setDestinationTab('schema');
+												}
+											)}
+										>
+											Generate from data
+										</button>
+									}
 									title="JsonSchema"
 								/>
 							) : (

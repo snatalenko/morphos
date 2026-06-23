@@ -83,6 +83,16 @@
 	border-color: #94a3b8;
 }
 
+.dm-code-toolbar-button:disabled {
+	opacity: 0.55;
+	cursor: not-allowed;
+}
+
+.dm-code-toolbar-button:disabled:hover {
+	background: #fff;
+	border-color: #cbd5e1;
+}
+
 .dm-code-textarea {
 	display: block;
 	width: 100%;
