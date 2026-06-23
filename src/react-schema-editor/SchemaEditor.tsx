@@ -152,14 +152,21 @@ function setRequired(schema: JsonSchema, name: string, required: boolean): JsonS
 
 function settingsForType(type: SchemaType): SchemaSettingKey[] {
 	if (type === 'string')
-		return ['title', 'description', 'format', 'minLength', 'maxLength', 'pattern', 'enum'];
+		return ['title', 'description', 'format', 'minLength', 'maxLength', 'pattern'];
 	if (type === 'number' || type === 'integer')
-		return ['title', 'description', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf', 'enum'];
+		return ['title', 'description', 'minimum', 'maximum', 'exclusiveMinimum', 'exclusiveMaximum', 'multipleOf'];
 	if (type === 'array')
 		return ['title', 'description', 'minItems', 'maxItems'];
 	if (type === 'object')
 		return ['title', 'description', 'minProperties', 'maxProperties'];
-	return ['title', 'description', 'enum'];
+	return ['title', 'description'];
+}
+
+function textareaSettingsForType(type: SchemaType): SchemaSettingKey[] {
+	if (type === 'object' || type === 'array')
+		return [];
+
+	return ['enum'];
 }
 
 function settingValue(schema: JsonSchema, key: SchemaSettingKey): string {
@@ -168,7 +175,7 @@ function settingValue(schema: JsonSchema, key: SchemaSettingKey): string {
 		return '';
 	if (key === 'enum')
 		return Array.isArray(value)
-			? value.map(v => typeof v === 'string' ? v : JSON.stringify(v)).join(', ')
+			? value.map(v => typeof v === 'string' ? v : JSON.stringify(v)).join('\n')
 			: '';
 	return String(value);
 }
@@ -178,7 +185,7 @@ function parseEnumValue(value: string): unknown[] | undefined {
 		return undefined;
 
 	return value
-		.split(',')
+		.split('\n')
 		.map(v => v.trim())
 		.filter(Boolean)
 		.map(v => {
@@ -189,6 +196,12 @@ function parseEnumValue(value: string): unknown[] | undefined {
 				return v;
 			}
 		});
+}
+
+function canonicalEnumValue(value: string): string {
+	const parsed = parseEnumValue(value);
+
+	return parsed === undefined ? '' : settingValue({ enum: parsed }, 'enum');
 }
 
 function examplesValue(schema: JsonSchema): string {
@@ -265,7 +278,6 @@ function settingsTextFields(
 		key,
 		label: labels[key],
 		value: settingValue(schema, key),
-		placeholder: key === 'enum' ? 'value1, value2' : undefined,
 		readOnly,
 		onChange: value => onChange(updateSetting(schema, key, value))
 	}));
@@ -289,11 +301,29 @@ function settingsCheckboxFields(
 
 function settingsTextareaFields(
 	schema: JsonSchema,
+	type: SchemaType,
 	labels: SchemaEditorLabels,
 	onChange: (next: JsonSchema) => void,
-	readOnly: boolean
+	readOnly: boolean,
+	enumDraft: string | undefined,
+	onEnumDraftChange: (next: string) => void
 ): SchemaTextareaSettingField[] {
-	return [{
+	const fields: SchemaTextareaSettingField[] = textareaSettingsForType(type).map(key => ({
+		key,
+		label: labels[key],
+		type: 'textarea',
+		value: key === 'enum' && enumDraft !== undefined ? enumDraft : settingValue(schema, key),
+		placeholder: key === 'enum' ? 'value1\nvalue2' : undefined,
+		readOnly,
+		onChange: value => {
+			if (key === 'enum')
+				onEnumDraftChange(value);
+
+			onChange(updateSetting(schema, key, value));
+		}
+	}));
+
+	fields.push({
 		key: 'examples',
 		label: labels.examples,
 		type: 'textarea',
@@ -301,7 +331,9 @@ function settingsTextareaFields(
 		placeholder: 'example 1\nexample 2',
 		readOnly,
 		onChange: value => onChange(updateExamples(schema, value))
-	}];
+	});
+
+	return fields;
 }
 
 function labelForType(type: SchemaType): string {
@@ -312,7 +344,15 @@ function labelForFormat(format: string): string {
 	return format[0].toUpperCase() + format.slice(1);
 }
 
-function typeSelectorOptions(format: string | undefined): TypeSelectorOption[] {
+function hasEnum(schema: JsonSchema): boolean {
+	return Array.isArray(schema.enum) && schema.enum.length > 0;
+}
+
+function typeSelectorOptions(
+	format: string | undefined,
+	enumOption: boolean,
+	labels: SchemaEditorLabels
+): TypeSelectorOption[] {
 	const options: TypeSelectorOption[] = schemaTypes.map(type => ({
 		value: type,
 		label: labelForType(type),
@@ -326,11 +366,25 @@ function typeSelectorOptions(format: string | undefined): TypeSelectorOption[] {
 			format
 		});
 	}
+	if (enumOption) {
+		options.push({
+			value: 'enum',
+			label: labels.enum,
+			type: 'string',
+			enum: true
+		});
+	}
 	return options;
 }
 
-function typeSelectorValue(type: SchemaType, format: string | undefined): string {
-	return type === 'string' && format ? `format:${format}` : type;
+function typeSelectorValue(type: SchemaType, format: string | undefined, enumOption: boolean): string {
+	if (type !== 'string')
+		return type;
+	if (enumOption)
+		return 'enum';
+	if (format)
+		return `format:${format}`;
+	return type;
 }
 
 interface PropertySlot {
@@ -383,14 +437,33 @@ function SchemaNodeEditor({
 	const labels = useContext(LabelsContext);
 	const [settingsOpen, setSettingsOpen] = useState(false);
 	const [propertySlots, setPropertySlots] = useState<PropertySlot[]>(() => [{ id: 0, value: '' }]);
+	const [preferBaseStringType, setPreferBaseStringType] = useState(false);
+	const [enumDraft, setEnumDraft] = useState<string | undefined>();
 	const nextPropertySlotIdRef = useRef(1);
 	const type = schemaType(schema);
+	const enumOption = type === 'string' && hasEnum(schema);
+	const enumValue = settingValue(schema, 'enum');
+
+	useEffect(() => {
+		if (!enumOption || type !== 'string')
+			setPreferBaseStringType(false);
+	}, [enumOption, type]);
+
+	useEffect(() => {
+		if (enumDraft !== undefined && canonicalEnumValue(enumDraft) !== enumValue)
+			setEnumDraft(undefined);
+	}, [enumDraft, enumValue]);
 
 	const updateType = (option: TypeSelectorOption) => {
+		const preferString = enumOption && option.value === 'string';
+		setPreferBaseStringType(preferString);
+		if (preferString && type === 'string' && !schema.format)
+			return;
+
 		const next = withSchemaType(schema, option.type);
 		if (option.type === 'string' && option.format)
 			next.format = option.format;
-		else
+		else if (option.type !== 'string' || !option.enum)
 			delete next.format;
 		onChange(next);
 	};
@@ -605,13 +678,28 @@ function SchemaNodeEditor({
 				<C.Section>
 					<C.SettingsGroup>
 						{(() => {
-							const textFields = settingsTextFields(schema, type, labels, onChange, readOnly);
+							const textFields = settingsTextFields(
+								schema,
+								type,
+								labels,
+								onChange,
+								readOnly
+							);
+							const textareaFields = settingsTextareaFields(
+								schema,
+								type,
+								labels,
+								onChange,
+								readOnly,
+								enumDraft,
+								setEnumDraft
+							);
 							return (
 								<>
 									{textFields.slice(0, 2).map(f => <C.TextFieldSetting key={f.key} field={f} />)}
 									{settingsCheckboxFields(schema, labels, onChange, readOnly).map(f => <C.CheckboxFieldSetting key={f.key} field={f} />)}
 									{textFields.slice(2).map(f => <C.TextFieldSetting key={f.key} field={f} />)}
-									{settingsTextareaFields(schema, labels, onChange, readOnly).map(f => <C.TextareaFieldSetting key={f.key} field={f} />)}
+									{textareaFields.map(f => <C.TextareaFieldSetting key={f.key} field={f} />)}
 								</>
 							);
 						})()}
@@ -632,8 +720,12 @@ function SchemaNodeEditor({
 			description={descriptionControl}
 			typeSelector={(
 				<C.TypeSelector
-					value={typeSelectorValue(type, schema.format)}
-					options={typeSelectorOptions(schema.format)}
+					value={
+						preferBaseStringType && enumOption
+							? 'string'
+							: typeSelectorValue(type, schema.format, enumOption)
+					}
+					options={typeSelectorOptions(schema.format, enumOption, labels)}
 					onChange={updateType}
 					readOnly={readOnly}
 				/>

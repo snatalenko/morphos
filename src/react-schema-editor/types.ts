@@ -41,6 +41,7 @@ export interface TypeSelectorOption {
 	label: string;
 	type: SchemaType;
 	format?: string;
+	enum?: boolean;
 }
 
 export interface TypeSelectorProps {

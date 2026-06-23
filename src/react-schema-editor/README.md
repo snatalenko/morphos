@@ -132,15 +132,17 @@ interface SchemaEditorHandle {
 The editor supports object properties, required flags, nullable fields, scalar types, nested objects, arrays, and array item schemas.
 String schemas can also define `format`; when present, the type dropdown adds the capitalized format as a separate option.
 Selecting the standard `String` option clears the field's format.
-Schema `examples` are edited as a multi-line value where each line becomes one example.
+String schemas with a non-empty `enum` show `Enum` in the type dropdown. Selecting `String` for an enum field only changes the dropdown
+display and leaves the enum unchanged; removing the enum from field settings returns the dropdown to `String`.
+Schema `enum` and `examples` values are edited as multi-line values where each line becomes one value.
 
 Field settings are rendered through separate theme components:
 
 | Component | Purpose |
 | --- | --- |
 | `SettingsGroup` | Wraps the expanded settings area. |
-| `TextFieldSetting` | Renders text-based settings such as title, description, min/max, pattern, and enum. |
+| `TextFieldSetting` | Renders text-based settings such as title, description, min/max, and pattern. |
 | `CheckboxFieldSetting` | Renders boolean settings such as nullable. |
-| `TextareaFieldSetting` | Renders multi-line settings such as examples. |
+| `TextareaFieldSetting` | Renders multi-line settings such as enum and examples. |
 
 Override these components to replace the inline settings block with a custom panel, popover, or modal while keeping the editor state handling unchanged.
