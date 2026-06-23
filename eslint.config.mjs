@@ -25,7 +25,12 @@ export default defineConfig([
 			"@typescript-eslint": tsPlugin,
 		},
 		"rules": {
-			"no-use-before-define": "warn",
+			"no-use-before-define": [
+				"warn",
+				{
+					"functions": false
+				}
+			],
 			"strict": "off",
 			"@typescript-eslint/no-unused-vars": [
 				"warn",

@@ -1,4 +1,3 @@
-/* eslint-disable no-use-before-define */
 import type { PropertiesMap, RootMapping, ValueMap } from '../mappingTypes.ts';
 import type { JsonSchema } from '../JsonSchema.ts';
 import { isJsonSchema, isRecord, schemaItems, schemaType } from './jsonSchemaUtils.ts';

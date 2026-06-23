@@ -27,7 +27,6 @@ function* returnValueMapToJs(
 	}
 	else {
 		yield `${prefix}return (`;
-		// eslint-disable-next-line no-use-before-define
 		yield* mappingToJs(mappingInstruction, level, contextExpr);
 		yield `${prefix});`;
 	}
@@ -67,7 +66,6 @@ function* propertiesMapToJs(
 			yield `${prefix}  ${mappingInstruction || 'null'};`;
 		}
 		else {
-			// eslint-disable-next-line no-use-before-define
 			yield* mappingToJs(mappingInstruction, level, contextExpr);
 			yield `${prefix};`;
 		}

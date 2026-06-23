@@ -1,4 +1,3 @@
-/* eslint-disable no-use-before-define */
 import type { RootMapping } from '../mappingTypes.ts';
 import type { JsonSchema } from '../JsonSchema.ts';
 import {
