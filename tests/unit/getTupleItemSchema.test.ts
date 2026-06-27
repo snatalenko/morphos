@@ -12,4 +12,23 @@ describe('getTupleItemSchema', () => {
 		expect(getTupleItemSchema({ type: 'array', items: [tupleItemSchema, true] }, 1)).to.equal(undefined);
 		expect(getTupleItemSchema({ type: 'array', items: [tupleItemSchema] }, 2)).to.equal(undefined);
 	});
+
+	it('uses homogeneous array item schemas for tuple editor items', () => {
+		const itemSchema = {
+			type: 'object',
+			properties: {
+				id: { type: 'string' },
+				quantity: { type: 'number' }
+			}
+		} as const;
+
+		expect(getTupleItemSchema({
+			type: 'array',
+			items: itemSchema
+		}, 0)).to.equal(itemSchema);
+		expect(getTupleItemSchema({
+			type: 'array',
+			items: itemSchema
+		}, 1)).to.equal(itemSchema);
+	});
 });

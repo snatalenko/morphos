@@ -7,6 +7,7 @@ import {
 	getPropertySchema,
 	createEntryValueForSchema,
 	createEntryValue,
+	suggestedKeyOptions,
 	WILDCARD_KEY,
 	type Entry
 } from './utils/index.ts';
@@ -80,31 +81,15 @@ export function EntriesEditor({
 		onChange([...entries, createEntryForKey(key, keyAdvanced, id)]);
 	};
 
-	const requiredSet = new Set(schema?.required ?? []);
-	const schemaPropNames = schema?.properties ? Object.keys(schema.properties) : [];
-	const mappedKeys = new Set(entries.map(e => e.key));
 	const wildcardEntry = entries.find(e => e.key === WILDCARD_KEY);
 	const wildcardIsSpread = wildcardEntry?.value.kind === 'expr' && wildcardEntry.value.expr === WILDCARD_KEY;
 	const currentValueMapped = wildcardEntry !== undefined && !wildcardIsSpread;
 
 	const availableForEntry = (entry: Entry): FieldOption[] => {
-		const result: FieldOption[] = [];
+		if (!schema)
+			return [];
 
-		if (entry.key === WILDCARD_KEY || !mappedKeys.has(WILDCARD_KEY))
-			result.push({ value: WILDCARD_KEY, label: labels.currentValue });
-
-		for (const name of schemaPropNames) {
-			if (name !== entry.key && mappedKeys.has(name))
-				continue;
-
-			if (!getPropertySchema(schema, name))
-				continue;
-
-			const required = requiredSet.has(name);
-			result.push({ value: name, label: name + (required ? ' *' : ''), group: 'field' });
-		}
-
-		return result;
+		return suggestedKeyOptions(entries, entry, schema, labels.currentValue);
 	};
 
 	const updateEntryKey = (id: string, newKey: string) => {
