@@ -1,3 +1,11 @@
+# [2.0.0-beta.9](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.8...v2.0.0-beta.9) (2026-06-27)
+
+
+### Changes
+
+* Suggest "Current value" only before other editor fields are mapped ([eac9c0e](https://github.com/snatalenko/morphos/commit/eac9c0eabfd16a5456289f630eb645226cda1ec1))
+
+
 # [2.0.0-beta.8](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.7...v2.0.0-beta.8) (2026-06-23)
 
 
