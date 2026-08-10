@@ -11,6 +11,7 @@ export const sourceData = {
 	FREIGHT_AMT: 25,
 	BUYER: {
 		NAME: 'Acme Retail',
+		ACCOUNT_NO: 10042,
 		TAX_ID: 'US-123456789'
 	},
 	SHIP_TO: {
@@ -31,6 +32,7 @@ export const initial: RootMapping = {
 		from: 'BUYER',
 		map: {
 			name: 'NAME',
+			accountNumber: 'String(ACCOUNT_NO)',
 			taxId: 'TAX_ID'
 		}
 	},
@@ -97,6 +99,7 @@ export const sourceSchema: JsonSchema = {
 			description: 'Buyer account',
 			properties: {
 				NAME: { type: 'string', description: 'Buyer legal name' },
+				ACCOUNT_NO: { type: 'integer', description: 'Buyer account number' },
 				TAX_ID: { type: 'string', description: 'Buyer tax identifier' }
 			}
 		},
@@ -138,6 +141,7 @@ export const destinationSchema: JsonSchema = {
 			description: 'Bill-to account',
 			properties: {
 				name: { type: 'string', description: 'Bill-to name' },
+				accountNumber: { type: 'string', description: 'Bill-to account number' },
 				taxId: { type: 'string', description: 'Bill-to tax identifier' }
 			}
 		},

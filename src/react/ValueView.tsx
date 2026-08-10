@@ -11,7 +11,8 @@ import {
 	resolveSourcePath,
 	createEntryValue,
 	enumOptionsForSchema,
-	typesCompatible,
+	typesSuggestible,
+	convertSuggestionForType,
 	preferNameMatches,
 	arrayContextSuggestions,
 	mergeSourceSuggestions,
@@ -302,18 +303,18 @@ export function ValueView({
 			? [...findSourceFields(sourceSchema, {})].filter(s => {
 				const t = schemaType(s.schema);
 				if (name === WILDCARD_KEY)
-					return typesCompatible(destType, t);
+					return typesSuggestible(destType, t);
 				if (t === 'object' || t === 'array')
 					return false;
 
-				return typesCompatible(destType, t);
+				return typesSuggestible(destType, t);
 			})
 			: [];
 		const suggestions = preferNameMatches(
 			mergeSourceSuggestions(allScalars, sourceSuggestions),
 			sourceSchema,
 			name
-		);
+		).map(s => convertSuggestionForType(s, destType));
 		const enumOptions = enumOptionsForSchema(schema);
 		const wildcardOptions: FieldOption[] = sourceSchema
 			? [{ value: WILDCARD_KEY, label: labels.currentFields, group: 'field' }]

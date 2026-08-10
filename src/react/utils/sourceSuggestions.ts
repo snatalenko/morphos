@@ -1,5 +1,6 @@
 import type { JsonSchema, SourceFieldMatch } from '../types.ts';
 import { findSourceFields, sourcePathRoot } from './sourceFields.ts';
+import { schemaType } from './schemaProps.ts';
 
 export function typesCompatible(destType: string | undefined, sourceType: string | undefined): boolean {
 	if (!destType)
@@ -13,6 +14,24 @@ export function typesCompatible(destType: string | undefined, sourceType: string
 		return true;
 
 	return false;
+}
+
+export function typesSuggestible(destType: string | undefined, sourceType: string | undefined): boolean {
+	if (destType === 'string' && (sourceType === 'number' || sourceType === 'integer'))
+		return true;
+
+	return typesCompatible(destType, sourceType);
+}
+
+export function convertSuggestionForType(
+	field: SourceFieldMatch,
+	destType: string | undefined
+): SourceFieldMatch {
+	const sourceType = schemaType(field.schema);
+	if (destType === 'string' && (sourceType === 'number' || sourceType === 'integer'))
+		return { ...field, path: `String(${field.path})` };
+
+	return field;
 }
 
 export function preferNameMatches(
