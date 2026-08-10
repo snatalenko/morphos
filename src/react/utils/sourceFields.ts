@@ -148,6 +148,10 @@ export function* findSourceFields(
 	const target = filter.name === undefined ? undefined : normalizeName(filter.name);
 	const seen = new Set<string>();
 	for (const field of walkSchema(sourceSchema, '', undefined, target, filter.type)) {
+		// Bracket access requires an explicit base expression.
+		if (field.path.startsWith('['))
+			continue;
+
 		if (!seen.has(field.path)) {
 			seen.add(field.path);
 			yield field;

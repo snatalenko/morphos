@@ -114,6 +114,30 @@ describe('source field utilities', () => {
 			.to.deep.equal(['id', 'name', 'email', 'phone']);
 	});
 
+	it('omits bracket paths without a base and keeps them when the full path is specified', () => {
+		const extendedProperty = 'urn:example:schemas:scim:User:social';
+		const schema: JsonSchema = {
+			type: 'object',
+			properties: {
+				[extendedProperty]: { type: 'string' },
+				$sources: {
+					type: 'object',
+					properties: {
+						$input: {
+							type: 'object',
+							properties: {
+								[extendedProperty]: { type: 'string' }
+							}
+						}
+					}
+				}
+			}
+		};
+
+		expect(Array.from(findSourceFields(schema, { type: 'string' }), field => field.path))
+			.to.deep.equal(['$sources.$input["urn:example:schemas:scim:User:social"]']);
+	});
+
 	it('resolves properties nested in schema composition keywords', () => {
 		const composedSchema: JsonSchema = {
 			allOf: [{
