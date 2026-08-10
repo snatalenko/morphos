@@ -1,3 +1,11 @@
+# [2.0.0-beta.12](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.11...v2.0.0-beta.12) (2026-08-10)
+
+
+### Fixes
+
+* Omit invalid source field suggestions ([fcbb957](https://github.com/snatalenko/morphos/commit/fcbb957541b025c460e62b35e39206e39d1fd499))
+
+
 # [2.0.0-beta.11](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.10...v2.0.0-beta.11) (2026-08-10)
 
 
