@@ -1,3 +1,11 @@
+# [2.0.0-beta.10](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.9...v2.0.0-beta.10) (2026-08-10)
+
+
+### Features
+
+* Support for "allOf", "oneOf", and "anyOf" in editor suggestions ([a4ddbaa](https://github.com/snatalenko/morphos/commit/a4ddbaad966f661ca8a171178dc5d1d9b9332577))
+
+
 # [2.0.0-beta.9](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.8...v2.0.0-beta.9) (2026-06-27)
 
 
