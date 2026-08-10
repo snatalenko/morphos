@@ -1,3 +1,11 @@
+# [2.0.0-beta.11](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.10...v2.0.0-beta.11) (2026-08-10)
+
+
+### Features
+
+* Suggest numeric-to-string field conversions ([a7036b7](https://github.com/snatalenko/morphos/commit/a7036b7ee0ba6c9a9f258ce6f31deaa136994334))
+
+
 # [2.0.0-beta.10](https://github.com/snatalenko/morphos/compare/v2.0.0-beta.9...v2.0.0-beta.10) (2026-08-10)
 
 
