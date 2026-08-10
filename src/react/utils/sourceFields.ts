@@ -1,5 +1,5 @@
 import type { JsonSchema, SourceFieldMatch } from '../types.ts';
-import { schemaType } from './schemaProps.ts';
+import { getPropertySchema, schemaType } from './schemaProps.ts';
 
 function normalizeName(name: string): string {
 	return name.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -129,6 +129,13 @@ function* walkSchema(
 			yield* walkSchema(propSchema, joinPath(path, propName), propName, target, filterType);
 		}
 	}
+
+	for (const alternatives of [node.allOf, node.oneOf, node.anyOf]) {
+		for (const alternative of alternatives ?? []) {
+			if (typeof alternative !== 'boolean')
+				yield* walkSchema(alternative, path, leafName, target, filterType);
+		}
+	}
 }
 
 export function* findSourceFields(
@@ -139,7 +146,13 @@ export function* findSourceFields(
 		return;
 
 	const target = filter.name === undefined ? undefined : normalizeName(filter.name);
-	yield* walkSchema(sourceSchema, '', undefined, target, filter.type);
+	const seen = new Set<string>();
+	for (const field of walkSchema(sourceSchema, '', undefined, target, filter.type)) {
+		if (!seen.has(field.path)) {
+			seen.add(field.path);
+			yield field;
+		}
+	}
 }
 
 export function extendSourceSchema(
@@ -181,11 +194,8 @@ export function resolveSourcePath(
 
 	let current: JsonSchema | undefined = sourceSchema;
 	for (const part of parts) {
-		if (!current || !current.properties)
-			return undefined;
-
-		const sub = current.properties[part];
-		if (sub === undefined || typeof sub === 'boolean')
+		const sub = getPropertySchema(current, part);
+		if (!sub)
 			return undefined;
 
 		current = sub;

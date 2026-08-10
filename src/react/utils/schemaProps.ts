@@ -10,14 +10,25 @@ export function schemaType(schema: JsonSchema | undefined): string | undefined {
 }
 
 export function getPropertySchema(parent: JsonSchema | undefined, name: string): JsonSchema | undefined {
-	if (!parent || !parent.properties)
+	if (!parent)
 		return undefined;
 
-	const sub = parent.properties[name];
-	if (sub === undefined || typeof sub === 'boolean')
-		return undefined;
+	const sub = parent.properties?.[name];
+	if (sub !== undefined && typeof sub !== 'boolean')
+		return sub;
 
-	return sub;
+	for (const alternatives of [parent.allOf, parent.oneOf, parent.anyOf]) {
+		for (const alternative of alternatives ?? []) {
+			if (typeof alternative === 'boolean')
+				continue;
+
+			const alternativeProperty = getPropertySchema(alternative, name);
+			if (alternativeProperty)
+				return alternativeProperty;
+		}
+	}
+
+	return undefined;
 }
 
 export function getItemsSchema(parent: JsonSchema | undefined): JsonSchema | undefined {

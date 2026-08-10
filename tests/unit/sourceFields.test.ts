@@ -71,6 +71,72 @@ describe('source field utilities', () => {
 			.to.deep.equal(['SKU']);
 	});
 
+	it('lists fields from nested allOf, oneOf, and anyOf schemas without duplicates', () => {
+		const composedSchema: JsonSchema = {
+			allOf: [
+				{
+					type: 'object',
+					properties: {
+						id: { type: 'string' }
+					}
+				},
+				{
+					oneOf: [
+						{
+							type: 'object',
+							properties: {
+								id: { type: 'string' },
+								name: { type: 'string' }
+							}
+						},
+						{
+							anyOf: [
+								{
+									type: 'object',
+									properties: {
+										email: { type: 'string' }
+									}
+								},
+								{
+									type: 'object',
+									properties: {
+										phone: { type: 'string' }
+									}
+								}
+							]
+						}
+					]
+				}
+			]
+		};
+
+		expect(Array.from(findSourceFields(composedSchema, {}), field => field.path))
+			.to.deep.equal(['id', 'name', 'email', 'phone']);
+	});
+
+	it('resolves properties nested in schema composition keywords', () => {
+		const composedSchema: JsonSchema = {
+			allOf: [{
+				oneOf: [{
+					anyOf: [{
+						type: 'object',
+						properties: {
+							contact: {
+								type: 'object',
+								properties: {
+									email: { type: 'string' }
+								}
+							}
+						}
+					}]
+				}]
+			}]
+		};
+
+		expect(resolveSourcePath(composedSchema, 'contact.email'))
+			.to.deep.equal({ type: 'string' });
+	});
+
 	it('filters consumed parent suggestions for quoted bracket property paths', () => {
 		const suggestions = parentContextSuggestions(sourceSchema, [], 'DETAILS["LINE_ITEMS"]');
 

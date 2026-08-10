@@ -5,6 +5,7 @@ export type JsonSchema = {
 	};
 	items?: JsonSchema | boolean | Array<JsonSchema | boolean>;
 	additionalProperties?: JsonSchema | boolean;
+	allOf?: Array<JsonSchema | boolean>;
 	oneOf?: Array<JsonSchema | boolean>;
 	anyOf?: Array<JsonSchema | boolean>;
 	required?: string[];
