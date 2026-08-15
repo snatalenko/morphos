@@ -8,6 +8,11 @@
   --link: #0969da;
   --active: #ddf4ff;
   --code: rgba(175, 184, 193, 0.2);
+  --syntax-comment: #6e7781;
+  --syntax-keyword: #cf222e;
+  --syntax-string: #0a3069;
+  --syntax-function: #8250df;
+  --syntax-number: #0550ae;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -21,6 +26,11 @@
     --link: #58a6ff;
     --active: rgba(56, 139, 253, 0.15);
     --code: rgba(110, 118, 129, 0.4);
+    --syntax-comment: #8b949e;
+    --syntax-keyword: #ff7b72;
+    --syntax-string: #a5d6ff;
+    --syntax-function: #d2a8ff;
+    --syntax-number: #79c0ff;
   }
 }
 
@@ -34,6 +44,11 @@
   --link: #58a6ff;
   --active: rgba(56, 139, 253, 0.15);
   --code: rgba(110, 118, 129, 0.4);
+  --syntax-comment: #8b949e;
+  --syntax-keyword: #ff7b72;
+  --syntax-string: #a5d6ff;
+  --syntax-function: #d2a8ff;
+  --syntax-number: #79c0ff;
 }
 
 :root[data-theme="light"] { color-scheme: light; }
@@ -193,21 +208,11 @@ a { color: var(--link); }
 .prose details { margin: 1em 0; }
 .prose summary { cursor: pointer; font-weight: 600; }
 
-.highlight .c, .highlight .cm, .highlight .c1 { color: #6e7781; }
-.highlight .k, .highlight .kd, .highlight .kn { color: #cf222e; }
-.highlight .s, .highlight .s1, .highlight .s2 { color: #0a3069; }
-.highlight .nf, .highlight .nx { color: #8250df; }
-.highlight .mi, .highlight .mf { color: #0550ae; }
-:root[data-theme="dark"] .highlight .k,
-:root[data-theme="dark"] .highlight .kd,
-:root[data-theme="dark"] .highlight .kn { color: #ff7b72; }
-:root[data-theme="dark"] .highlight .s,
-:root[data-theme="dark"] .highlight .s1,
-:root[data-theme="dark"] .highlight .s2 { color: #a5d6ff; }
-:root[data-theme="dark"] .highlight .nf,
-:root[data-theme="dark"] .highlight .nx { color: #d2a8ff; }
-:root[data-theme="dark"] .highlight .mi,
-:root[data-theme="dark"] .highlight .mf { color: #79c0ff; }
+.highlight .c, .highlight .cm, .highlight .c1 { color: var(--syntax-comment); }
+.highlight .k, .highlight .kd, .highlight .kn { color: var(--syntax-keyword); }
+.highlight .s, .highlight .s1, .highlight .s2 { color: var(--syntax-string); }
+.highlight .nf, .highlight .nx { color: var(--syntax-function); }
+.highlight .mi, .highlight .mf { color: var(--syntax-number); }
 
 @media (max-width: 820px) {
   .site-header { position: static; }
