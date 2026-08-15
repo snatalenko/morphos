@@ -128,7 +128,11 @@
     "type": "git",
     "url": "git+ssh://git@github.com/snatalenko/morphos.git"
   },
-  "author": "@snatalenko",
+  "author": {
+    "name": "Stanislav Natalenko",
+    "url": "https://natalenko.com/about/",
+    "email": "taxer.32-dense@icloud.com"
+  },
   "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/snatalenko/morphos/issues"

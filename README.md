@@ -17,7 +17,7 @@ JSON-to-JSON mapper with user-defined JSON mapping specs, plain JS transformatio
 
 Users define the mapping as JSON, so it can be stored, versioned, generated, or edited from a UI. Unlike many transformation tools, it does not invent a custom expression language: field transforms are plain JavaScript expressions, executed in a restricted VM context for predictable behavior without giving mappings access to the host environment.
 
-Try it in the [interactive playground](https://snatalenko.github.io/morphos/playground/).
+Try it in the [interactive playground](playground/).
 
 ### Table of Contents
 
@@ -61,7 +61,7 @@ Need users to build or maintain mappings in a web app? Use the React mapping edi
 <table>
   <tr>
     <td width="50%" style="border: none">
-      <a href="https://natalenko.com/morphos/playground/#/bootstrap53" target="_blank">
+      <a href="playground/#/bootstrap53" target="_blank">
         <img src="docs/images/mapping-editor-browser.png" alt="Mapping editor in browser" width="100%" />
       </a>
     </td>

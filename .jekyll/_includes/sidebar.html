@@ -1,0 +1,47 @@
+<aside class="sidebar">
+  <nav aria-label="Documentation">
+    {% assign primary_pages = site.pages | where: "nav_group", "primary" | sort: "nav_order" %}
+    {% for nav_page in primary_pages %}
+    <div class="nav-group">
+      <a class="nav-link" href="{{ nav_page.url | relative_url }}"{% if page.nav == nav_page.nav %} aria-current="page"{% endif %}>{{ nav_page.nav_title | default: nav_page.title | escape }}</a>
+      {% if page.nav == nav_page.nav %}
+      {% include section_links.html content=content %}
+      {% endif %}
+    </div>
+    {% endfor %}
+    <div class="nav-group">
+      <h2>Modules</h2>
+      {% assign module_pages = site.pages | where: "nav_group", "modules" | sort: "nav_order" %}
+      {% for nav_page in module_pages %}
+      <a class="nav-link" href="{{ nav_page.url | relative_url }}"{% if page.nav == nav_page.nav %} aria-current="page"{% endif %}>{{ nav_page.nav_title | default: nav_page.title | escape }}</a>
+      {% if page.nav == nav_page.nav %}
+      {% include section_links.html content=content %}
+      {% endif %}
+      {% endfor %}
+    </div>
+    <div class="nav-group">
+      <h2>Resources</h2>
+      {% for resource in site.navigation.resources %}
+        {% assign resource_external = false %}
+        {% if resource.nav %}
+          {% assign resource_pages = site.pages | where: "nav", resource.nav %}
+          {% assign resource_page = resource_pages | first %}
+          {% if resource_page %}
+      <a class="nav-link" href="{{ resource_page.url | relative_url }}"{% if page.nav == resource_page.nav %} aria-current="page"{% endif %}>{{ resource_page.nav_title | default: resource_page.title | escape }}</a>
+          {% endif %}
+        {% else %}
+          {% if resource.site_path %}
+            {% assign resource_url = resource.site_path | relative_url %}
+          {% elsif resource.url %}
+            {% assign resource_url = resource.url %}
+            {% assign resource_external = true %}
+          {% else %}
+            {% capture resource_url %}https://github.com/{{ site.repository }}{% if resource.github_view %}/{{ resource.github_view }}{% endif %}{% if resource.branch %}/{{ site.github_branch }}{% endif %}{% if resource.path %}/{{ resource.path }}{% endif %}{% endcapture %}
+            {% assign resource_external = true %}
+          {% endif %}
+      <a class="nav-link{% if resource_external %} external{% endif %}" href="{{ resource_url | strip | escape }}">{{ resource.title | escape }}</a>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </nav>
+</aside>

@@ -1,0 +1,27 @@
+<header class="site-header">
+  <div class="header-inner">
+    <div class="brand">
+      <img class="butterfly-logo" id="butterfly-logo" src="{{ site.logo | relative_url }}" alt="Morphos" width="64" height="32">
+      <span><strong>{{ site.title }}</strong><small>{{ site.tagline }}</small></span>
+    </div>
+    <div class="header-actions">
+      <button class="theme-toggle" type="button" aria-label="Toggle color theme" title="Toggle color theme">
+        <svg class="theme-icon theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path></svg>
+        <svg class="theme-icon theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+      <a class="header-link" href="https://github.com/{{ site.repository }}">GitHub</a>
+      <a class="header-link" href="https://www.npmjs.com/package/morphos">npm</a>
+    </div>
+  </div>
+  <nav class="mobile-nav" aria-label="Documentation">
+    {% assign primary_pages = site.pages | where: "nav_group", "primary" | sort: "nav_order" %}
+    {% assign module_pages = site.pages | where: "nav_group", "modules" | sort: "nav_order" %}
+    {% assign mobile_pages = primary_pages | concat: module_pages %}
+    {% for nav_page in mobile_pages %}
+    <a href="{{ nav_page.url | relative_url }}"{% if page.nav == nav_page.nav %} aria-current="page"{% endif %}>{{ nav_page.nav_title | default: nav_page.title | escape }}</a>
+    {% endfor %}
+    {% assign changelog_pages = site.pages | where: "nav", "changelog" %}
+    {% assign changelog_page = changelog_pages | first %}
+    {% if changelog_page %}<a href="{{ changelog_page.url | relative_url }}"{% if page.nav == changelog_page.nav %} aria-current="page"{% endif %}>{{ changelog_page.nav_title | default: changelog_page.title | escape }}</a>{% endif %}
+  </nav>
+</header>
