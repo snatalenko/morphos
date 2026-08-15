@@ -1,0 +1,30 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Playground: Dev Server + Chrome",
+			"type": "node-terminal",
+			"request": "launch",
+			"command": "npm run playground -- --host 127.0.0.1 --port 5173 --strictPort --no-open",
+			"cwd": "${workspaceFolder}",
+			"serverReadyAction": {
+				"pattern": "Local:\\s+(http://127\\.0\\.0\\.1:5173/)",
+				"uriFormat": "%s",
+				"action": "debugWithChrome",
+				"webRoot": "${workspaceFolder}"
+			}
+		},
+		{
+			"name": "Unit Tests: Jest",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
+			"args": [
+				"--runInBand"
+			],
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen"
+		}
+	]
+}

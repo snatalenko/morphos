@@ -1,14 +1,14 @@
 import type { JSONSchema4 } from 'json-schema';
-import { default as mergeSchema } from './utils/mergeSchema.ts';
+import { default as mergeSchema } from './mergeSchema.ts';
 
 /**
  * Create sample data for a given JSON schema
  */
-export default function sampleForSchema(schema: JSONSchema4) {
+export function sampleForSchema(schema: JSONSchema4): any {
 
 	const {
 		title,
-		type,
+		type: rawType,
 		properties,
 		additionalProperties,
 		items,
@@ -24,6 +24,7 @@ export default function sampleForSchema(schema: JSONSchema4) {
 		anyOf,
 		oneOf
 	} = schema;
+	const type = Array.isArray(rawType) ? rawType.find(t => t !== 'null') ?? rawType[0] : rawType;
 
 	if (example)
 		return example;
@@ -94,6 +95,6 @@ export default function sampleForSchema(schema: JSONSchema4) {
 		}
 	}
 	else {
-		throw new TypeError(`Unexpected type "${type}" in "${title || JSON.stringify(schema)}"`);
+		throw new TypeError(`Unexpected type "${rawType}" in "${title || JSON.stringify(schema)}"`);
 	}
 }

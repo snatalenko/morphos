@@ -1,0 +1,180 @@
+title: Morphos
+tagline: JSON-to-JSON mapper for TypeScript
+description: TypeScript JSON-to-JSON mapping with JSON specs, JavaScript expressions, isolated VM execution, React editors, and AI-assisted mapping generation.
+url: https://morphosjs.org
+baseurl: ""
+repository: snatalenko/morphos
+github_branch: master
+logo: /docs/images/morphos_logo.svg
+
+navigation:
+  resources:
+    - title: Editor Playground
+      site_path: /playground/
+    - nav: changelog
+    - title: Issues
+      path: issues
+    - title: Apache-2.0 License
+      github_view: blob
+      branch: true
+      path: LICENSE
+    - title: Maintainer
+      url: https://natalenko.com/about/
+
+layouts_dir: .jekyll/_layouts
+includes_dir: .jekyll/_includes
+
+include:
+  - README.md
+  - src/react/README.md
+  - src/react-schema-editor/README.md
+  - src/openai/README.md
+  - src/anthropic/README.md
+
+defaults:
+  - scope:
+      path: README.md
+    values:
+      layout: docs
+      title: "Morphos: JSON-to-JSON Mapper for TypeScript"
+      nav: overview
+      nav_title: Overview
+      nav_group: primary
+      nav_order: 1
+      description: Define JSON-to-JSON transformations as reusable JSON mapping specs with isolated JavaScript expressions, React editors, and optional AI generation.
+      source_path: README.md
+      source_url: https://github.com/snatalenko/morphos/blob/master/README.md
+      permalink: /
+      content_start_id: overview
+      toc_level: 3
+      toc_next_id: features
+      last_modified_at: 2026-05-28
+      sitemap: true
+  - scope:
+      path: src/react/README.md
+    values:
+      layout: docs
+      title: React Mapping Editor
+      nav: react
+      nav_title: Mapping Editor
+      nav_group: modules
+      nav_order: 1
+      eyebrow: Morphos module
+      description: Build and edit Morphos JSON mapping specifications in React with schema-driven suggestions, localization, and customizable components.
+      source_path: src/react/README.md
+      source_url: https://github.com/snatalenko/morphos/blob/master/src/react/README.md
+      permalink: /react/
+      content_start_id: overview
+      last_modified_at: 2026-05-23
+      sitemap: true
+  - scope:
+      path: src/react-schema-editor/README.md
+    values:
+      layout: docs
+      title: React JSON Schema Editor
+      nav: react-schema-editor
+      nav_title: Schema Editor
+      nav_group: modules
+      nav_order: 2
+      eyebrow: Morphos module
+      description: Create and edit JSON Schemas in React using the Morphos schema editor and its default or Bootstrap component themes.
+      source_path: src/react-schema-editor/README.md
+      source_url: https://github.com/snatalenko/morphos/blob/master/src/react-schema-editor/README.md
+      permalink: /react-schema-editor/
+      content_start_id: overview
+      last_modified_at: 2026-06-23
+      sitemap: true
+  - scope:
+      path: src/openai/README.md
+    values:
+      layout: docs
+      title: OpenAI Mapping Generation
+      nav: openai
+      nav_title: OpenAI
+      nav_group: modules
+      nav_order: 3
+      eyebrow: Morphos module
+      description: Generate an initial Morphos mapping from source and destination JSON Schemas using OpenAI models and optional natural-language instructions.
+      source_path: src/openai/README.md
+      source_url: https://github.com/snatalenko/morphos/blob/master/src/openai/README.md
+      permalink: /openai/
+      content_start_id: overview
+      last_modified_at: 2026-05-21
+      sitemap: true
+  - scope:
+      path: src/anthropic/README.md
+    values:
+      layout: docs
+      title: Anthropic Mapping Generation
+      nav: anthropic
+      nav_title: Anthropic
+      nav_group: modules
+      nav_order: 4
+      eyebrow: Morphos module
+      description: Generate an initial Morphos mapping from source and destination JSON Schemas using Anthropic Claude and optional natural-language instructions.
+      source_path: src/anthropic/README.md
+      source_url: https://github.com/snatalenko/morphos/blob/master/src/anthropic/README.md
+      permalink: /anthropic/
+      content_start_id: overview
+      last_modified_at: 2026-05-21
+      sitemap: true
+  - scope:
+      path: CHANGELOG.md
+    values:
+      layout: docs
+      title: Release Changelog
+      nav: changelog
+      nav_title: Changelog
+      nav_group: resources
+      description: Release history and notable changes for Morphos.
+      source_path: CHANGELOG.md
+      source_url: https://github.com/snatalenko/morphos/blob/master/CHANGELOG.md
+      permalink: /changelog/
+      last_modified_at: 2026-08-10
+      sitemap: true
+
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+plugins:
+  - jekyll-optional-front-matter
+  - jekyll-sitemap
+
+optional_front_matter:
+  remove_originals: true
+
+readme_index:
+  enabled: false
+
+exclude:
+  - .github
+  - .jekyll/Gemfile
+  - .jekyll/Gemfile.lock
+  - AGENTS.md
+  - CLAUDE.md
+  - CONTRIBUTING.md
+  - LICENSE
+  - NOTICE
+  - coverage
+  - dist
+  - node_modules
+  - scripts
+  - schemas
+  - "src/*.ts"
+  - "src/**/*.ts"
+  - "src/**/*.tsx"
+  - tests
+  - utils
+  - playground/main.tsx
+  - playground/shared
+  - eslint.config.mjs
+  - jest.config.ts
+  - package-lock.json
+  - package.json
+  - tsconfig.cjs.json
+  - tsconfig.esm.json
+  - tsconfig.json
+  - vite.config.ts

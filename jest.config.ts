@@ -11,6 +11,7 @@ export default {
 	],
 	collectCoverageFrom: [
 		'src/**/*.ts',
+		'!src/react/utils/entries.ts',
 		'!/src/**/*.d.ts'
 	],
 	coverageReporters: ['lcov', 'text-summary'],
@@ -20,6 +21,6 @@ export default {
 		'/tests/'
 	],
 	transform: {
-		'^.+\\.tsx?$': ['ts-jest']
+		'^.+\\.tsx?$': ['ts-jest', { tsconfig: './tests/tsconfig.json' }]
 	}
 };

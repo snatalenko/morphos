@@ -1,10 +1,12 @@
 import type { RootMapping } from './mappingTypes.ts';
+import type { ILogger } from './ILogger.ts';
 import * as vm from 'vm';
 import createScript from './createScript.ts';
 import { createGlobalContext } from './runtime/index.ts';
+import RuntimeValueWrapper, { type RuntimeValueSerializer } from './runtime/RuntimeValueWrapper.ts';
 
-interface ILogger {
-	trace(message: string, ...args: any[]): void;
+function isDate(value: unknown): value is Date {
+	return value instanceof Date;
 }
 
 type TMappingScriptEnvironment<TSource, TResult> = {
@@ -20,7 +22,12 @@ type TMappingScriptEnvironment<TSource, TResult> = {
 	 * Resulting object catches all variable requests
 	 * and returns `undefined` instead of ReferenceError
 	 */
-	$createGlobalContext(input: object): any;
+	$createGlobalContext?: (input: object) => object;
+
+	/** Global context used to resolve top level source properties */
+	$globalContext?: object;
+
+	[extensionName: string]: unknown
 }
 
 /**
@@ -33,40 +40,59 @@ type TMappingScriptEnvironment<TSource, TResult> = {
  *  The object can contain additional functions, dictionaries, etc.
  * @param options.logger
  *  Logger instance for trace output
+ * @param options.timeout
+ *  Maximum script execution time per document, in milliseconds.
  */
 export default function createMapper<TSource extends object, TResult>(map: RootMapping, options?: {
-	extensions?: object,
-	logger?: ILogger
+	extensions?: Record<string, unknown>,
+	logger?: ILogger,
+	timeout?: number
 }) {
 	const scriptBody = createScript(map);
 	options?.logger?.trace(scriptBody);
 
 	const script = new vm.Script(scriptBody);
+	const extensionNames = options?.extensions ? new Set(Object.keys(options.extensions)) : undefined;
 
-	const extensionNames = options && options.extensions ? Object.keys(options.extensions) : undefined;
+	const sandbox: TMappingScriptEnvironment<TSource, TResult> = {};
+	const ctx = vm.createContext(sandbox) as TMappingScriptEnvironment<TSource, TResult>;
 
-	const sandbox: TMappingScriptEnvironment<TSource, TResult> = {
-		$input: undefined,
-		$result: undefined,
-		$createGlobalContext: (input: object) => createGlobalContext(input, extensionNames),
-		...options?.extensions
-	};
+	const RuntimeDate = new vm.Script('Date').runInContext(ctx) as DateConstructor;
+	const serializers: RuntimeValueSerializer[] = [{
+		check: isDate,
+		serialize: value => new RuntimeDate(value.getTime())
+	}];
+	const valueWrapper = new RuntimeValueWrapper(options?.logger, serializers);
 
-	const ctx = vm.createContext(sandbox);
+	const $createGlobalContext = (input: object) => createGlobalContext(input, extensionNames, {
+		logger: options?.logger,
+		valueWrapper
+	});
+
+	for (const extensionName of extensionNames ?? [])
+		sandbox[extensionName] = valueWrapper.wrap(options?.extensions?.[extensionName], true);
 
 	return (document: TSource): TResult | undefined => {
 
+		ctx.$createGlobalContext = $createGlobalContext;
 		ctx.$input = document;
 		ctx.$result = undefined;
 
-		if (extensionNames) {
-			const conflictingKey = Object.keys(document).find(inputKey => extensionNames.includes(inputKey));
-			if (conflictingKey)
-				throw new TypeError(`Extension "${conflictingKey}" conflicts with a field name passed in input`);
+		try {
+			script.runInContext(ctx, {
+				timeout: options?.timeout
+			});
+
+			return ctx.$result;
 		}
-
-		script.runInContext(ctx);
-
-		return ctx.$result;
+		catch (error: unknown) {
+			throw valueWrapper.unwrap(error);
+		}
+		finally {
+			ctx.$input = undefined;
+			ctx.$result = undefined;
+			ctx.$createGlobalContext = undefined;
+			ctx.$globalContext = undefined;
+		}
 	};
 }
