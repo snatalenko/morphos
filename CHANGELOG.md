@@ -1,4 +1,4 @@
-## [2.0.0-beta.13](https://github.com/snatalenko/morphos/compare/v1.7.2...v2.0.0-beta.13) (2026-08-15)
+## [2.0.0-beta.14](https://github.com/snatalenko/morphos/compare/v1.7.2...v2.0.0-beta.14) (2026-08-15)
 
 ### Features
 
