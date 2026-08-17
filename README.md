@@ -43,7 +43,7 @@ Try it in the [interactive playground](https://morphosjs.org/playground/#/bootst
   - [Concatenating Arrays](#concatenating-arrays)
   - [Dynamic Output Keys](#dynamic-output-keys)
 - [Extensions](#extensions)
-- [Complex Mapping Example](#complex-mapping-example)
+- [Mapper Options](#mapper-options)
 - [Upgrading](#upgrading)
 
 ### Features
@@ -51,8 +51,8 @@ Try it in the [interactive playground](https://morphosjs.org/playground/#/bootst
 - **JSON-defined** - mappings are JSON documents, so they are easy to store, diff, generate, validate, and edit from a UI.
 - **JavaScript-native** - transformations use ordinary JavaScript expressions instead of a custom DSL.
 - **Isolated** - expressions run in a separate [V8 Virtual Machine](https://nodejs.org/api/vm.html) context with restricted access to the outside environment.
-- **Fast** - mapping instructions are compiled once up front, allowing processing at ~100k objects/sec on Apple M1 Pro.
-- **Typed** - written in TypeScript
+- **Fast** - mapping instructions are compiled once into a reusable mapper; the repository includes simple and complex throughput benchmarks.
+- **Typed** - written in TypeScript with declarations for mappings, schemas, editors, and integrations.
 - **Lightweight** - the runtime has no required dependencies; integrations use optional peer dependencies.
 
 ### Visual Mapping Editor
@@ -62,7 +62,7 @@ Need users to build or maintain mappings in a web app? Use the React mapping edi
 <table>
   <tr>
     <td width="50%" style="border: none">
-      <a href="playground/#/bootstrap53" target="_blank">
+      <a href="https://morphosjs.org/playground/#/bootstrap53" target="_blank">
         <img src="docs/images/mapping-editor-browser.png" alt="Mapping editor in browser" width="100%" />
       </a>
     </td>
@@ -134,43 +134,31 @@ npm install @anthropic-ai/sdk
 ```ts
 import { createMapper } from 'morphos';
 
-// Source records from system A
-const sourceOrders = [
-  {
-    orderId: 'SO-1001',
-    customerName: 'Acme Ltd',
-    lineItems: [{ sku: 'A-1', qty: 2, unitPrice: 10 }]
-  },
-  {
-    orderId: 'SO-1002',
-    customerName: 'Globex',
-    lineItems: [{ sku: 'B-9', qty: 1, unitPrice: 25 }]
-  }
-];
-
-// Compile once
 const mapper = createMapper({
-  id: 'orderId',
-  customer: 'customerName',
-  items: {
-    forEach: 'lineItems',
-    map: {
-      code: 'sku',
-      quantity: 'qty',
-      amount: 'qty * unitPrice'
-    }
-  },
-  totalAmount: 'lineItems.reduce((sum, i) => sum + (i.qty * i.unitPrice), 0)'
+  code: 'sku',
+  name: 'name.trim()',
+  amount: 'Number(unitPrice) * quantity'
 });
 
-// Use in a loop; 100k+ objects/sec on simple mappings
-const results = sourceOrders.map(mapper); 
+const result = mapper({
+  sku: 'A-1',
+  name: '  Widget  ',
+  unitPrice: '12.50',
+  quantity: 3
+});
+
+console.log(result);
+// { code: 'A-1', name: 'Widget', amount: 37.5 }
 ```
 
 ## Compatibility
 
-- **Node.js:** 16+
-- **Browser:** best effort support; requires a `vm` polyfill
+| Capability | Environment |
+| --- | --- |
+| Mapping runtime | Node.js 16+ |
+| Mapping and schema editors | Browser applications using React 18+ |
+| OpenAI and Anthropic helpers | Node.js by default; browser use requires explicit SDK opt-in and exposes API credentials |
+| Mapping runtime in browsers | Best-effort support; requires a compatible `vm` polyfill |
 
 ## Security
 
@@ -217,50 +205,38 @@ adding a `$schema` property to the mapping itself, because mapping keys represen
 In mapping JSON, the left side is a key in the resulting object.
 The right side is either a string with a valid JS expression or an object with mapping instructions.
 
-```js
+```json
 {
-  "key": "100",               // numeric value, produces `"key": 100`
-  "key": "true",              // boolean value, produces `"key": true`
-  "key": "'text'",            // text value, produces `"key": "text"` (notice inner quotation marks)
-  "key": "foo",               // access to an input variable `foo`
-  "key": "*",                 // copy all fields/elements from the current context
-  "key": "Number(foo)",       // access to an input variable `foo` converted to a number, produces `"key": 100`
-  "key": "arr.map(e => ...)", // more complex JS expression that produces an array
-  "key": {                    // object mapping, produces `{ foo: 'bar' }`
-    "foo": "'bar'"
-  }, 
-  "key": {                    // same as above, but more verbose
-    "map": { /*...*/ }
+  "id": "Number(sourceId)",
+  "kind": "'order'",
+  "customer": {
+    "from": "buyer",
+    "map": {
+      "name": "name.trim()"
+    }
   },
-  "key": {                    // array mapped from input
-    "forEach": "nested.array.filter(e => !!e)",
-    "map": { /*...*/ }        // $record, $index, $collection are available in "map"
+  "items": {
+    "forEach": "lineItems",
+    "map": {
+      "code": "sku",
+      "amount": "quantity * unitPrice"
+    }
   },
-  "key": {                    // tuple array
-    "0": { /*...*/ },
-    "1": { /*...*/ },
-    "5": { /*...*/ }
+  "status": {
+    "when": "cancelledAt",
+    "then": "'cancelled'",
+    "else": "'active'"
   },
-  "key": {                    // object mapping from a different context 
-    "from": "some.nested.field",
-    "map": { /*...*/ }
+  "references": {
+    "concat": ["primaryReferences", "secondaryReferences"]
   },
-  "key": {                    // copy current object fields, then override/add fields
-    "*": "*",
-    "foo": "foo + 1"
-  },
-  "key": {                    // conditionally include a value
-    "when": "someField",
-    "then": "someField"
-  },
-  "key": {                    // build an array from multiple mappings
-    "concat": [
-      { "when": "foo", "then": "'bar'" }
-    ]
-  },
-  "${prefix}_${id}": "value", // dynamic output key (template interpolation)
+  "${prefix}_${sourceId}": "value"
 }
 ```
+
+Expression strings can read the current source context and use JavaScript built-ins. String literals need inner
+quotes, as in `"'order'"`. Instruction objects provide nested object mapping, array iteration, context switching,
+conditions, concatenation, tuple arrays, wildcards, and dynamic output keys.
 
 ### Runtime Variables Quick Reference
 
@@ -270,32 +246,39 @@ The right side is either a string with a valid JS expression or an object with m
 | `$record` | Current element in a `forEach` iteration. | `forEach` → `map` |
 | `$index` | Current element index in a `forEach` iteration. | `forEach` → `map` |
 | `$collection` | Entire source array selected by `forEach`. | `forEach` → `map` |
+| `$context` | Object selected by `from`. | `from` → `map` |
 
 ### Objects
 
 Mapping of an object with inner properties:
 
 ```json
+{
   "key": {
     "foo": "-1"
   }
+}
 ```
 or
 
 ```json
+{
   "key": {
     "map": {
       "foo": "-1"
     }
-  } 
+  }
+}
 ```
 
 Both examples above produce the same result (the second one is more verbose, but keeps a consistent format with array mappings):
 
 ```json
+{
   "key": {
     "foo": -1
-  } 
+  }
+}
 ```
 
 Use `"*"` as a value to copy the current source object or array into one destination field:
@@ -340,22 +323,29 @@ Assume we have input with an array of objects and need to produce one output obj
 ```
 
 ```json
+{
   "key": {
     "forEach": "inputArray",
     "map": {
       "foo": "arrayInnerProperty"
     }
   }
+}
 ```
 
 Result: 
 
 ```json
-  "key": [{
-    "foo": "value1"
-  }, {
-    "foo": "value2"
-  }]
+{
+  "key": [
+    {
+      "foo": "value1"
+    },
+    {
+      "foo": "value2"
+    }
+  ]
+}
 ```
 
 In this mapping, the execution context shifts to each input object, so inner properties can be referenced directly as `arrayInnerProperty` instead of `inputArray[index].arrayInnerProperty`.
@@ -369,21 +359,25 @@ More on that in [Context Switching](#context-switching).
 If the array should contain plain values instead of objects, use `"*"` on the left side instead of a key name:
 
 ```json
+{
   "key": {
     "forEach": "inputArray",
     "map": {
       "*": "arrayInnerProperty"
     }
   }
+}
 ```
 
 Produces:
 
 ```json
+{
   "key": [
     "value1",
     "value2"
   ]
+}
 ```
 
 #### String[] from String[]
@@ -416,17 +410,20 @@ Result:
 If the array should have a predefined set of elements, each element can be mapped by index:
 
 ```json
+{
   "key": {
     "0": {
       "foo": "\"text1\""
     },
     "2": "1000"
   }
+}
 ```
 
 Result:
 
 ```json
+{
   "key": [
     {
       "foo": "text1"
@@ -434,6 +431,7 @@ Result:
     null,
     1000
   ]
+}
 ```
 
 
@@ -447,23 +445,27 @@ When arrays are mapped with the `"forEach": "", "map": {}` statement, the execut
 Down in the source tree:
 
 ```json
+{
   "key": {
     "from": "field.innerArray[0].innerObject",
     "map": {
       "foo": "nestedProperty"
     }
   }
+}
 ```
 
 Or up in the source document:
 
 ```json
+{
   "key": {
     "from": "$input.rootLevelProperty",
     "map": {
       "foo": "nestedProperty"
     }
   }
+}
 ```
 
 Inside `from` mappings, you can still reference root-level fields through `$input`.
@@ -626,97 +628,21 @@ Extension keys are available as globals in expressions.
 
 If an extension key conflicts with an input field name, mapper throws an error.
 
+## Mapper Options
 
+`createMapper(mapping, options)` accepts:
 
-## Complex Mapping Example
+| Option | Description |
+| --- | --- |
+| `extensions` | Helper functions, lookup tables, and other explicit values exposed to mapping expressions. |
+| `logger` | Receives the generated script through `trace` and blocked-access warnings through `warn`. |
+| `timeout` | Maximum execution time per document in milliseconds. Disabled by default because it adds overhead. |
 
-```ts
-// Some kind of a document we expect on input
-const input = {
-  LINE_ITEMS: [
-    { UPC: '123', QTY: 1, PRICE: 3.4 },
-    { UPC: '456', QTY: 2, PRICE: 5.7 }
-  ],
-  ALLOWANCES: [
-    { ITEM_UPC: '123', AMOUNT: 1.5 }
-  ]
-};
+The mapping is compiled when `createMapper` is called. Invalid instructions or expression syntax fail at that point;
+errors raised while transforming a document are propagated by the returned mapper.
 
-// Additional information we want to pass to the mapping environment
-const itemCatalog = [
-  { upc: '123', vendorCode: 'X-123' },
-  { upc: '456', vendorCode: 'X-456' }
-];
-
-// Some format we need
-const desiredOutput = {
-  title: 'Invoice 1',
-  items: [
-    {
-      code: 'X-123',
-      qty: 1,
-      price: 3.4,
-      amount: 3.4,
-      allowances: [1.5]
-    },
-    {
-      code: 'X-456',
-      qty: 2,
-      price: 5.7,
-      amount: 11.4,
-      allowances: []
-    }
-  ],
-  total: 14.8
-};
-
-
-// Declarative instructions on how to convert the input format
-// to the desired format
-const mapping = {
-  // mapping to a constant
-  title: '"Invoice 1"',
-
-  // array mapping from another array
-  items: {
-    forEach: 'LINE_ITEMS',
-    map: {
-      // data lookup from an additional source passed to `extensions`
-      code: 'itemCatalog.find(e => e.upc === UPC).vendorCode',
-      
-      // fields mapping in a context of `LINE_ITEMS` elements
-      qty: 'QTY',
-      price: 'PRICE',
-      amount: 'QTY * PRICE',
-
-      // data mapping from a source different from the current mapping context
-      // (ALLOWANCES are placed next to LINE_ITEMS in the input)
-      allowances: {
-        forEach: 'ALLOWANCES.filter(a => a.ITEM_UPC === UPC)',
-        map: {
-          '*': 'AMOUNT'
-        }
-      }
-    }
-  },
-
-  // property mapping from an array,
-  // with a custom reducer function defined in `extensions`
-  total: '$sum(LINE_ITEMS, i => i.QTY * i.PRICE)'
-};
-
-// Pre-compiled function that can be executed any number of times
-const mapper = createMapper(mapping, {
-  extensions: {
-    itemCatalog,
-    $sum: (arr, cb) => arr.reduce((t, el) => t + cb(el), 0)
-  }
-});
-
-const result = mapper(input);
-
-expect(result).to.eql(desiredOutput);
-```
+To see these instructions combined in complete, editable mappings, open the
+[interactive playground](https://morphosjs.org/playground/#/bootstrap53).
 
 ## Upgrading
 
