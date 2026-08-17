@@ -1,0 +1,8 @@
+{
+  "json.schemas": [
+    {
+      "fileMatch": ["**/*.morphos.json"],
+      "url": "https://morphosjs.org/schemas/mapping.json"
+    }
+  ]
+}

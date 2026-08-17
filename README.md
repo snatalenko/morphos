@@ -17,7 +17,7 @@ JSON-to-JSON mapper with user-defined JSON mapping specs, plain JS transformatio
 
 Users define the mapping as JSON, so it can be stored, versioned, generated, or edited from a UI. Unlike many transformation tools, it does not invent a custom expression language: field transforms are plain JavaScript expressions, executed in a restricted VM context for predictable behavior without giving mappings access to the host environment.
 
-Try it in the [interactive playground](playground/).
+Try it in the [interactive playground](https://morphosjs.org/playground/#/bootstrap53).
 
 ### Table of Contents
 
@@ -30,6 +30,7 @@ Try it in the [interactive playground](playground/).
   - [Quick Start Example](#quick-start-example)
 - [Compatibility](#compatibility)
 - [Security](#security)
+- [Validating Mapping Specs](#validating-mapping-specs)
 - [Mapping Instructions](#mapping-instructions)
   - [Runtime Variables Quick Reference](#runtime-variables-quick-reference)
   - [Objects](#objects)
@@ -179,6 +180,37 @@ Mappings stay simple for non-technical users, while technical users can still us
 Instead of `eval`, expressions run in an isolated VM context with built-ins, mapping input, and explicit `extensions` only, which reduces JS injection risk.
 
 `timeout` prevents long-running expressions from blocking the process indefinitely. It has a performance cost, so use it only when executing mappings that cannot be trusted.
+
+## Validating Mapping Specs
+
+Morphos exports its mapping grammar as a JSON Schema Draft 7 document:
+
+```ts
+import { mappingSchema } from 'morphos';
+```
+
+Use `mappingSchema` with the JSON Schema validator already used by your application before storing or executing
+externally created mappings. `createMapper` reports malformed instructions and JavaScript syntax errors during
+compilation, but it does not replace full schema validation.
+
+The same schema is available at
+[`https://morphosjs.org/schemas/mapping.json`](https://morphosjs.org/schemas/mapping.json) for editors and other
+tools. For example, associate files named `*.morphos.json` with it in VS Code workspace settings:
+
+```json
+{
+  "json.schemas": [
+    {
+      "fileMatch": ["**/*.morphos.json"],
+      "url": "https://morphosjs.org/schemas/mapping.json"
+    }
+  ]
+}
+```
+
+The schema provides validation, hover descriptions, property suggestions, and snippets for complete mapping
+instructions. Other editors with JSON Schema associations can use the same URL. Prefer an editor association over
+adding a `$schema` property to the mapping itself, because mapping keys represent destination fields.
 
 ## Mapping Instructions
 
